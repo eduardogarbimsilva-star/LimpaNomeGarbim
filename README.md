@@ -1,7 +1,11 @@
-# Limpa Nome Garbim — site institucional
+# Milena Garbim · Limpa Nome — site institucional
 
 Site estático (HTML, CSS e JavaScript puro — sem build, sem servidor) da **Limpa Nome Garbim**, assessoria de
 crédito e recuperação do nome. Fundadora, proprietária e acionista: **Milena Garbim**.
+
+Identidade visual clara e suave (rosa, nude, champanhe e ameixa), com a marca **MILENA GARBIM** ao lado da foto
+dela no cabeçalho e a **assinatura** em letra cursiva (fonte Great Vibes) no topo, na seção da fundadora, no
+formulário, nas chamadas e no rodapé. As cores ficam em variáveis no início de `assets/css/style.css`.
 
 Segue o mesmo padrão do site da Policoating (repositório Color-Weg): páginas estáticas, `config.js` com os dados
 da empresa e atendimento fechado pelo **WhatsApp**.
@@ -27,9 +31,9 @@ Tudo em [`assets/js/config.js`](assets/js/config.js):
 - `telefone`, `email`, `cnpj`, `horario`, `endereco` — aparecem no topo e no rodapé (vazios ficam escondidos).
 - `redes` — Instagram, Facebook, TikTok, YouTube (vazio esconde o ícone).
 
-**Foto da Milena:** salve em `assets/img/milena-garbim.jpg` e, em `index.html` e `sobre.html`, troque
-`<span class="iniciais" ...>MG</span>` por `<img src="assets/img/milena-garbim.jpg" alt="Milena Garbim">`
-(há um comentário no código indicando o lugar).
+**Fotos da Milena** (em `assets/img/`): `milena-garbim.jpg` (original), `milena-garbim-retrato.jpg` (recorte 4:5
+usado no topo e em Quem somos) e `milena-garbim-avatar.jpg` (rosto, usado na marca do cabeçalho e no formulário).
+Para trocar a foto, substitua esses arquivos mantendo os nomes.
 
 ## Formulário de análise
 
