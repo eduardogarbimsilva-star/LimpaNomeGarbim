@@ -116,7 +116,8 @@
           <ol class="linha-tempo">${(p.andamento || []).map((a) => `<li class="lt-${esc(a.autor)}"><div class="lt-cab"><strong>${a.autor === "cliente" ? "Cliente" : a.autor === "equipe" ? esc(a.nome || "Equipe") : "Site"}</strong><time>${esc(dataHora(a.data))}</time></div>${a.status ? `<p class="lt-status">Situação: ${seloStatus(a.status)}</p>` : ""}${a.texto ? `<p>${fmt(a.texto)}</p>` : ""}</li>`).join("")}</ol>
           <form class="form-andamento" data-andamento="${esc(p.id)}">
             <label class="campo"><span>Situação</span><select name="status">${Object.entries(D.STATUS).map(([k, s]) => `<option value="${k}"${k === p.status ? " selected" : ""}>${esc(s.nome)}</option>`).join("")}</select></label>
-            <label class="campo"><span>Mensagem para o cliente <small>(aparece em Minha conta)</small></span><textarea name="texto" rows="3" maxlength="1000" placeholder="Ex.: Recebemos seus documentos e já iniciamos a negociação com o banco."></textarea></label>
+            <label class="campo"><span>Nota da atualização <small>(opcional · fica na linha do tempo do pedido)</small></span><textarea name="texto" rows="2" maxlength="1000" placeholder="Ex.: Documentos recebidos, negociação iniciada."></textarea></label>
+            <p class="dica-campo">${icone("chat")}Para conversar com o cliente, use o botão <strong>Abrir conversa</strong> ou a aba <strong>Conversas</strong>.</p>
             <div class="botoes-form"><button type="submit" class="btn btn-primario">Salvar atualização</button>${ehAdmin ? `<button type="button" class="btn-texto perigo" data-excluir-pedido="${esc(p.id)}">${icone("lixo")}Excluir pedido</button>` : ""}</div>
           </form>
         </div>
@@ -124,16 +125,15 @@
     </details>`;
   }
   function blocoChatAdmin(p, n) {
-    if (D.Chat.aberto(p)) return `<div class="chat-bloco aberto"><div>${icone("chat")}<div><strong>Chat com o cliente</strong><small>Aberto desde ${esc(dataHora(p.confirmado_em))}.</small></div></div>
-      <div class="botoes-form"><button type="button" class="btn btn-primario" data-chat-pedido="${esc(p.id)}">${icone("chat")}Abrir chat<span class="selo-chat" data-selo-botao${n ? "" : " hidden"}>${n}</span></button></div></div>`;
+    if (D.Chat.aberto(p)) return `<div class="chat-bloco aberto"><div>${icone("chat")}<div><strong>Chat com o cliente</strong><small>Aberto desde ${esc(dataHora(p.confirmado_em))}. As mensagens ficam na aba Conversas.</small></div></div>
+      <div class="botoes-form"><button type="button" class="btn btn-primario" data-chat-pedido="${esc(p.id)}">${icone("chat")}Abrir conversa<span class="selo-chat" data-selo-botao${n ? "" : " hidden"}>${n}</span></button></div></div>`;
     if (p.status === "cancelado") return `<div class="chat-bloco"><div>${icone("cadeado")}<div><strong>Chat fechado</strong><small>Pedido cancelado.</small></div></div></div>`;
     return `<div class="chat-bloco confirmar"><div>${icone("check")}<div><strong>Confirme o pedido para abrir o chat</strong><small>Ao confirmar, o cliente é avisado em Minha conta e já pode conversar com você.</small></div></div>
       <div class="botoes-form"><button type="button" class="btn btn-primario" data-confirmar-pedido="${esc(p.id)}">${icone("check")}Confirmar pedido e abrir o chat</button></div></div>`;
   }
   function abrirChatPedido(id) {
-    const p = pedidos.find((x) => x.id === id);
-    if (!p) return;
-    window.ChatUI.abrir({ pedido: p, como: "equipe", titulo: nomeCliente(p.cliente), subtitulo: `Pedido ${p.numero} · ${(p.itens || []).map((i) => i.nome).join(", ")}`, nomeCliente: String(nomeCliente(p.cliente)).split(" ")[0], aoMudar: atualizarChatNaoLidas });
+    abrirAba("conversas");
+    montarCaixa().abrirConversa(id);
   }
   document.addEventListener("click", async (e) => {
     const chat = e.target.closest("[data-chat-pedido]");
@@ -141,7 +141,7 @@
     const conf = e.target.closest("[data-confirmar-pedido]");
     if (conf) {
       await comBotao(conf, async () => {
-        await A.atualizarPedido(conf.dataset.confirmarPedido, "confirmado", "Pedido confirmado! Agora você pode conversar com a Milena pelo chat, aqui em Minha conta.");
+        await A.atualizarPedido(conf.dataset.confirmarPedido, "confirmado", "Pedido confirmado! Agora você pode conversar com a Milena na aba Mensagens, aqui em Minha conta.");
         avisar("Pedido confirmado. O chat está aberto.");
         await recarregarPedidos();
       });
@@ -161,7 +161,6 @@
       if (selo) { selo.hidden = !n; $("b", selo).textContent = n; selo.lastChild.textContent = n === 1 ? " nova" : " novas"; }
       if (botao) { botao.hidden = !n; botao.textContent = n; }
     });
-    if (carregadas.has("conversas") && !painel("conversas").hidden) desenharConversas();
   }
 
   async function salvarAndamento(e) {
@@ -180,29 +179,24 @@
   /* =========================================================
      CONVERSAS (chats dos pedidos confirmados)
      ========================================================= */
-  CARREGAR.conversas = async function () {
-    painel("conversas").innerHTML = `<p class="adm-dica">Cada pedido confirmado tem um chat com o cliente. As conversas com mensagem nova aparecem primeiro.</p><div id="conv-lista"></div>`;
-    $("#conv-lista").addEventListener("click", (e) => { const b = e.target.closest("[data-chat-pedido]"); if (b) e.stopPropagation(), abrirChatPedido(b.dataset.chatPedido); });
-    if (!pedidos.length) { try { pedidos = await A.pedidos(); } catch (e) { avisar(e.message); } }
-    await desenharConversas();
-  };
-  async function desenharConversas() {
-    let msgs = [];
-    try { msgs = await D.Chat.recentes(); } catch (e) { avisar(e.message); }
-    const ultima = {};
-    msgs.forEach((m) => { if (!ultima[m.pedido_id] || m.criado_em > ultima[m.pedido_id].criado_em) ultima[m.pedido_id] = m; });
-    const lista = pedidos.filter((p) => D.Chat.aberto(p) || ultima[p.id])
-      .sort((a, b) => (chatNaoLidas[b.id] || 0) - (chatNaoLidas[a.id] || 0) || String((ultima[b.id] || {}).criado_em || b.confirmado_em || "").localeCompare(String((ultima[a.id] || {}).criado_em || a.confirmado_em || "")));
-    $("#conv-lista").innerHTML = lista.length ? `<ul class="conversas">${lista.map((p) => {
-      const m = ultima[p.id], n = chatNaoLidas[p.id] || 0;
-      return `<li><button type="button" class="conversa${n ? " nova" : ""}" data-chat-pedido="${esc(p.id)}">
-        <span class="chat-avatar">${esc(String(nomeCliente(p.cliente)).charAt(0).toUpperCase())}</span>
-        <span class="conversa-texto"><strong>${esc(nomeCliente(p.cliente))}</strong><small>${esc(p.numero)} · ${esc((p.itens || []).map((i) => i.nome).join(", "))}</small>
-          <em>${m ? (m.autor === "equipe" ? "Você: " : "") + esc(m.texto.slice(0, 90)) : "Nenhuma mensagem ainda"}</em></span>
-        <span class="conversa-lado">${m ? `<time>${esc(dataHora(m.criado_em))}</time>` : ""}${n ? `<span class="selo-chat">${n}</span>` : ""}${!D.Chat.aberto(p) ? `<span class="selo-status st-cinza">Fechado</span>` : ""}</span>
-      </button></li>`;
-    }).join("")}</ul>` : `<div class="cartao centro caixa-aviso">${icone("chat", "icone-svg grande")}<h3>Nenhuma conversa ainda</h3><p>Confirme um pedido na aba Pedidos para abrir o chat com o cliente.</p></div>`;
+  let caixa = null;
+  function montarCaixa() {
+    if (caixa) return caixa;
+    caixa = window.ChatUI.caixaEntrada(painel("conversas"), {
+      como: "equipe",
+      vazio: "Confirme um pedido na aba Pedidos para abrir a conversa com o cliente.",
+      conversas: async () => {
+        pedidos = await A.pedidos();
+        return pedidos.filter((p) => p.confirmado_em).map((p) => ({
+          pedido: p, titulo: nomeCliente(p.cliente), nomeCliente: String(nomeCliente(p.cliente)).split(" ")[0],
+          subtitulo: `${p.numero} · ${(p.itens || []).map((i) => i.nome).join(", ")}`
+        }));
+      },
+      aoMudar: atualizarChatNaoLidas
+    });
+    return caixa;
   }
+  CARREGAR.conversas = async function () { montarCaixa(); };
 
   /* =========================================================
      CLIENTES

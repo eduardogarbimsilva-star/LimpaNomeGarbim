@@ -49,8 +49,11 @@ de cada serviço. Categoria sem serviço visível não aparece no site.
 
 - Cada pedido tem o seu chat. Ele **só abre depois que a vendedora confirma o pedido** e **fecha se o pedido for
   cancelado** (o histórico continua visível). Antes disso, o cliente vê o aviso e o botão do WhatsApp.
-- Cliente: **Minha conta → Conversar com a Milena**. Equipe: botão **Abrir chat** no pedido ou a aba **Conversas**,
-  que lista os chats com as mensagens novas primeiro e mostra o total na aba e no título da página.
+- As mensagens ficam **só na aba de mensagens**, no estilo WhatsApp / Mercado Livre (lista de conversas de um lado,
+  conversa do outro; no celular, a conversa abre em tela cheia com botão de voltar):
+  cliente em **Minha conta → Mensagens**; equipe em **Painel → Conversas**. No pedido fica apenas o botão
+  **Abrir conversa**, que leva direto para ela. Mensagens novas aparecem primeiro e o total aparece na aba.
+- A “Nota da atualização” do pedido é outra coisa: fica na linha do tempo do pedido, não no chat.
 - Mensagens chegam na hora (Supabase Realtime); se o Realtime estiver desligado, o site confere a cada 15 segundos.
   Há confirmação de leitura (✓ enviada, ✓✓ lida). Enter envia; Shift+Enter pula linha.
 - O cliente vê o **nome no chat** da pessoa da equipe (aba Equipe), nunca o e-mail dela. A Milena já vem como

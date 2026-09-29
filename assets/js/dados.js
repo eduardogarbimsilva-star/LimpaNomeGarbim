@@ -203,7 +203,10 @@
       if (ONLINE) {
         const sb = await supabase();
         lista = (await rodar(sb.from("mensagens").select("pedido_id").is("lida_em", null).neq("autor", como).limit(1000))) || [];
-      } else lista = ler(K.mensagens, []).filter((m) => !m.lida_em && m.autor !== como);
+      } else {
+        const meus = como === "cliente" ? new Set(ler(K.pedidos, []).filter((p) => p.cliente_id === (usuarioAtual || {}).email).map((p) => p.id)) : null;
+        lista = ler(K.mensagens, []).filter((m) => !m.lida_em && m.autor !== como && (!meus || meus.has(m.pedido_id)));
+      }
       const r = {};
       lista.forEach((m) => { r[m.pedido_id] = (r[m.pedido_id] || 0) + 1; });
       return r;

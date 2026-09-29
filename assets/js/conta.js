@@ -164,6 +164,7 @@
      ========================================================= */
   $$(".abas [data-aba]").forEach((b) => b.addEventListener("click", () => abrirAba(b.dataset.aba)));
   function abrirAba(aba) {
+    if (aba === "mensagens") montarCaixa();
     $$(".abas [data-aba]").forEach((x) => { x.classList.toggle("ativo", x.dataset.aba === aba); x.setAttribute("aria-selected", x.dataset.aba === aba); });
     $$("[data-painel]").forEach((p) => { p.hidden = p.dataset.painel !== aba; });
   }
@@ -229,8 +230,8 @@
     const whats = `<a class="btn btn-contorno-rosa" data-whats="Olá! Quero falar sobre a minha solicitação ${esc(p.numero)}.">WhatsApp</a>`;
     if (D.Chat.aberto(p)) {
       const n = naoLidas[p.id] || 0;
-      return `<div class="chat-bloco aberto"><div>${icone("chat")}<div><strong>Chat com a Milena</strong><small>Seu pedido foi confirmado. Converse direto com ela por aqui.</small></div></div>
-        <div class="botoes-form"><button type="button" class="btn btn-primario" data-abrir-chat="${esc(p.id)}">${icone("chat")}Conversar com a Milena${n ? `<span class="selo-chat" data-selo-chat="${esc(p.id)}">${n}</span>` : ""}</button>${whats}</div></div>`;
+      return `<div class="chat-bloco aberto"><div>${icone("chat")}<div><strong>Chat com a Milena</strong><small>Seu pedido foi confirmado. As mensagens ficam na aba Mensagens.</small></div></div>
+        <div class="botoes-form"><button type="button" class="btn btn-primario" data-abrir-chat="${esc(p.id)}">${icone("chat")}Abrir conversa${n ? `<span class="selo-chat" data-selo-chat="${esc(p.id)}">${n}</span>` : ""}</button>${whats}</div></div>`;
     }
     if (p.status === "cancelado") return `<div class="chat-bloco"><div>${icone("cadeado")}<div><strong>Chat encerrado</strong><small>Este pedido foi cancelado. Se precisar, fale com a gente pelo WhatsApp.</small></div></div><div class="botoes-form">${whats}</div></div>`;
     return `<div class="chat-bloco"><div>${icone("cadeado")}<div><strong>Chat com a Milena</strong><small>O chat abre assim que a Milena confirmar o seu pedido. Enquanto isso, se precisar, chame no WhatsApp.</small></div></div><div class="botoes-form">${whats}</div></div>`;
@@ -244,13 +245,27 @@
       else if (n) selo.textContent = n; else if (selo) selo.remove();
     });
     const total = Object.values(naoLidas).reduce((a, b) => a + b, 0);
-    const aba = $('.abas [data-aba="pedidos"]');
-    if (aba) aba.innerHTML = "Minhas solicitações" + (total ? ` <span class="selo-chat">${total}</span>` : "");
+    const aba = $('.abas [data-aba="mensagens"]');
+    if (aba) aba.innerHTML = `${icone("chat")}Mensagens` + (total ? ` <span class="selo-chat">${total}</span>` : "");
+  }
+  /* Aba Mensagens: conversas estilo WhatsApp */
+  let caixa = null;
+  function montarCaixa() {
+    if (caixa) return caixa;
+    caixa = window.ChatUI.caixaEntrada($("#conta-mensagens"), {
+      como: "cliente",
+      vazio: "Suas conversas com a Milena aparecem aqui depois que ela confirmar um pedido.",
+      conversas: async () => (await C.listarPedidos()).filter((p) => p.confirmado_em).map((p) => ({
+        pedido: p, titulo: "Milena Garbim", foto: fotoMilena, nomeCliente: "Você",
+        subtitulo: `Pedido ${p.numero} · ${(p.itens || []).map((i) => i.nome).join(", ")}`
+      })),
+      aoMudar: atualizarNaoLidas
+    });
+    return caixa;
   }
   function abrirChat(id) {
-    const p = pedidosAtuais.find((x) => x.id === id);
-    if (!p || !D.Chat.aberto(p)) return;
-    window.ChatUI.abrir({ pedido: p, como: "cliente", titulo: "Milena Garbim", subtitulo: "Pedido " + p.numero, foto: fotoMilena, aoMudar: atualizarNaoLidas });
+    abrirAba("mensagens");
+    montarCaixa().abrirConversa(id);
   }
   $("#conta-pedidos").addEventListener("click", (e) => {
     const b = e.target.closest("[data-abrir-chat]");
