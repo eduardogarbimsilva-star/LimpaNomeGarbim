@@ -283,7 +283,7 @@ window.PADRAO = {
   },
   {
    "p": "Como acompanho minha solicitação?",
-   "r": "Pela sua conta no site: em “Minha conta” você vê a situação de cada solicitação, as atualizações da equipe e pode mandar mensagens."
+   "r": "Pela sua conta no site: em “Minha conta” você vê a situação de cada solicitação e as atualizações da equipe. Assim que a Milena confirmar o seu pedido, abre um chat para você conversar direto com ela."
   },
   {
    "p": "O que é negativação indevida?",
@@ -527,7 +527,8 @@ window.PADRAO = {
   "texto": "<path d=\"M4 6h16M4 12h16M4 18h10\"/>",
   "sair": "<path d=\"M15 4h4v16h-4M10 17l5-5-5-5M15 12H3\"/>",
   "lixo": "<path d=\"M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3\"/>",
-  "lapis": "<path d=\"M4 20h4L19 9l-4-4L4 16z\"/><path d=\"m13 7 4 4\"/>"
+  "lapis": "<path d=\"M4 20h4L19 9l-4-4L4 16z\"/><path d=\"m13 7 4 4\"/>",
+  "enviar": "<path d=\"M22 2 11 13\"/><path d=\"M22 2 15 22l-4-9-9-4z\"/>"
  },
  "iconesCategoria": [
   "aperto",

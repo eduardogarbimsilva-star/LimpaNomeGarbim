@@ -21,7 +21,8 @@
   const PADRAO = window.PADRAO || { textos: {}, categorias: [], servicos: [], faq: [], fotos: {} };
   const K = {
     sessao: "mg_demo_sessao", perfis: "mg_demo_perfis", pedidos: "mg_demo_pedidos", codigo: "mg_demo_codigo",
-    categorias: "mg_demo_categorias", servicos: "mg_demo_servicos", site: "mg_demo_site", equipe: "mg_demo_equipe"
+    categorias: "mg_demo_categorias", servicos: "mg_demo_servicos", site: "mg_demo_site", equipe: "mg_demo_equipe",
+    mensagens: "mg_demo_mensagens"
   };
 
   const ler = (k, p) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? p; } catch (e) { return p; } };
@@ -66,6 +67,7 @@
     if (/rate limit|security purposes|only request/i.test(msg)) return new Error("Muitas tentativas. Aguarde um minuto antes de pedir outro código.");
     if (/CADASTRO_INCOMPLETO/.test(msg)) return new Error("Complete seu cadastro antes de enviar a solicitação.");
     if (/SEM_ITENS/.test(msg)) return new Error("Sua solicitação está vazia.");
+    if (/CHAT_FECHADO/.test(msg)) return new Error("O chat abre quando a Milena confirmar o pedido.");
     if (/SERVICO_INDISPONIVEL/.test(msg)) return new Error("Um dos serviços escolhidos não está mais disponível. Atualize a página.");
     if (/Failed to fetch|NetworkError/i.test(msg)) return new Error("Sem conexão com o servidor. Verifique sua internet.");
     return new Error(msg || "Ocorreu um erro. Tente novamente.");
@@ -77,9 +79,13 @@
   }
 
   /* ---------- Situações do pedido ---------- */
+  /** Situações que contam como pedido aceito pela vendedora (liberam o chat) */
+  const CONFIRMADOS = ["confirmado", "aguardando_cliente", "em_andamento", "concluido"];
+  const chatAberto = (p) => !!(p && p.confirmado_em && p.status !== "cancelado");
   const STATUS = {
     recebido: { nome: "Recebido", cor: "rosa" },
     em_analise: { nome: "Em análise", cor: "champanhe" },
+    confirmado: { nome: "Confirmado", cor: "ok" },
     aguardando_cliente: { nome: "Aguardando você", cor: "alerta" },
     em_andamento: { nome: "Em andamento", cor: "champanhe" },
     concluido: { nome: "Concluído", cor: "ok" },
@@ -158,6 +164,74 @@
     }
     return { categorias: cats.sort(porOrdem), servicos: servs.sort(porOrdem) };
   }
+
+  /* =========================================================
+     Chat do pedido (cliente <-> vendedora)
+     ========================================================= */
+  const Chat = {
+    aberto: chatAberto,
+    async mensagens(pedidoId) {
+      if (!ONLINE) return ler(K.mensagens, []).filter((m) => m.pedido_id === pedidoId);
+      const sb = await supabase();
+      return (await rodar(sb.from("mensagens").select("*").eq("pedido_id", pedidoId).order("criado_em").limit(500))) || [];
+    },
+    /** como: "cliente" | "equipe" */
+    async enviar(pedidoId, texto, como) {
+      texto = String(texto || "").trim().slice(0, 2000);
+      if (!texto) throw new Error("Escreva a mensagem.");
+      if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("enviar_mensagem", { p_pedido: pedidoId, p_texto: texto, p_como: como })); }
+      const todos = ler(K.pedidos, []), p = todos.find((x) => x.id === pedidoId);
+      if (!p || (como === "cliente" && p.cliente_id !== (usuarioAtual || {}).email)) throw new Error("Pedido não encontrado.");
+      if (!chatAberto(p)) throw new Error("O chat abre quando a Milena confirmar o pedido.");
+      let nome = null;
+      if (como === "equipe") { const m = ler(K.equipe, []).find((x) => x.email === (usuarioAtual || {}).email); nome = (m && m.nome) || "Equipe Milena Garbim"; }
+      const msg = { id: "m" + Date.now() + Math.random().toString(36).slice(2, 6), pedido_id: pedidoId, autor: como, nome, texto, criado_em: new Date().toISOString(), lida_em: null };
+      const lista = ler(K.mensagens, []); lista.push(msg); gravar(K.mensagens, lista);
+      p.atualizado_em = msg.criado_em; gravar(K.pedidos, todos);
+      return msg;
+    },
+    async marcarLidas(pedidoId, como) {
+      if (ONLINE) { const sb = await supabase(); await sb.rpc("marcar_lidas", { p_pedido: pedidoId, p_como: como }); return; }
+      const lista = ler(K.mensagens, []);
+      let mudou = false;
+      lista.forEach((m) => { if (m.pedido_id === pedidoId && m.autor !== como && !m.lida_em) { m.lida_em = new Date().toISOString(); mudou = true; } });
+      if (mudou) gravar(K.mensagens, lista);
+    },
+    /** Não lidas por pedido, do ponto de vista de quem lê: { pedidoId: n } */
+    async naoLidas(como) {
+      let lista;
+      if (ONLINE) {
+        const sb = await supabase();
+        lista = (await rodar(sb.from("mensagens").select("pedido_id").is("lida_em", null).neq("autor", como).limit(1000))) || [];
+      } else lista = ler(K.mensagens, []).filter((m) => !m.lida_em && m.autor !== como);
+      const r = {};
+      lista.forEach((m) => { r[m.pedido_id] = (r[m.pedido_id] || 0) + 1; });
+      return r;
+    },
+    /** Últimas mensagens de todos os pedidos (painel: lista de conversas) */
+    async recentes() {
+      if (!ONLINE) return ler(K.mensagens, []).slice(-1000);
+      const sb = await supabase();
+      return (await rodar(sb.from("mensagens").select("*").order("criado_em", { ascending: false }).limit(1000))) || [];
+    },
+    /** Avisa quando chegar mensagem nova (tempo real + consulta de segurança). Devolve a função para parar. */
+    ouvir(pedidoId, aoChegar) {
+      let parado = false, canal = null;
+      const tique = setInterval(() => { if (!parado) aoChegar(); }, ONLINE ? 15000 : 3000);
+      const aoGuardar = (e) => { if (e.key === K.mensagens) aoChegar(); };
+      if (!ONLINE) window.addEventListener("storage", aoGuardar);
+      else supabase().then((sb) => {
+        if (parado) return;
+        const filtro = pedidoId ? { event: "*", schema: "public", table: "mensagens", filter: "pedido_id=eq." + pedidoId } : { event: "*", schema: "public", table: "mensagens" };
+        canal = sb.channel("chat-" + (pedidoId || "todos") + "-" + Date.now()).on("postgres_changes", filtro, () => aoChegar()).subscribe();
+      }).catch(() => {});
+      return () => {
+        parado = true; clearInterval(tique);
+        window.removeEventListener("storage", aoGuardar);
+        if (canal) supabase().then((sb) => sb.removeChannel(canal)).catch(() => {});
+      };
+    }
+  };
 
   /* =========================================================
      Conta do cliente
@@ -323,17 +397,6 @@
         return (await rodar(sb.from("pedidos").select("*").eq("cliente_id", usuarioAtual.id).order("criado_em", { ascending: false }).limit(50))) || [];
       }
       return ler(K.pedidos, []).filter((p) => p.cliente_id === usuarioAtual.email);
-    },
-
-    async enviarMensagem(pedidoId, texto) {
-      texto = String(texto || "").trim().slice(0, 1000);
-      if (!texto) throw new Error("Escreva a mensagem.");
-      if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("mensagem_cliente", { p_id: pedidoId, p_texto: texto })); }
-      const todos = ler(K.pedidos, []), p = todos.find((x) => x.id === pedidoId && x.cliente_id === usuarioAtual.email);
-      if (!p) throw new Error("Pedido não encontrado.");
-      p.andamento.push({ data: new Date().toISOString(), autor: "cliente", texto });
-      p.atualizado_em = new Date().toISOString();
-      gravar(K.pedidos, todos);
     }
   };
 
@@ -367,7 +430,7 @@
       if (!usuarioAtual) return null;
       if (!ONLINE) {
         const eq = ler(K.equipe, null);
-        if (!eq || !eq.length) { gravar(K.equipe, [{ email: usuarioAtual.email, papel: "admin" }]); return "admin"; }   // demonstração: o primeiro a entrar vira administrador
+        if (!eq || !eq.length) { gravar(K.equipe, [{ email: usuarioAtual.email, papel: "admin", nome: CFG.proprietaria || null }]); return "admin"; }   // demonstração: o primeiro a entrar vira administrador
         const m = eq.find((x) => x.email === usuarioAtual.email);
         return m ? m.papel : null;
       }
@@ -391,7 +454,9 @@
       const mudou = status && status !== p.status;
       if (!mudou && !texto) throw new Error("Escolha uma nova situação ou escreva uma mensagem.");
       if (mudou) p.status = status;
-      p.andamento.push({ data: new Date().toISOString(), autor: "equipe", nome: usuarioAtual.email, status: mudou ? status : undefined, texto: texto || undefined });
+      if (mudou && CONFIRMADOS.includes(status) && !p.confirmado_em) p.confirmado_em = new Date().toISOString();
+      const eu = ler(K.equipe, []).find((x) => x.email === usuarioAtual.email);
+      p.andamento.push({ data: new Date().toISOString(), autor: "equipe", nome: (eu && eu.nome) || "Equipe Milena Garbim", status: mudou ? status : undefined, texto: texto || undefined });
       p.atualizado_em = new Date().toISOString();
       gravar(K.pedidos, todos);
     },
@@ -490,15 +555,17 @@
       const sb = await supabase();
       return (await rodar(sb.from("equipe").select("*").order("criado_em"))) || [];
     },
-    async salvarMembro(email, papel) {
+    async salvarMembro(email, papel, nome) {
       email = normalizarEmail(email);
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Informe um e-mail válido.");
       if (!["admin", "atendente"].includes(papel)) throw new Error("Cargo inválido.");
       if (email === (usuarioAtual || {}).email) throw new Error("Você não pode mudar o próprio cargo.");
-      if (ONLINE) { const sb = await supabase(); return rodar(sb.from("equipe").upsert({ email, papel })); }
-      const eq = ler(K.equipe, []).filter((m) => m.email !== email);
-      eq.push({ email, papel, criado_em: new Date().toISOString() });
-      gravar(K.equipe, eq);
+      nome = String(nome || "").trim().slice(0, 60) || null;
+      if (ONLINE) { const sb = await supabase(); return rodar(sb.from("equipe").upsert({ email, papel, nome })); }
+      const eq = ler(K.equipe, []), antigo = eq.find((m) => m.email === email) || {};
+      const resto = eq.filter((m) => m.email !== email);
+      resto.push({ email, papel, nome, criado_em: antigo.criado_em || new Date().toISOString() });
+      gravar(K.equipe, resto);
     },
     async removerMembro(email) {
       if (email === (usuarioAtual || {}).email) throw new Error("Você não pode remover a si mesmo.");
@@ -507,6 +574,6 @@
     }
   };
 
-  window.Dados = { online: ONLINE, STATUS, site, catalogo, Conta, Painel, slug };
+  window.Dados = { online: ONLINE, STATUS, CONFIRMADOS, site, catalogo, Conta, Painel, Chat, slug };
   window.ContaPronta = Conta.iniciar();
 })();

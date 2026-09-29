@@ -90,11 +90,11 @@
     const c = p.cliente || {}, itens = p.itens || [];
     const tel = BR.so(c.telefone);
     const zap = tel ? `https://wa.me/55${tel}?text=${encodeURIComponent(`Olá, ${String(c.tipo === "pj" ? c.responsavel : c.nome || "").split(" ")[0]}! Aqui é da equipe Milena Garbim, sobre a sua solicitação ${p.numero}.`)}` : "";
-    const naoLidas = (() => { const a = p.andamento || []; let n = 0; for (let i = a.length - 1; i >= 0 && a[i].autor === "cliente"; i--) n++; return n; })();
+    const naoLidas = chatNaoLidas[p.id] || 0;
     return `<details class="pedido-cartao adm-pedido"${aberto ? " open" : ""} data-pedido="${esc(p.id)}">
       <summary>
         <div><strong>${esc(p.numero)}</strong><small>${esc(dataHora(p.criado_em))} · ${esc(nomeCliente(c))}</small></div>
-        <div class="adm-pedido-dir">${naoLidas ? `<span class="selo-msg">${naoLidas} ${naoLidas === 1 ? "mensagem nova" : "mensagens novas"}</span>` : ""}${p.total ? `<span class="adm-valor">${brl(p.total)}</span>` : ""}${seloStatus(p.status)}</div>
+        <div class="adm-pedido-dir"><span class="selo-msg" data-selo-novas${naoLidas ? "" : " hidden"}>${icone("chat")}<b>${naoLidas}</b> ${naoLidas === 1 ? "nova" : "novas"}</span>${!p.confirmado_em && p.status !== "cancelado" ? `<span class="selo-msg selo-confirmar">Aguardando confirmação</span>` : ""}${p.total ? `<span class="adm-valor">${brl(p.total)}</span>` : ""}${seloStatus(p.status)}</div>
       </summary>
       <div class="pedido-corpo adm-pedido-corpo">
         <div class="adm-col">
@@ -111,6 +111,7 @@
           ${p.observacoes ? `<p class="pedido-obs"><strong>Observação do cliente:</strong> ${esc(p.observacoes)}</p>` : ""}
         </div>
         <div class="adm-col">
+          ${blocoChatAdmin(p, naoLidas)}
           <h4>Andamento</h4>
           <ol class="linha-tempo">${(p.andamento || []).map((a) => `<li class="lt-${esc(a.autor)}"><div class="lt-cab"><strong>${a.autor === "cliente" ? "Cliente" : a.autor === "equipe" ? esc(a.nome || "Equipe") : "Site"}</strong><time>${esc(dataHora(a.data))}</time></div>${a.status ? `<p class="lt-status">Situação: ${seloStatus(a.status)}</p>` : ""}${a.texto ? `<p>${fmt(a.texto)}</p>` : ""}</li>`).join("")}</ol>
           <form class="form-andamento" data-andamento="${esc(p.id)}">
@@ -122,6 +123,47 @@
       </div>
     </details>`;
   }
+  function blocoChatAdmin(p, n) {
+    if (D.Chat.aberto(p)) return `<div class="chat-bloco aberto"><div>${icone("chat")}<div><strong>Chat com o cliente</strong><small>Aberto desde ${esc(dataHora(p.confirmado_em))}.</small></div></div>
+      <div class="botoes-form"><button type="button" class="btn btn-primario" data-chat-pedido="${esc(p.id)}">${icone("chat")}Abrir chat<span class="selo-chat" data-selo-botao${n ? "" : " hidden"}>${n}</span></button></div></div>`;
+    if (p.status === "cancelado") return `<div class="chat-bloco"><div>${icone("cadeado")}<div><strong>Chat fechado</strong><small>Pedido cancelado.</small></div></div></div>`;
+    return `<div class="chat-bloco confirmar"><div>${icone("check")}<div><strong>Confirme o pedido para abrir o chat</strong><small>Ao confirmar, o cliente é avisado em Minha conta e já pode conversar com você.</small></div></div>
+      <div class="botoes-form"><button type="button" class="btn btn-primario" data-confirmar-pedido="${esc(p.id)}">${icone("check")}Confirmar pedido e abrir o chat</button></div></div>`;
+  }
+  function abrirChatPedido(id) {
+    const p = pedidos.find((x) => x.id === id);
+    if (!p) return;
+    window.ChatUI.abrir({ pedido: p, como: "equipe", titulo: nomeCliente(p.cliente), subtitulo: `Pedido ${p.numero} · ${(p.itens || []).map((i) => i.nome).join(", ")}`, nomeCliente: String(nomeCliente(p.cliente)).split(" ")[0], aoMudar: atualizarChatNaoLidas });
+  }
+  document.addEventListener("click", async (e) => {
+    const chat = e.target.closest("[data-chat-pedido]");
+    if (chat) { abrirChatPedido(chat.dataset.chatPedido); return; }
+    const conf = e.target.closest("[data-confirmar-pedido]");
+    if (conf) {
+      await comBotao(conf, async () => {
+        await A.atualizarPedido(conf.dataset.confirmarPedido, "confirmado", "Pedido confirmado! Agora você pode conversar com a Milena pelo chat, aqui em Minha conta.");
+        avisar("Pedido confirmado. O chat está aberto.");
+        await recarregarPedidos();
+      });
+    }
+  });
+
+  /* ---------- Mensagens não lidas (aviso nas abas) ---------- */
+  let chatNaoLidas = {};
+  async function atualizarChatNaoLidas() {
+    try { chatNaoLidas = await D.Chat.naoLidas("equipe"); } catch (e) { return; }
+    const total = Object.values(chatNaoLidas).reduce((a, b) => a + b, 0);
+    const aba = $('.abas-painel [data-aba="conversas"]');
+    if (aba) { let selo = $(".selo-chat", aba); if (total && !selo) aba.insertAdjacentHTML("beforeend", `<span class="selo-chat">${total}</span>`); else if (total) selo.textContent = total; else if (selo) selo.remove(); }
+    document.title = (total ? `(${total}) ` : "") + document.title.replace(/^\(\d+\) /, "");
+    $$("#ped-lista [data-pedido]").forEach((d) => {   // só os selos: não apaga o que estiver sendo digitado
+      const n = chatNaoLidas[d.dataset.pedido] || 0, selo = $("[data-selo-novas]", d), botao = $("[data-selo-botao]", d);
+      if (selo) { selo.hidden = !n; $("b", selo).textContent = n; selo.lastChild.textContent = n === 1 ? " nova" : " novas"; }
+      if (botao) { botao.hidden = !n; botao.textContent = n; }
+    });
+    if (carregadas.has("conversas") && !painel("conversas").hidden) desenharConversas();
+  }
+
   async function salvarAndamento(e) {
     const f = e.target.closest("[data-andamento]");
     if (!f) return;
@@ -133,6 +175,33 @@
       avisar("Atualização salva. O cliente vê em Minha conta.");
       await recarregarPedidos();
     });
+  }
+
+  /* =========================================================
+     CONVERSAS (chats dos pedidos confirmados)
+     ========================================================= */
+  CARREGAR.conversas = async function () {
+    painel("conversas").innerHTML = `<p class="adm-dica">Cada pedido confirmado tem um chat com o cliente. As conversas com mensagem nova aparecem primeiro.</p><div id="conv-lista"></div>`;
+    $("#conv-lista").addEventListener("click", (e) => { const b = e.target.closest("[data-chat-pedido]"); if (b) e.stopPropagation(), abrirChatPedido(b.dataset.chatPedido); });
+    if (!pedidos.length) { try { pedidos = await A.pedidos(); } catch (e) { avisar(e.message); } }
+    await desenharConversas();
+  };
+  async function desenharConversas() {
+    let msgs = [];
+    try { msgs = await D.Chat.recentes(); } catch (e) { avisar(e.message); }
+    const ultima = {};
+    msgs.forEach((m) => { if (!ultima[m.pedido_id] || m.criado_em > ultima[m.pedido_id].criado_em) ultima[m.pedido_id] = m; });
+    const lista = pedidos.filter((p) => D.Chat.aberto(p) || ultima[p.id])
+      .sort((a, b) => (chatNaoLidas[b.id] || 0) - (chatNaoLidas[a.id] || 0) || String((ultima[b.id] || {}).criado_em || b.confirmado_em || "").localeCompare(String((ultima[a.id] || {}).criado_em || a.confirmado_em || "")));
+    $("#conv-lista").innerHTML = lista.length ? `<ul class="conversas">${lista.map((p) => {
+      const m = ultima[p.id], n = chatNaoLidas[p.id] || 0;
+      return `<li><button type="button" class="conversa${n ? " nova" : ""}" data-chat-pedido="${esc(p.id)}">
+        <span class="chat-avatar">${esc(String(nomeCliente(p.cliente)).charAt(0).toUpperCase())}</span>
+        <span class="conversa-texto"><strong>${esc(nomeCliente(p.cliente))}</strong><small>${esc(p.numero)} · ${esc((p.itens || []).map((i) => i.nome).join(", "))}</small>
+          <em>${m ? (m.autor === "equipe" ? "Você: " : "") + esc(m.texto.slice(0, 90)) : "Nenhuma mensagem ainda"}</em></span>
+        <span class="conversa-lado">${m ? `<time>${esc(dataHora(m.criado_em))}</time>` : ""}${n ? `<span class="selo-chat">${n}</span>` : ""}${!D.Chat.aberto(p) ? `<span class="selo-status st-cinza">Fechado</span>` : ""}</span>
+      </button></li>`;
+    }).join("")}</ul>` : `<div class="cartao centro caixa-aviso">${icone("chat", "icone-svg grande")}<h3>Nenhuma conversa ainda</h3><p>Confirme um pedido na aba Pedidos para abrir o chat com o cliente.</p></div>`;
   }
 
   /* =========================================================
@@ -482,26 +551,32 @@
   /* =========================================================
      EQUIPE
      ========================================================= */
+  let equipeAtual = [];
   CARREGAR.equipe = async function () {
     const p = painel("equipe");
     async function desenhar() {
       let lista = [];
       try { lista = await A.equipe(); } catch (e) { avisar(e.message); }
-      p.innerHTML = `<p class="adm-dica"><strong>Administrador:</strong> tudo no painel. <strong>Atendente:</strong> só Pedidos e Clientes. A pessoa entra em “Minha conta” com o e-mail cadastrado aqui.</p>
-        <div class="tabela-rolagem"><table class="tabela"><thead><tr><th>E-mail</th><th>Cargo</th><th></th></tr></thead><tbody>
+      equipeAtual = lista;
+      p.innerHTML = `<p class="adm-dica"><strong>Administrador:</strong> tudo no painel. <strong>Atendente:</strong> Pedidos, Conversas e Clientes. A pessoa entra em “Minha conta” com o e-mail cadastrado aqui. O <strong>nome no chat</strong> é o que o cliente vê (o e-mail nunca aparece para ele).</p>
+        <div class="tabela-rolagem"><table class="tabela"><thead><tr><th>E-mail</th><th>Nome no chat</th><th>Cargo</th><th></th></tr></thead><tbody>
         ${lista.map((m) => { const eu = m.email === C.usuario.email; return `<tr data-email="${esc(m.email)}"><td>${esc(m.email)}${eu ? " <small>(você)</small>" : ""}</td>
+          <td>${eu ? esc(m.nome || "Equipe Milena Garbim") : `<input data-nome value="${esc(m.nome || "")}" maxlength="60" placeholder="Ex.: Ana" aria-label="Nome no chat">`}</td>
           <td>${eu ? (m.papel === "admin" ? "Administrador" : "Atendente") : `<select data-papel aria-label="Cargo"><option value="admin"${m.papel === "admin" ? " selected" : ""}>Administrador</option><option value="atendente"${m.papel === "atendente" ? " selected" : ""}>Atendente</option></select>`}</td>
           <td>${eu ? "" : `<button type="button" class="btn-texto perigo" data-remover-membro>${icone("lixo")}Remover</button>`}</td></tr>`; }).join("")}
         </tbody></table></div>
         <form id="form-membro" class="adm-barra">
           <input type="email" name="email" placeholder="e-mail da pessoa" required aria-label="E-mail">
+          <input name="nome" placeholder="nome no chat" maxlength="60" aria-label="Nome no chat">
           <select name="papel" aria-label="Cargo"><option value="atendente">Atendente</option><option value="admin">Administrador</option></select>
           <button type="submit" class="btn btn-primario">${icone("mais")}Adicionar</button>
         </form>`;
     }
     p.addEventListener("change", async (e) => {
-      if (!e.target.matches("[data-papel]")) return;
-      try { await A.salvarMembro(e.target.closest("tr").dataset.email, e.target.value); avisar("Cargo atualizado."); } catch (err) { avisar(err.message); }
+      if (!e.target.matches("[data-papel], [data-nome]")) return;
+      const tr = e.target.closest("tr"), m = equipeAtual.find((x) => x.email === tr.dataset.email) || {};
+      const papelNovo = $("[data-papel]", tr) ? $("[data-papel]", tr).value : m.papel, nome = $("[data-nome]", tr) ? $("[data-nome]", tr).value : m.nome;
+      try { await A.salvarMembro(tr.dataset.email, papelNovo, nome); m.papel = papelNovo; m.nome = nome; avisar("Equipe atualizada."); } catch (err) { avisar(err.message); }
     });
     p.addEventListener("click", async (e) => {
       const b = e.target.closest("[data-remover-membro]");
@@ -513,7 +588,7 @@
     p.addEventListener("submit", (e) => {
       e.preventDefault();
       const f = e.target;
-      comBotao($("button[type=submit]", f), async () => { await A.salvarMembro(f.email.value, f.papel.value); avisar("Pessoa adicionada à equipe."); await desenhar(); });
+      comBotao($("button[type=submit]", f), async () => { await A.salvarMembro(f.email.value, f.papel.value, f.nome.value); avisar("Pessoa adicionada à equipe."); await desenhar(); });
     });
     await desenhar();
   };
@@ -534,5 +609,7 @@
     let aba = "pedidos";
     try { const s = sessionStorage.getItem("mg_aba"); if (s && $(`.abas-painel [data-aba="${s}"]`)) aba = s; } catch (e) { /* ok */ }
     abrirAba(aba);
+    atualizarChatNaoLidas();
+    D.Chat.ouvir(null, atualizarChatNaoLidas);
   });
 })();

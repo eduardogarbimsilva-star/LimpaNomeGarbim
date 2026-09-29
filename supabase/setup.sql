@@ -52,8 +52,10 @@ end $$;
 create table if not exists public.equipe (
   email text primary key check (email = lower(email)),
   papel text not null default 'atendente' check (papel in ('admin', 'atendente')),
+  nome text check (length(nome) <= 60),      -- nome que o cliente vê no chat
   criado_em timestamptz not null default now()
 );
+alter table public.equipe add column if not exists nome text check (length(nome) <= 60);
 
 create or replace function public.meu_email() returns text
 language sql stable as $$ select lower(coalesce(auth.jwt() ->> 'email', '')) $$;
@@ -61,6 +63,11 @@ language sql stable as $$ select lower(coalesce(auth.jwt() ->> 'email', '')) $$;
 create or replace function public.meu_papel() returns text
 language sql stable security definer set search_path = public as $$
   select papel from public.equipe where email = public.meu_email()
+$$;
+-- Nome que aparece para o cliente (nunca o e-mail da pessoa da equipe)
+create or replace function public.meu_nome_equipe() returns text
+language sql stable security definer set search_path = public as $$
+  select coalesce(nullif(trim(nome), ''), 'Equipe Milena Garbim') from public.equipe where email = public.meu_email()
 $$;
 create or replace function public.eh_equipe() returns boolean
 language sql stable security definer set search_path = public as $$
@@ -197,12 +204,17 @@ create table if not exists public.pedidos (
   observacoes text check (length(observacoes) <= 800),
   total numeric(12, 2) not null default 0,
   status text not null default 'recebido'
-    check (status in ('recebido', 'em_analise', 'aguardando_cliente', 'em_andamento', 'concluido', 'cancelado')),
+    check (status in ('recebido', 'em_analise', 'confirmado', 'aguardando_cliente', 'em_andamento', 'concluido', 'cancelado')),
   andamento jsonb not null default '[]'::jsonb,
   criado_em timestamptz not null default now(),
   atualizado_em timestamptz not null default now()
 );
 create index if not exists pedidos_cliente on public.pedidos (cliente_id, criado_em desc);
+-- Confirmação pela vendedora: libera o chat do pedido
+alter table public.pedidos add column if not exists confirmado_em timestamptz;
+alter table public.pedidos drop constraint if exists pedidos_status_check;
+alter table public.pedidos add constraint pedidos_status_check
+  check (status in ('recebido', 'em_analise', 'confirmado', 'aguardando_cliente', 'em_andamento', 'concluido', 'cancelado'));
 alter table public.pedidos enable row level security;
 drop policy if exists "cliente vê os próprios pedidos" on public.pedidos;
 create policy "cliente vê os próprios pedidos" on public.pedidos for select to authenticated
@@ -258,28 +270,75 @@ begin
   if not public.eh_equipe() then raise exception 'Sem permissão' using errcode = '42501'; end if;
   select status into v_atual from public.pedidos where id = p_id;
   if not found then raise exception 'Pedido não encontrado.'; end if;
-  if p_status is not null and p_status not in ('recebido', 'em_analise', 'aguardando_cliente', 'em_andamento', 'concluido', 'cancelado') then
+  if p_status is not null and p_status not in ('recebido', 'em_analise', 'confirmado', 'aguardando_cliente', 'em_andamento', 'concluido', 'cancelado') then
     raise exception 'Situação inválida.'; end if;
   if (p_status is null or p_status = v_atual) and v_texto is null then
     raise exception 'Escolha uma nova situação ou escreva uma mensagem.'; end if;
   update public.pedidos set
     status = coalesce(p_status, status),
-    andamento = andamento || jsonb_strip_nulls(jsonb_build_object('data', now(), 'autor', 'equipe', 'nome', public.meu_email(),
+    -- confirmado (ou já em andamento/concluído) = pedido aceito pela vendedora: o chat abre
+    confirmado_em = case when p_status in ('confirmado', 'aguardando_cliente', 'em_andamento', 'concluido')
+                         then coalesce(confirmado_em, now()) else confirmado_em end,
+    andamento = andamento || jsonb_strip_nulls(jsonb_build_object('data', now(), 'autor', 'equipe', 'nome', public.meu_nome_equipe(),
       'status', case when p_status is not null and p_status <> v_atual then p_status end, 'texto', v_texto)),
     atualizado_em = now()
   where id = p_id;
 end $$;
 
--- Cliente: manda mensagem sobre o próprio pedido
-create or replace function public.mensagem_cliente(p_id uuid, p_texto text)
-returns void language plpgsql security definer set search_path = public as $$
-declare v_texto text := left(nullif(trim(p_texto), ''), 1000);
+-- ---------------------------------------------------------
+-- Chat do pedido (cliente <-> vendedora)
+-- Abre só depois que a vendedora confirma o pedido; fecha se o pedido for cancelado.
+-- ---------------------------------------------------------
+drop function if exists public.mensagem_cliente(uuid, text);
+
+create table if not exists public.mensagens (
+  id uuid primary key default gen_random_uuid(),
+  pedido_id uuid not null references public.pedidos (id) on delete cascade,
+  autor text not null check (autor in ('cliente', 'equipe')),
+  nome text,
+  texto text not null check (length(texto) between 1 and 2000),
+  criado_em timestamptz not null default now(),
+  lida_em timestamptz
+);
+create index if not exists mensagens_pedido on public.mensagens (pedido_id, criado_em);
+alter table public.mensagens enable row level security;
+drop policy if exists "chat: cliente do pedido e equipe" on public.mensagens;
+create policy "chat: cliente do pedido e equipe" on public.mensagens for select to authenticated
+  using (public.eh_equipe() or exists (select 1 from public.pedidos p where p.id = pedido_id and p.cliente_id = auth.uid()));
+
+-- p_como: 'cliente' (dono do pedido) ou 'equipe'
+create or replace function public.enviar_mensagem(p_pedido uuid, p_texto text, p_como text default 'cliente')
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare v_p public.pedidos; v_texto text := left(nullif(trim(p_texto), ''), 2000); v_nome text; r public.mensagens;
 begin
   if v_texto is null then raise exception 'Escreva a mensagem.'; end if;
-  update public.pedidos set andamento = andamento || jsonb_build_object('data', now(), 'autor', 'cliente', 'texto', v_texto),
-         atualizado_em = now()
-   where id = p_id and cliente_id = auth.uid();
+  select * into v_p from public.pedidos where id = p_pedido;
   if not found then raise exception 'Pedido não encontrado.'; end if;
+  if p_como = 'equipe' then
+    if not public.eh_equipe() then raise exception 'Sem permissão' using errcode = '42501'; end if;
+    v_nome := public.meu_nome_equipe();
+  elsif p_como = 'cliente' then
+    if v_p.cliente_id is distinct from auth.uid() then raise exception 'Pedido não encontrado.'; end if;
+  else raise exception 'Remetente inválido.'; end if;
+  if v_p.confirmado_em is null or v_p.status = 'cancelado' then raise exception 'CHAT_FECHADO'; end if;
+  insert into public.mensagens (pedido_id, autor, nome, texto) values (p_pedido, p_como, v_nome, v_texto) returning * into r;
+  update public.pedidos set atualizado_em = now() where id = p_pedido;
+  return to_jsonb(r);
+end $$;
+
+-- Marca como lidas as mensagens do outro lado
+create or replace function public.marcar_lidas(p_pedido uuid, p_como text default 'cliente')
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if p_como = 'equipe' and not public.eh_equipe() then raise exception 'Sem permissão' using errcode = '42501'; end if;
+  if p_como = 'cliente' and not exists (select 1 from public.pedidos where id = p_pedido and cliente_id = auth.uid()) then return; end if;
+  update public.mensagens set lida_em = now() where pedido_id = p_pedido and lida_em is null and autor <> p_como;
+end $$;
+
+-- Mensagens chegam na hora (Supabase Realtime)
+do $$ begin
+  alter publication supabase_realtime add table public.mensagens;
+exception when others then null;   -- já adicionada ou Realtime indisponível: o site consulta de tempos em tempos
 end $$;
 
 -- ---------------------------------------------------------
@@ -306,10 +365,12 @@ grant insert, update, delete on public.categorias, public.servicos, public.confi
 grant select, insert, update on public.clientes to authenticated;
 grant select, delete on public.pedidos to authenticated;
 grant select, insert, update, delete on public.equipe to authenticated;
+grant select on public.mensagens to authenticated;
 revoke execute on function public.criar_pedido(jsonb, text), public.atualizar_pedido(uuid, text, text),
-  public.mensagem_cliente(uuid, text) from public, anon;
+  public.enviar_mensagem(uuid, text, text), public.marcar_lidas(uuid, text) from public, anon;
 grant execute on function public.criar_pedido(jsonb, text), public.atualizar_pedido(uuid, text, text),
-  public.mensagem_cliente(uuid, text), public.meu_papel(), public.eh_equipe(), public.eh_admin() to authenticated;
+  public.enviar_mensagem(uuid, text, text), public.marcar_lidas(uuid, text),
+  public.meu_papel(), public.meu_nome_equipe(), public.eh_equipe(), public.eh_admin() to authenticated;
 grant execute on function public.email_ja_cadastrado(text) to anon, authenticated;
 
 -- ---------------------------------------------------------
@@ -334,5 +395,6 @@ notify pgrst, 'reload schema';
 -- =========================================================
 -- Administradora do painel: Milena Garbim.
 -- Para liberar outra pessoa, use a aba Equipe do painel (ou rode esta linha com outro e-mail).
-insert into public.equipe (email, papel) values ('millenagarbim@gmail.com', 'admin') on conflict (email) do update set papel = 'admin';
+insert into public.equipe (email, papel, nome) values ('millenagarbim@gmail.com', 'admin', 'Milena Garbim')
+on conflict (email) do update set papel = 'admin', nome = coalesce(public.equipe.nome, 'Milena Garbim');
 -- =========================================================

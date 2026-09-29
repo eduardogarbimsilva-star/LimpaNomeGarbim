@@ -40,9 +40,22 @@ de cada serviço. Categoria sem serviço visível não aparece no site.
    (CPF ou CNPJ, telefone, cidade/UF; endereço opcional, com busca por CEP e por CNPJ).
 3. A solicitação é **registrada no banco** (o preço é conferido pelo servidor) com um número `MG-AAMMDD-0000`, e o
    **WhatsApp da empresa abre** com o resumo, se o número estiver configurado.
-4. A equipe acompanha em **Painel → Pedidos**: muda a situação (Recebido → Em análise → Aguardando você →
-   Em andamento → Concluído, ou Cancelado) e escreve atualizações.
-5. O cliente vê tudo em **Minha conta**: barra de progresso, linha do tempo e um campo para responder à equipe.
+4. A Milena vê o pedido em **Painel → Pedidos** e clica em **Confirmar pedido e abrir o chat**.
+   Depois muda a situação (Em andamento → Concluído, Aguardando você, ou Cancelado) e escreve atualizações.
+5. O cliente vê tudo em **Minha conta**: barra de progresso (Recebido → Confirmado → Em andamento → Concluído),
+   linha do tempo e o **chat com a Milena**.
+
+## Chat do pedido (cliente ↔ vendedora)
+
+- Cada pedido tem o seu chat. Ele **só abre depois que a vendedora confirma o pedido** e **fecha se o pedido for
+  cancelado** (o histórico continua visível). Antes disso, o cliente vê o aviso e o botão do WhatsApp.
+- Cliente: **Minha conta → Conversar com a Milena**. Equipe: botão **Abrir chat** no pedido ou a aba **Conversas**,
+  que lista os chats com as mensagens novas primeiro e mostra o total na aba e no título da página.
+- Mensagens chegam na hora (Supabase Realtime); se o Realtime estiver desligado, o site confere a cada 15 segundos.
+  Há confirmação de leitura (✓ enviada, ✓✓ lida). Enter envia; Shift+Enter pula linha.
+- O cliente vê o **nome no chat** da pessoa da equipe (aba Equipe), nunca o e-mail dela. A Milena já vem como
+  “Milena Garbim”.
+- Tudo é conferido pelo banco: só o dono do pedido e a equipe leem o chat, e ninguém escreve antes da confirmação.
 
 O **formulário de análise** da página inicial continua existindo para quem não quer criar conta: ele só abre o
 WhatsApp com a mensagem pronta (nada é gravado).
@@ -51,14 +64,15 @@ WhatsApp com a mensagem pronta (nada é gravado).
 
 | Aba | O que faz | Quem vê |
 |---|---|---|
-| Pedidos | Resumo por situação, busca, dados do cliente, serviços, andamento, mudar situação e mandar mensagem, excluir | Todos da equipe (excluir: só administrador) |
+| Pedidos | Resumo por situação, busca, **confirmar pedido**, dados do cliente, serviços, andamento, mudar situação e escrever atualização, abrir chat, excluir | Todos da equipe (excluir: só administrador) |
+| Conversas | Todos os chats de pedidos, com as mensagens novas primeiro | Todos da equipe |
 | Clientes | Lista com busca, nº de pedidos e **exportar planilha** (CSV que abre no Excel) | Todos da equipe |
 | Catálogo | Categorias e serviços (criar, editar, ocultar, excluir, foto, preço) | Administrador |
 | Textos | Todos os textos principais do site, por página. `*palavra*` destaca em rosa itálico | Administrador |
 | Fotos | Foto principal e foto do rosto da Milena (a foto é reduzida antes de enviar) | Administrador |
 | Dúvidas | Perguntas e respostas: editar, reordenar, adicionar, remover | Administrador |
 | Contato e links | WhatsApp, telefone, e-mail, CNPJ, horário, endereço e redes sociais | Administrador |
-| Equipe | Adicionar pessoas como **Administrador** ou **Atendente** | Administrador |
+| Equipe | Adicionar pessoas como **Administrador** ou **Atendente** e o **nome que aparece no chat** | Administrador |
 
 A pessoa da equipe entra em **Minha conta** com o e-mail liberado e vê o botão **Painel da empresa** (há também o
 link “Área da equipe” no rodapé).
@@ -106,6 +120,7 @@ assets/js/dados.js       banco de dados / modo demonstração (conta, pedidos, c
 assets/js/main.js        todas as páginas: textos do painel, catálogo, Minha solicitação, formulário
 assets/js/conta.js       Minha conta
 assets/js/admin.js       Painel
+assets/js/chat.js        janela do chat do pedido (Minha conta e Painel)
 assets/js/br.js          CPF/CNPJ, máscaras, CEP (ViaCEP) e CNPJ (BrasilAPI)
 supabase/setup.sql       banco de dados
 supabase/emails/         modelo do e-mail com o código

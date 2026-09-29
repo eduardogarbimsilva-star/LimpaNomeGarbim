@@ -142,7 +142,7 @@
     return d;
   }
 
-  let editando = false;
+  let editando = false, ouvindo = null;
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const b = $("button[type=submit]", form);
@@ -180,10 +180,11 @@
         ${a.status ? `<p class="lt-status">Situação: ${seloStatus(a.status)}</p>` : ""}${a.texto ? `<p>${fmt(a.texto)}</p>` : ""}</li>`;
     }).join("")}</ol>`;
   }
-  const PASSOS = ["recebido", "em_analise", "em_andamento", "concluido"];
+  const PASSOS = ["recebido", "confirmado", "em_andamento", "concluido"];
+  const POSICAO = { recebido: 0, em_analise: 0, confirmado: 1, aguardando_cliente: 2, em_andamento: 2, concluido: 3 };
   function progresso(p) {
     if (p.status === "cancelado") return "";
-    const atual = p.status === "aguardando_cliente" ? 2 : PASSOS.indexOf(p.status);
+    const atual = POSICAO[p.status] ?? 0;
     return `<ol class="progresso">${PASSOS.map((s, i) => `<li class="${i <= atual ? "feito" : ""}${i === atual ? " atual" : ""}"><span></span>${esc(D.STATUS[s].nome)}</li>`).join("")}</ol>`;
   }
 
@@ -191,7 +192,9 @@
     const alvo = $("#conta-pedidos");
     alvo.innerHTML = `<p class="vazio">Carregando suas solicitações...</p>`;
     let lista = [];
-    try { lista = await C.listarPedidos(); } catch (e) { alvo.innerHTML = `<p class="vazio">${esc(e.message)}</p>`; return; }
+    try { [lista] = await Promise.all([C.listarPedidos(), D.Chat.naoLidas("cliente").then((r) => { naoLidas = r; }).catch(() => {})]); }
+    catch (e) { alvo.innerHTML = `<p class="vazio">${esc(e.message)}</p>`; return; }
+    pedidosAtuais = lista;
     if (!lista.length) {
       alvo.innerHTML = `<div class="cartao centro caixa-aviso">${icone("sacola", "icone-svg grande")}<h3>Nenhuma solicitação ainda</h3><p>Escolha os serviços no catálogo e envie a sua solicitação. Você acompanha tudo por aqui.</p><a href="servicos.html" class="btn btn-primario">Ver serviços</a></div>`;
       return;
@@ -210,11 +213,7 @@
           ${p.observacoes ? `<p class="pedido-obs"><strong>Sua observação:</strong> ${esc(p.observacoes)}</p>` : ""}
           <h4>Andamento</h4>
           ${linhaTempo(p)}
-          <form class="form-mensagem" data-mensagem="${esc(p.id)}">
-            <label class="campo"><span>Mandar mensagem para a equipe</span><textarea name="texto" rows="2" maxlength="1000" placeholder="Escreva sua dúvida ou resposta..."></textarea></label>
-            <div class="botoes-form"><button type="submit" class="btn btn-primario">Enviar mensagem</button>
-            <a class="btn btn-contorno-rosa" data-whats="Olá! Quero falar sobre a minha solicitação ${esc(p.numero)}.">WhatsApp</a></div>
-          </form>
+          ${blocoChat(p)}
         </div>
       </details>`;
     }).join("");
@@ -223,14 +222,39 @@
       $$("#conta-pedidos [data-whats]").forEach((a) => { if (n) { a.href = "https://wa.me/" + n + "?text=" + encodeURIComponent(a.dataset.whats); a.target = "_blank"; a.rel = "noopener"; } else a.hidden = true; });
     });
   }
-  $("#conta-pedidos").addEventListener("submit", async (e) => {
-    const f = e.target.closest("[data-mensagem]");
-    if (!f) return;
-    e.preventDefault();
-    const b = $("button[type=submit]", f);
-    b.disabled = true;
-    try { await C.enviarMensagem(f.dataset.mensagem, f.texto.value); avisar("Mensagem enviada para a equipe."); await desenharPedidos(); }
-    catch (err) { avisar(err.message); b.disabled = false; }
+  /* ---------- Chat com a Milena (abre depois que ela confirma o pedido) ---------- */
+  let pedidosAtuais = [], naoLidas = {}, fotoMilena = "assets/img/milena-garbim-avatar.jpg";
+  D.site().then((s) => { fotoMilena = s.fotos.avatar || fotoMilena; });
+  function blocoChat(p) {
+    const whats = `<a class="btn btn-contorno-rosa" data-whats="Olá! Quero falar sobre a minha solicitação ${esc(p.numero)}.">WhatsApp</a>`;
+    if (D.Chat.aberto(p)) {
+      const n = naoLidas[p.id] || 0;
+      return `<div class="chat-bloco aberto"><div>${icone("chat")}<div><strong>Chat com a Milena</strong><small>Seu pedido foi confirmado. Converse direto com ela por aqui.</small></div></div>
+        <div class="botoes-form"><button type="button" class="btn btn-primario" data-abrir-chat="${esc(p.id)}">${icone("chat")}Conversar com a Milena${n ? `<span class="selo-chat" data-selo-chat="${esc(p.id)}">${n}</span>` : ""}</button>${whats}</div></div>`;
+    }
+    if (p.status === "cancelado") return `<div class="chat-bloco"><div>${icone("cadeado")}<div><strong>Chat encerrado</strong><small>Este pedido foi cancelado. Se precisar, fale com a gente pelo WhatsApp.</small></div></div><div class="botoes-form">${whats}</div></div>`;
+    return `<div class="chat-bloco"><div>${icone("cadeado")}<div><strong>Chat com a Milena</strong><small>O chat abre assim que a Milena confirmar o seu pedido. Enquanto isso, se precisar, chame no WhatsApp.</small></div></div><div class="botoes-form">${whats}</div></div>`;
+  }
+  async function atualizarNaoLidas() {
+    try { naoLidas = await D.Chat.naoLidas("cliente"); } catch (e) { return; }
+    $$("[data-abrir-chat]").forEach((b) => {
+      const n = naoLidas[b.dataset.abrirChat] || 0;
+      let selo = $(".selo-chat", b);
+      if (n && !selo) { b.insertAdjacentHTML("beforeend", `<span class="selo-chat">${n}</span>`); }
+      else if (n) selo.textContent = n; else if (selo) selo.remove();
+    });
+    const total = Object.values(naoLidas).reduce((a, b) => a + b, 0);
+    const aba = $('.abas [data-aba="pedidos"]');
+    if (aba) aba.innerHTML = "Minhas solicitações" + (total ? ` <span class="selo-chat">${total}</span>` : "");
+  }
+  function abrirChat(id) {
+    const p = pedidosAtuais.find((x) => x.id === id);
+    if (!p || !D.Chat.aberto(p)) return;
+    window.ChatUI.abrir({ pedido: p, como: "cliente", titulo: "Milena Garbim", subtitulo: "Pedido " + p.numero, foto: fotoMilena, aoMudar: atualizarNaoLidas });
+  }
+  $("#conta-pedidos").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-abrir-chat]");
+    if (b) abrirChat(b.dataset.abrirChat);
   });
 
   function desenharDados() {
@@ -265,7 +289,11 @@
     $("#conta-email").textContent = C.usuario.email;
     mostrar("conta-painel");
     desenharDados();
-    desenharPedidos();
+    await desenharPedidos();
+    atualizarNaoLidas();
+    if (!ouvindo) ouvindo = D.Chat.ouvir(null, atualizarNaoLidas);
+    const pedirChat = params.get("chat");
+    if (pedirChat) abrirChat(pedirChat);
     D.Painel.meuPapel().then((papel) => { $("#link-painel").hidden = !papel; }).catch(() => {});
   }
 
