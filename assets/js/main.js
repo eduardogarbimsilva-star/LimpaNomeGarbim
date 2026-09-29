@@ -70,7 +70,11 @@
   function aplicarSite(s) {
     $$("[data-texto]").forEach((el) => {
       const v = s.textos[el.getAttribute("data-texto")];
-      if (typeof v === "string") el.innerHTML = fmt(v);
+      if (typeof v !== "string") return;
+      const html = fmt(v);
+      if ((el.dataset.fonte || el.innerHTML) === html) return;   // igual ao que já está: não reinicia a animação
+      el.innerHTML = html; el.dataset.fonte = html;
+      if (el.matches(".hero h1, .topo-pagina h1")) separarPalavras(el);
     });
     $$("img[data-foto]").forEach((img) => {
       const v = s.fotos[img.getAttribute("data-foto")];
@@ -345,11 +349,67 @@
     $$(".fundadora > .revelar:not(.retrato), .analise > .form").forEach((el) => el.classList.add("lado-dir"));
     $$(".cta.revelar, .caixa-aviso").forEach((el) => el.classList.add("zoom"));
   }
+  // Título do topo: cada palavra entra separada
+  function separarPalavras(el) {
+    if (!el.dataset.fonte) el.dataset.fonte = el.innerHTML;
+    let n = 0;
+    (function andar(no) {
+      Array.from(no.childNodes).forEach((filho) => {
+        if (filho.nodeType === 3) {
+          const partes = filho.textContent.split(/(\s+)/), frag = document.createDocumentFragment();
+          partes.forEach((t) => {
+            if (!t) return;
+            if (/^\s+$/.test(t)) { frag.appendChild(document.createTextNode(t)); return; }
+            const sp = document.createElement("span");
+            sp.className = "palavra"; sp.style.setProperty("--p", n++); sp.textContent = t;
+            frag.appendChild(sp);
+          });
+          no.replaceChild(frag, filho);
+        } else if (filho.nodeType === 1 && filho.tagName !== "BR") andar(filho);
+      });
+    })(el);
+  }
+  $$(".hero h1, .topo-pagina h1").forEach(separarPalavras);
+  $$(".hero .revelar").forEach((el) => { if (!el.classList.contains("hero-foto")) el.classList.remove("revelar"); });
+
+  // Abertura (colocada no começo da página): sai sozinha ou com um toque
+  const abertura = $(".abertura");
+  if (abertura) {
+    const tirar = () => { abertura.remove(); };
+    setTimeout(tirar, 3100);
+    abertura.addEventListener("click", () => { abertura.style.animation = "abertura-sai .5s cubic-bezier(.7,0,.3,1) forwards"; setTimeout(tirar, 500); });
+  }
+
+  // Brilhos em volta da foto do topo
+  const fotoTopo = $(".hero-foto");
+  if (fotoTopo) {
+    const estrela = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 0c.7 6.6 4.4 10.9 12 12-7.6 1.1-11.3 5.4-12 12-.7-6.6-4.4-10.9-12-12C7.6 10.9 11.3 6.6 12 0z"/></svg>';
+    [["-4%", "30%", "0s", 22], ["96%", "14%", ".8s", 16], ["88%", "82%", "1.6s", 24], ["6%", "76%", "2.3s", 14], ["50%", "-5%", "1.2s", 18]].forEach(([x, y, d, t]) => {
+      const b = document.createElement("span");
+      b.className = "brilho"; b.innerHTML = estrela;
+      b.style.cssText = `left:${x};top:${y};--b:${d};width:${t}px;height:${t}px`;
+      fotoTopo.appendChild(b);
+    });
+  }
+
+  // Cartões inclinam de leve acompanhando o mouse (computador)
+  if (!menosMovimento && matchMedia("(pointer: fine)").matches) {
+    const SEL = ".cartao, .servico-card, .valor-item";
+    document.addEventListener("pointermove", (e) => {
+      const c = e.target.closest && e.target.closest(SEL);
+      if (!c || c.closest(".modal, .adm-cat, #conta-dados, .caixa-aviso")) return;
+      const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+      c.classList.add("inclina");
+      c.style.transform = `perspective(900px) rotateY(${x * 7}deg) rotateX(${-y * 7}deg) translateY(-6px)`;
+      if (!c.dataset.ouvindoSaida) { c.dataset.ouvindoSaida = "1"; c.addEventListener("pointerleave", () => { c.style.transform = ""; }); }
+    });
+  }
+
   let obsRevelar = null;
   function observarRevelar() {
     escalonar();
-    const itens = $$(".revelar:not(.visivel), .assinatura:not(.escrita), .rotulo:not(.visivel)").filter((el) => !(el.classList.contains("assinatura") && el.closest(".hero-foto")));
-    if (!("IntersectionObserver" in window) || menosMovimento) { itens.forEach((el) => el.classList.add("visivel", "escrita")); return; }
+    const itens = $$(".revelar:not(.visivel), .assinatura:not(.escrita), .rotulo:not(.visivel)").filter((el) => !el.closest(".hero-foto, .abertura") || el.classList.contains("hero-foto"));
+    if (!("IntersectionObserver" in window)) { itens.forEach((el) => el.classList.add("visivel", "escrita")); return; }
     obsRevelar = obsRevelar || new IntersectionObserver((l) => l.forEach((i) => {
       if (!i.isIntersecting) return;
       i.target.classList.add(i.target.classList.contains("assinatura") ? "escrita" : "visivel");

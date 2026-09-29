@@ -330,11 +330,6 @@ fieldset.campo { border: 0; }
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 160%); background: var(--ameixa); color: #fff; padding: 14px 22px; border-radius: 14px; box-shadow: var(--sombra-forte); z-index: 90; transition: transform 0.3s; max-width: calc(100% - 32px); font-size: 0.92rem; }
 .toast.visivel { transform: translate(-50%, 0); }
 
-/* ---------- Animação de entrada ---------- */
-.revelar { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
-.revelar.visivel { opacity: 1; transform: none; }
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
   .revelar { opacity: 1; transform: none; transition: none; }
 }
 
@@ -708,149 +703,191 @@ body.sem-rolagem { overflow: hidden; }
 
 
 /* =========================================================
-   Animações (desligadas para quem pede menos movimento)
+   Animações
+   Todo mundo vê as entradas suaves (aparecer ao rolar, assinatura, título).
+   Quem pede "reduzir movimento" no aparelho não vê movimentos contínuos
+   (flutuar, girar, faixa rolando, inclinação) — veja o bloco no fim.
    ========================================================= */
-@media (prefers-reduced-motion: no-preference) {
-  /* Entrada da página */
-  body { animation: pagina-entra .6s ease both; }
-  @keyframes pagina-entra { from { opacity: 0; } }
+html { scroll-behavior: smooth; }
 
-  /* Revelar ao rolar: em sequência dentro das grades */
-  .revelar { transition: opacity .8s cubic-bezier(.2, .7, .2, 1), transform .8s cubic-bezier(.2, .7, .2, 1); transition-delay: calc(var(--i, 0) * 90ms); }
-  .revelar.zoom { transform: scale(.94); }
-  .revelar.lado { transform: translateX(-28px); }
-  .revelar.lado-dir { transform: translateX(28px); }
-  .revelar.visivel.zoom, .revelar.visivel.lado, .revelar.visivel.lado-dir { transform: none; }
+/* ---------- Abertura (uma vez por visita) ---------- */
+.abertura { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; text-align: center;
+  background: radial-gradient(600px 400px at 50% 40%, #fff, transparent 70%), linear-gradient(160deg, #fdf1f4, var(--blush) 60%, var(--champanhe-claro));
+  animation: abertura-sai .9s cubic-bezier(.7, 0, .3, 1) 2.1s forwards; cursor: pointer; }
+.abertura-miolo { display: grid; justify-items: center; gap: 6px; }
+.abertura img { width: 108px; height: 108px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 16px 40px rgba(122, 64, 86, .25);
+  animation: abertura-foto 1s cubic-bezier(.2, .9, .3, 1.3) .1s both; }
+.abertura .assinatura { font-size: clamp(3rem, 9vw, 4.6rem); clip-path: inset(0 100% 0 0); animation: escrever 1.3s cubic-bezier(.6, .1, .3, 1) .55s forwards; }
+.abertura small { font-size: .75rem; letter-spacing: .32em; text-transform: uppercase; color: var(--champanhe-escuro); font-weight: 600; animation: aparece .8s ease 1.4s both; }
+.abertura::after { content: ""; position: absolute; left: 50%; bottom: 18%; width: 160px; height: 2px; margin-left: -80px; background: linear-gradient(90deg, transparent, var(--rosa), transparent); transform: scaleX(0); animation: linha-cresce 1s ease 1.2s forwards; }
+@keyframes abertura-foto { from { opacity: 0; transform: scale(.4) rotate(-12deg); } }
+@keyframes abertura-sai { to { transform: translateY(-100%); border-radius: 0 0 50% 50% / 0 0 20% 20%; visibility: hidden; } }
+@keyframes linha-cresce { to { transform: scaleX(1); } }
+@keyframes aparece { from { opacity: 0; } }
+@keyframes escrever { to { clip-path: inset(0 0 0 0); } }
+/* enquanto a abertura roda, o topo espera para animar depois dela */
+body { --atraso: 0s; }
+body.com-abertura { --atraso: 2.3s; }
 
-  /* Hero: título linha a linha, texto e botões em seguida */
-  .hero .sobretitulo, .hero h1, .hero .lead, .hero .hero-botoes, .hero .hero-confianca, .hero .nota-ilustracao {
-    animation: sobe .9s cubic-bezier(.2, .7, .2, 1) both;
-  }
-  .hero h1 { animation-delay: .12s; }
-  .hero .lead { animation-delay: .26s; }
-  .hero .hero-botoes { animation-delay: .38s; }
-  .hero .hero-confianca { animation-delay: .5s; }
-  .hero .nota-ilustracao { animation-delay: .6s; }
-  @keyframes sobe { from { opacity: 0; transform: translateY(26px); } }
-  .hero h1 em { background: linear-gradient(90deg, var(--rosa-forte), var(--champanhe), var(--rosa-forte)); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; animation: brilho-texto 6s linear infinite; padding-right: .04em; }
-  @keyframes brilho-texto { to { background-position: 200% center; } }
+/* ---------- Aparecer ao rolar ---------- */
+.revelar { opacity: 0; transform: translateY(46px); filter: blur(6px);
+  transition: opacity 1s cubic-bezier(.2, .7, .2, 1), transform 1s cubic-bezier(.2, .7, .2, 1), filter 1s ease;
+  transition-delay: calc(var(--i, 0) * 120ms); }
+.revelar.zoom { transform: scale(.9); }
+.revelar.lado { transform: translateX(-60px); }
+.revelar.lado-dir { transform: translateX(60px); }
+.revelar.visivel { opacity: 1; transform: none; filter: none; }
 
-  /* Hero: manchas de cor se movendo ao fundo */
-  .hero::before, .hero::after { content: ""; position: absolute; border-radius: 50%; filter: blur(60px); opacity: .55; pointer-events: none; z-index: 0; }
-  .hero::before { width: 420px; height: 420px; background: #f3c6d2; top: -120px; right: 8%; animation: flutua-mancha 16s ease-in-out infinite alternate; }
-  .hero::after { width: 360px; height: 360px; background: #f3e1cc; bottom: -140px; left: -80px; animation: flutua-mancha 20s ease-in-out infinite alternate-reverse; }
-  .hero > .container { position: relative; z-index: 1; }
-  @keyframes flutua-mancha { to { transform: translate(-60px, 50px) scale(1.15); } }
+/* ---------- Topo: palavras do título entrando uma a uma ---------- */
+.palavra { display: inline-block; opacity: 0; transform: translateY(.7em) rotate(3deg); filter: blur(8px);
+  animation: palavra-entra .9s cubic-bezier(.2, .8, .2, 1) forwards; animation-delay: calc(var(--atraso) + .15s + var(--p, 0) * 110ms); }
+@keyframes palavra-entra { to { opacity: 1; transform: none; filter: none; } }
+.hero .sobretitulo, .hero .lead, .hero .hero-botoes, .hero .hero-confianca, .hero .nota-ilustracao,
+.topo-pagina .migalhas, .topo-pagina p { animation: sobe 1s cubic-bezier(.2, .7, .2, 1) both; }
+.hero .sobretitulo { animation-delay: var(--atraso); }
+.hero .lead { animation-delay: calc(var(--atraso) + .7s); }
+.hero .hero-botoes { animation-delay: calc(var(--atraso) + .9s); }
+.hero .hero-confianca { animation-delay: calc(var(--atraso) + 1.1s); }
+.hero .nota-ilustracao { animation-delay: calc(var(--atraso) + 1.2s); }
+.topo-pagina p { animation-delay: calc(var(--atraso) + .5s); }
+@keyframes sobe { from { opacity: 0; transform: translateY(34px); } }
+.hero h1 em { background: linear-gradient(90deg, var(--rosa-forte), #d9a0ae, var(--champanhe), var(--rosa-forte)); background-size: 300% auto;
+  -webkit-background-clip: text; background-clip: text; color: transparent; animation: brilho-texto 5s linear infinite; padding-right: .05em; }
+.hero h1 em .palavra { background: inherit; -webkit-background-clip: text; background-clip: text; }
+@keyframes brilho-texto { to { background-position: 300% center; } }
 
-  /* Foto da Milena: entra com zoom suave, moldura desenhando e cartões flutuando */
-  .hero-foto .moldura { animation: foto-entra 1.2s cubic-bezier(.2, .7, .2, 1) .15s both; }
-  @keyframes foto-entra { from { opacity: 0; transform: scale(.92) translateY(20px); } }
-  .hero-foto::before { animation: moldura-entra 1.4s ease .5s both; }
-  @keyframes moldura-entra { from { opacity: 0; transform: translate(14px, -14px); } }
-  .hero-foto .moldura img { transition: transform 1.2s ease; }
-  .hero-foto:hover .moldura img { transform: scale(1.04); }
-  .chip { animation: chip-entra .8s cubic-bezier(.2, .7, .2, 1) both, flutuar 6s ease-in-out infinite; }
-  .chip-score { animation-delay: .9s, 1.7s; }
-  .chip-ok { animation-delay: 1.1s, 2.6s; }
-  @keyframes chip-entra { from { opacity: 0; transform: translateY(18px) scale(.9); } }
-  @keyframes flutuar { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
-  .hero-foto .assina-foto { animation: chip-entra .8s cubic-bezier(.2, .7, .2, 1) 1.3s both; }
+/* Botão principal do topo respirando */
+.hero .hero-botoes .btn-primario { animation: brilho-botao 3s ease-in-out calc(var(--atraso) + 2s) infinite; }
+@keyframes brilho-botao { 50% { box-shadow: 0 8px 20px rgba(165, 83, 107, .25), 0 0 0 10px rgba(196, 111, 135, .16); } }
 
-  /* Assinatura se escrevendo */
-  .assinatura { display: inline-block; }
-  .hero-foto .assinatura, .retrato .cracha .assinatura, .cta .assinatura, .citacao .assinatura, .rodape .assinatura, .login-lado .assinatura, .analise-assinatura .assinatura {
-    clip-path: inset(0 100% 0 0); transition: clip-path 1.8s cubic-bezier(.6, .1, .3, 1) .2s;
-  }
-  .hero-foto .assinatura { animation: escrever 2s cubic-bezier(.6, .1, .3, 1) 1.6s forwards; transition: none; }
-  .assinatura.escrita { clip-path: inset(0 0 0 0) !important; }
-  @keyframes escrever { to { clip-path: inset(0 0 0 0); } }
+/* ---------- Fundo do topo: manchas de cor ---------- */
+.hero::before, .hero::after { content: ""; position: absolute; border-radius: 50%; filter: blur(50px); pointer-events: none; z-index: 0; }
+.hero::before { width: 460px; height: 460px; background: #f2bccb; opacity: .7; top: -140px; right: 6%; animation: flutua-mancha 12s ease-in-out infinite alternate; }
+.hero::after { width: 380px; height: 380px; background: #f1dcc2; opacity: .8; bottom: -150px; left: -90px; animation: flutua-mancha 15s ease-in-out infinite alternate-reverse; }
+.hero > .container { position: relative; z-index: 1; }
+@keyframes flutua-mancha { 50% { transform: translate(-90px, 70px) scale(1.2); } 100% { transform: translate(40px, 20px) scale(.9); } }
 
-  /* Rótulos: traço dourado crescendo */
-  .rotulo::before, .secao-titulo .rotulo::after { transform: scaleX(0); transition: transform .9s ease .3s; }
-  .rotulo::before { transform-origin: right; }
-  .secao-titulo .rotulo::after { transform-origin: left; }
-  .visivel .rotulo::before, .visivel .rotulo::after, .rotulo.visivel::before, .rotulo.visivel::after, .topo-pagina .rotulo::before { transform: scaleX(1); }
+/* ---------- Foto da Milena ---------- */
+.hero-foto .moldura { animation: foto-entra 1.4s cubic-bezier(.2, .8, .2, 1) calc(var(--atraso) + .2s) both, flutuar-foto 7s ease-in-out calc(var(--atraso) + 1.8s) infinite; }
+@keyframes foto-entra { from { opacity: 0; transform: scale(.85) translateY(40px); clip-path: inset(100% 0 0 0 round 240px 240px 28px 28px); } to { clip-path: inset(0 0 0 0 round 240px 240px 28px 28px); } }
+@keyframes flutuar-foto { 0%, 100% { translate: 0 0; } 50% { translate: 0 -12px; } }
+.hero-foto::before { animation: moldura-entra 1.4s ease calc(var(--atraso) + .6s) both; }
+@keyframes moldura-entra { from { opacity: 0; transform: translate(24px, -24px); } }
+.hero-foto::after { content: ""; position: absolute; z-index: 0; width: 118%; aspect-ratio: 1; left: -9%; top: 6%; border-radius: 50%;
+  border: 1.5px dashed rgba(196, 111, 135, .35); animation: girar 40s linear infinite, aparece 1.5s ease calc(var(--atraso) + 1s) both; pointer-events: none; }
+@keyframes girar { to { transform: rotate(360deg); } }
+.brilho { position: absolute; z-index: 3; width: 22px; height: 22px; color: var(--champanhe); pointer-events: none; animation: cintilar 3.2s ease-in-out infinite; animation-delay: calc(var(--atraso) + var(--b, 0s)); opacity: 0; }
+.brilho svg { width: 100%; height: 100%; }
+@keyframes cintilar { 0%, 100% { opacity: 0; transform: scale(.3) rotate(0); } 50% { opacity: 1; transform: scale(1) rotate(90deg); } }
+.chip { animation: chip-entra .9s cubic-bezier(.2, .9, .3, 1.3) both, flutuar 5s ease-in-out infinite; }
+.chip-score { animation-delay: calc(var(--atraso) + 1s), calc(var(--atraso) + 1.9s); }
+.chip-ok { animation-delay: calc(var(--atraso) + 1.25s), calc(var(--atraso) + 3.2s); }
+@keyframes chip-entra { from { opacity: 0; transform: translateY(30px) scale(.8); } }
+@keyframes flutuar { 0%, 100% { translate: 0 0; } 50% { translate: 0 -14px; } }
+.hero-foto .assina-foto { animation: chip-entra .9s cubic-bezier(.2, .9, .3, 1.3) calc(var(--atraso) + 1.4s) both; }
+.hero-foto .assina-foto .assinatura { clip-path: inset(0 100% 0 0); animation: escrever 1.8s cubic-bezier(.6, .1, .3, 1) calc(var(--atraso) + 1.9s) forwards; }
+.hero-foto .moldura img { transition: transform 1.2s ease; }
+.hero-foto:hover .moldura img { transform: scale(1.05); }
 
-  /* Topo das páginas internas */
-  .topo-pagina .migalhas, .topo-pagina h1, .topo-pagina p { animation: sobe .8s cubic-bezier(.2, .7, .2, 1) both; }
-  .topo-pagina h1 { animation-delay: .1s; }
-  .topo-pagina p { animation-delay: .2s; }
+/* ---------- Faixa rolando com os serviços ---------- */
+.faixa-rolante { overflow: hidden; background: linear-gradient(90deg, var(--rosa-forte), #b9667d, var(--champanhe-escuro), var(--rosa-forte)); color: #fff; padding: 14px 0; position: relative; }
+.faixa-rolante .trilho { display: flex; width: max-content; animation: rolar 32s linear infinite; }
+.faixa-rolante:hover .trilho { animation-play-state: paused; }
+.faixa-rolante span { display: inline-flex; align-items: center; gap: 22px; padding-right: 22px; font-family: var(--serifada); font-style: italic; font-size: 1.15rem; white-space: nowrap; }
+.faixa-rolante span::after { content: "✦"; font-style: normal; font-size: .8rem; color: #ffe3ea; }
+@keyframes rolar { to { transform: translateX(-50%); } }
 
-  /* Cartões: sobem e o ícone dá um pulinho */
-  .cartao .ic, .valor-item .ic, .selos .ic, .catalogo-cab .ic { transition: transform .4s cubic-bezier(.3, 1.6, .5, 1), background .3s; }
-  .cartao:hover .ic, .valor-item:hover .ic, .selos > div:hover .ic { transform: translateY(-4px) rotate(-6deg) scale(1.08); }
-  .valor-item, .dor, .passo, .servico-card { transition: transform .3s ease, box-shadow .3s ease, border-color .3s; }
-  .valor-item:hover, .dor:hover, .passo:hover, .servico-card:hover { transform: translateY(-4px); box-shadow: var(--sombra-forte); }
-  .dor:hover .icone-svg { animation: balanca .5s ease; }
-  @keyframes balanca { 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
-  .servico-foto img { transition: transform .8s ease; }
-  .servico-card:hover .servico-foto img { transform: scale(1.06); }
-  .servico-card.destaque .etiqueta { animation: pulso-suave 2.6s ease-in-out infinite; }
-  @keyframes pulso-suave { 50% { box-shadow: 0 0 0 6px rgba(201, 162, 126, .18); } }
+/* ---------- Assinaturas se escrevendo ao aparecer ---------- */
+.assinatura { display: inline-block; }
+.retrato .cracha .assinatura, .cta .assinatura, .citacao .assinatura, .rodape .assinatura, .login-lado .assinatura, .analise-assinatura .assinatura {
+  clip-path: inset(0 100% 0 0); transition: clip-path 2s cubic-bezier(.6, .1, .3, 1) .3s; }
+.assinatura.escrita { clip-path: inset(0 0 0 0) !important; }
 
-  /* Passos: número e linha que se desenha */
-  .passo::after { content: ""; position: absolute; left: 24px; right: 24px; bottom: 0; height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--rosa), var(--champanhe)); transform: scaleX(0); transform-origin: left; transition: transform 1s ease calc(var(--i, 0) * 180ms + .3s); }
-  .passo.visivel::after { transform: scaleX(1); }
-  .passo::before { transition: transform .4s ease; display: inline-block; }
-  .passo:hover::before { transform: scale(1.15) rotate(-4deg); }
+/* ---------- Detalhes ao rolar ---------- */
+.rotulo::before, .secao-titulo .rotulo::after { transform: scaleX(0); transition: transform 1s ease .4s; }
+.rotulo::before { transform-origin: right; }
+.secao-titulo .rotulo::after { transform-origin: left; }
+.rotulo.visivel::before, .rotulo.visivel::after { transform: scaleX(1); }
+.passo::after { content: ""; position: absolute; left: 24px; right: 24px; bottom: 0; height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--rosa), var(--champanhe)); transform: scaleX(0); transform-origin: left; transition: transform 1.2s ease calc(var(--i, 0) * 200ms + .4s); }
+.passo.visivel::after { transform: scaleX(1); }
+.passo::before { display: inline-block; transition: transform .4s ease; }
+.passo.visivel::before { animation: numero-entra .8s cubic-bezier(.2, .9, .3, 1.4) calc(var(--i, 0) * 200ms + .3s) both; }
+@keyframes numero-entra { from { opacity: 0; transform: scale(.3) rotate(-20deg); } }
+.passo:hover::before { transform: scale(1.15) rotate(-4deg); }
+.cartao.visivel .ic, .valor-item.visivel .ic, .selos > .visivel .ic { animation: icone-entra .8s cubic-bezier(.2, .9, .3, 1.5) calc(var(--i, 0) * 120ms + .35s) both; }
+@keyframes icone-entra { from { transform: scale(0) rotate(-30deg); } }
+.retrato.visivel::before { animation: moldura-entra 1.3s ease .4s both; }
+.retrato .moldura img { transition: transform 1.2s ease; }
+.retrato:hover .moldura img { transform: scale(1.05); }
 
-  /* Fotos da Milena nas seções */
-  .retrato .moldura img { transition: transform 1.2s ease; }
-  .retrato:hover .moldura img { transform: scale(1.04); }
-  .retrato::before { transition: transform 1.2s ease; }
-  .retrato.visivel::before { animation: moldura-entra 1.2s ease .3s both; }
-  .logo-foto { transition: transform .5s cubic-bezier(.3, 1.6, .5, 1); }
-  .logo:hover .logo-foto { transform: rotate(-8deg) scale(1.06); }
+/* Bolhas suaves no fundo das seções rosas e da chamada final */
+.secao-rosa, .cta { position: relative; overflow: hidden; }
+.secao-rosa::before, .cta::before { content: ""; position: absolute; width: 320px; height: 320px; border-radius: 50%; background: rgba(255, 255, 255, .55); filter: blur(30px); top: -80px; left: -60px; animation: flutua-mancha 14s ease-in-out infinite alternate; pointer-events: none; }
+.secao-rosa > .container, .cta > * { position: relative; z-index: 1; }
 
-  /* Botões: brilho passando e toque com onda */
-  .btn { position: relative; overflow: hidden; isolation: isolate; }
-  .btn-primario::after { content: ""; position: absolute; top: 0; left: -80%; width: 50%; height: 100%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .35), transparent); transform: skewX(-20deg); z-index: -1; transition: left .7s ease; }
-  .btn-primario:hover::after { left: 130%; }
-  .onda { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, .45); transform: scale(0); animation: onda .6s ease-out forwards; pointer-events: none; }
-  .btn-contorno-rosa .onda, .chip-filtro .onda { background: rgba(196, 111, 135, .25); }
-  @keyframes onda { to { transform: scale(2.6); opacity: 0; } }
+/* ---------- Interações ---------- */
+.cartao, .valor-item, .dor, .passo, .servico-card { transition: transform .35s cubic-bezier(.2, .7, .2, 1), box-shadow .35s ease, border-color .3s; }
+.valor-item:hover, .dor:hover, .servico-card:hover { transform: translateY(-6px); box-shadow: var(--sombra-forte); }
+.cartao .ic, .valor-item .ic, .selos .ic { transition: transform .4s cubic-bezier(.3, 1.6, .5, 1); }
+.cartao:hover .ic, .valor-item:hover .ic, .selos > div:hover .ic { transform: translateY(-5px) rotate(-8deg) scale(1.12); }
+.dor:hover .icone-svg { animation: balanca .5s ease; }
+@keyframes balanca { 25% { transform: rotate(-14deg); } 75% { transform: rotate(14deg); } }
+.servico-foto img { transition: transform .8s ease; }
+.servico-card:hover .servico-foto img { transform: scale(1.07); }
+.servico-card.destaque .etiqueta { animation: pulso-suave 2.4s ease-in-out infinite; }
+@keyframes pulso-suave { 50% { box-shadow: 0 0 0 7px rgba(201, 162, 126, .22); } }
+.logo-foto { transition: transform .5s cubic-bezier(.3, 1.6, .5, 1); }
+.logo:hover .logo-foto { transform: rotate(-10deg) scale(1.08); }
+.btn { position: relative; overflow: hidden; isolation: isolate; }
+.btn-primario::after { content: ""; position: absolute; top: 0; left: -80%; width: 50%; height: 100%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .4), transparent); transform: skewX(-20deg); z-index: -1; transition: left .7s ease; }
+.btn-primario:hover::after { left: 130%; }
+.onda { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, .45); transform: scale(0); animation: onda .6s ease-out forwards; pointer-events: none; }
+.btn-contorno-rosa .onda, .chip-filtro .onda { background: rgba(196, 111, 135, .25); }
+@keyframes onda { to { transform: scale(2.6); opacity: 0; } }
+.whats-flutuante { animation: chip-entra .7s ease calc(var(--atraso) + 1.5s) both; }
+.whats-flutuante::before, .whats-flutuante::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--whats); animation: anel 2.6s ease-out infinite; }
+.whats-flutuante::after { animation-delay: 1.3s; }
+@keyframes anel { from { transform: scale(1); opacity: .8; } to { transform: scale(1.8); opacity: 0; } }
+.contador.pulou { animation: pular .5s cubic-bezier(.3, 1.8, .5, 1); }
+@keyframes pular { 40% { transform: scale(1.6); } }
+.btn-adicionado .icone-svg { animation: check-entra .4s cubic-bezier(.3, 1.8, .5, 1); }
+@keyframes check-entra { from { transform: scale(0) rotate(-45deg); } }
+.faq details { transition: box-shadow .3s, border-color .3s; }
+.faq details:hover { border-color: #f0c9d3; }
+.faq details[open] { box-shadow: var(--sombra); }
+.faq details[open] > p { animation: sobe .5s ease both; }
+.catalogo-cat:not([hidden]) { animation: sobe .7s cubic-bezier(.2, .7, .2, 1) both; }
+.chip-filtro { position: relative; overflow: hidden; transition: background .25s, color .25s, border-color .25s, transform .2s; }
+.chip-filtro:active { transform: scale(.95); }
+.modal-fundo, .chat-fundo { animation: aparece .25s ease both; }
+.modal { animation: modal-entra .4s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes modal-entra { from { opacity: 0; transform: translateY(30px) scale(.95); } }
+.gaveta-lista li { animation: sobe .45s ease both; }
+.gaveta-ok .icone-svg.grande { animation: check-entra .6s cubic-bezier(.3, 1.8, .5, 1) both; }
+.chat-msg { animation: msg-entra .35s cubic-bezier(.2, .8, .2, 1) both; }
+.chat-msg.minha { transform-origin: bottom right; }
+.chat-msg.dele { transform-origin: bottom left; }
+@keyframes msg-entra { from { opacity: 0; transform: scale(.8) translateY(10px); } }
+.selo-chat, .selo-msg { animation: pular .5s cubic-bezier(.3, 1.8, .5, 1); }
+.pedido-cartao { transition: box-shadow .3s; }
+.pedido-cartao:hover { box-shadow: var(--sombra-forte); }
+.progresso li.atual span { animation: pulso-rosa 2s ease-in-out infinite; }
+@keyframes pulso-rosa { 50% { box-shadow: 0 0 0 8px rgba(196, 111, 135, .2); } }
+.inclina { transition: transform .25s ease-out, box-shadow .35s ease; will-change: transform; }
 
-  /* WhatsApp flutuante: ondas chamando atenção */
-  .whats-flutuante { animation: chip-entra .6s ease 1.5s both; }
-  .whats-flutuante::before, .whats-flutuante::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--whats); animation: anel 2.8s ease-out infinite; }
-  .whats-flutuante::after { animation-delay: 1.4s; }
-  @keyframes anel { from { transform: scale(1); opacity: .7; } to { transform: scale(1.7); opacity: 0; } }
-
-  /* Contador da solicitação pulando quando muda */
-  .contador.pulou { animation: pular .5s cubic-bezier(.3, 1.8, .5, 1); }
-  @keyframes pular { 40% { transform: scale(1.5); } }
-  .btn-adicionado .icone-svg { animation: check-entra .4s cubic-bezier(.3, 1.8, .5, 1); }
-  @keyframes check-entra { from { transform: scale(0) rotate(-45deg); } }
-
-  /* Dúvidas abrindo com suavidade */
-  .faq details { transition: box-shadow .3s, border-color .3s; }
-  .faq details:hover { border-color: #f0c9d3; }
-  .faq details[open] { box-shadow: var(--sombra); }
-  .faq details[open] > p { animation: sobe .45s ease both; }
-
-  /* Filtro do catálogo e seções aparecendo */
-  .catalogo-cat:not([hidden]) { animation: sobe .6s cubic-bezier(.2, .7, .2, 1) both; }
-  .chip-filtro { position: relative; overflow: hidden; transition: background .25s, color .25s, border-color .25s, transform .2s; }
-  .chip-filtro:active { transform: scale(.96); }
-
-  /* Gaveta, modais e chat */
-  .modal-fundo, .chat-fundo { animation: pagina-entra .25s ease both; }
-  .modal { animation: modal-entra .35s cubic-bezier(.2, .8, .2, 1) both; }
-  @keyframes modal-entra { from { opacity: 0; transform: translateY(24px) scale(.97); } }
-  .gaveta-lista li { animation: sobe .4s ease both; }
-  .gaveta-ok .icone-svg.grande { animation: check-entra .6s cubic-bezier(.3, 1.8, .5, 1) both; }
-  .chat-msg { animation: msg-entra .3s cubic-bezier(.2, .8, .2, 1) both; }
-  .chat-msg.minha { transform-origin: bottom right; }
-  .chat-msg.dele { transform-origin: bottom left; }
-  @keyframes msg-entra { from { opacity: 0; transform: scale(.85) translateY(8px); } }
-  .selo-chat, .selo-msg { animation: pular .5s cubic-bezier(.3, 1.8, .5, 1); }
-  .pedido-cartao { transition: box-shadow .3s, transform .3s; }
-  .pedido-cartao:hover { box-shadow: var(--sombra-forte); }
-  .progresso li.atual span { animation: pulso-rosa 2s ease-in-out infinite; }
-  @keyframes pulso-rosa { 50% { box-shadow: 0 0 0 7px rgba(196, 111, 135, .18); } }
-
-  /* Selos da faixa */
-  .selos > div { transition: transform .3s; }
+/* ---------- Menos movimento: só aparições suaves, nada contínuo ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .revelar, .revelar.zoom, .revelar.lado, .revelar.lado-dir { transform: none; filter: none; transition: opacity 1s ease; transition-delay: calc(var(--i, 0) * 100ms); }
+  .palavra { transform: none; filter: none; animation-name: aparece-fim; }
+  @keyframes aparece-fim { to { opacity: 1; } }
+  .hero::before, .hero::after, .secao-rosa::before, .cta::before, .hero-foto::after, .brilho,
+  .faixa-rolante .trilho, .whats-flutuante::before, .whats-flutuante::after { animation: none !important; }
+  .brilho { display: none; }
+  .hero-foto .moldura { animation: aparece 1.2s ease calc(var(--atraso) + .2s) both; }
+  .chip, .hero-foto .assina-foto, .hero .hero-botoes .btn-primario { animation-name: aparece; animation-iteration-count: 1; }
+  .faixa-rolante .trilho { justify-content: center; width: auto; flex-wrap: wrap; }
+  .faixa-rolante span[aria-hidden] { display: none; }
 }
 
 /* Barra de progresso da leitura e cabeçalho que encolhe ao rolar */
