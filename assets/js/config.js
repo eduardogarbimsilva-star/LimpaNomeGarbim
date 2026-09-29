@@ -1,30 +1,29 @@
 /*
  * CONFIGURAÇÃO GERAL DO SITE
- * Altere aqui os dados da empresa. Tudo o que está marcado com data-cfg nas páginas
- * é preenchido a partir deste arquivo.
  *
- * WhatsApp: formato internacional, só dígitos -> 55 (Brasil) + DDD + número
- *   ex.: "5516999999999"
- * Enquanto estiver vazio, os botões de WhatsApp levam ao formulário de contato.
+ * Contatos, textos, fotos, serviços e dúvidas são editados pelo PAINEL (admin.html).
+ * O que estiver aqui vale só enquanto o painel não tiver outro valor salvo.
+ *
+ * WhatsApp: formato internacional, só dígitos -> 55 (Brasil) + DDD + número. Ex.: "5516999999999"
  */
 window.SITE_CONFIG = {
-  empresa: "Limpa Nome Garbim",
+  empresa: "Milena Garbim",
   descricao: "Assessoria de crédito e recuperação do nome",
-  slogan: "Seu nome limpo, seu crédito de volta.",
   proprietaria: "Milena Garbim",
-  cargo: "Fundadora, proprietária e acionista",
-  whatsapp: "",            // ex.: "5516999999999"
-  telefone: "",            // ex.: "(16) 99999-9999"
-  email: "",               // ex.: "contato@limpanomegarbim.com.br"
-  cnpj: "",                // ex.: "00.000.000/0001-00" (aparece no rodapé quando preenchido)
+  whatsapp: "",
+  telefone: "",
+  email: "",
+  cnpj: "",
   endereco: "Atendimento online para todo o Brasil",
   horario: "Seg a Sex, 9h às 18h · Sáb, 9h às 12h",
+  redes: { instagram: "", facebook: "", tiktok: "", youtube: "" },
 
-  // Redes sociais. Deixe vazio ("") para esconder o ícone.
-  redes: {
-    instagram: "",
-    facebook: "",
-    tiktok: "",
-    youtube: ""
-  }
+  // Banco de dados e login com código por e-mail (Supabase). Enquanto estiver vazio, o site roda em
+  // "modo demonstração": o código aparece na tela e tudo fica salvo só no navegador. Veja o README.
+  supabase: {
+    url: "",       // ex.: "https://SEU-PROJETO.supabase.co"
+    anonKey: ""    // chave pública (anon / publishable). NUNCA coloque aqui a chave secreta (service_role).
+  },
+  // Quantos dígitos tem o código do e-mail (Supabase: Authentication → Email → "Email OTP Length").
+  tamanhoCodigo: 8
 };

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>Seu código de acesso</title>
+<style>
+  body { margin: 0; padding: 0; }
+  @media (max-width: 620px) {
+    .conteiner { width: 100% !important; }
+    .miolo { padding: 28px 22px !important; }
+    .codigo { font-size: 30px !important; letter-spacing: 6px !important; }
+  }
+</style>
+</head>
+<body style="margin:0; padding:0; background-color:#fbeef1;">
+  <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#fbeef1;">
+    Use o código deste e-mail para entrar na sua conta Milena Garbim · Limpa Nome.
+  </div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fbeef1;">
+    <tr>
+      <td align="center" style="padding:32px 12px;">
+        <table role="presentation" class="conteiner" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px; background-color:#fffdfc; border-radius:18px; overflow:hidden; border:1px solid #eedde2;">
+          <tr>
+            <td align="center" style="background-color:#f6e2e7; padding:28px 24px 22px;">
+              <img src="{{ .SiteURL }}/assets/img/milena-garbim-avatar.jpg" width="72" height="72" alt="" style="display:block; width:72px; height:72px; border-radius:36px; border:3px solid #ffffff;">
+              <div style="font-family:Georgia, 'Times New Roman', serif; font-size:20px; letter-spacing:4px; color:#4a2e3a; margin-top:12px;">MILENA GARBIM</div>
+              <div style="font-family:Arial, Helvetica, sans-serif; font-size:10px; letter-spacing:3px; color:#9c7753; font-weight:bold; margin-top:4px;">LIMPA NOME &amp; CRÉDITO</div>
+            </td>
+          </tr>
+          <tr><td height="3" style="background-color:#c46f87; font-size:0; line-height:0;">&nbsp;</td></tr>
+          <tr>
+            <td class="miolo" style="padding:36px 44px; font-family:Arial, Helvetica, sans-serif; color:#4d3b43;">
+              <h1 style="margin:0 0 12px; font-family:Georgia, 'Times New Roman', serif; font-weight:normal; font-size:26px; color:#4a2e3a;">Seu código de acesso</h1>
+              <p style="margin:0 0 22px; font-size:15px; line-height:23px;">Olá! Use o código abaixo para entrar na sua conta com o e-mail <strong>{{ .Email }}</strong>.</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr><td align="center" style="background-color:#fbeef1; border:1px dashed #c46f87; border-radius:14px; padding:20px;">
+                  <div class="codigo" style="font-family:'Courier New', Courier, monospace; font-size:36px; font-weight:bold; letter-spacing:10px; color:#a5536b;">{{ .Token }}</div>
+                </td></tr>
+              </table>
+              <p style="margin:22px 0 0; font-size:13px; line-height:20px; color:#7e6a73;">O código vale por pouco tempo e só pode ser usado uma vez. <strong>Nunca compartilhe este código</strong> — nossa equipe nunca pede códigos ou senhas.</p>
+              <p style="margin:14px 0 0; font-size:13px; line-height:20px; color:#7e6a73;">Não pediu este código? Pode ignorar este e-mail com tranquilidade.</p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:0 44px 30px; font-family:Arial, Helvetica, sans-serif;">
+              <div style="font-family:'Brush Script MT', 'Segoe Script', cursive; font-size:30px; color:#c46f87;">Milena Garbim</div>
+              <div style="font-size:12px; color:#7e6a73; margin-top:6px;"><a href="{{ .SiteURL }}" style="color:#a5536b; text-decoration:none;">Visitar o site</a></div>
+            </td>
+          </tr>
+        </table>
+        <p style="font-family:Arial, Helvetica, sans-serif; font-size:11px; color:#7e6a73; margin:16px 0 0;">Você recebeu este e-mail porque pediu para entrar no site.</p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
