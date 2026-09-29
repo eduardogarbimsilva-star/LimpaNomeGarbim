@@ -241,7 +241,10 @@
   const obsSalva = () => { try { return sessionStorage.getItem("mg_obs") || ""; } catch (e) { return ""; } };
   function atualizarGaveta(concluido) {
     const ids = Solicitacao.ids();
-    $$("[data-contador]").forEach((el) => { el.textContent = ids.length; el.hidden = !ids.length; });
+    $$("[data-contador]").forEach((el) => {
+      if (el.textContent !== String(ids.length)) { el.classList.remove("pulou"); void el.offsetWidth; el.classList.add("pulou"); }
+      el.textContent = ids.length; el.hidden = !ids.length;
+    });
     const g = $(".gaveta");
     if (!g) return;
     const corpo = $(".gaveta-corpo", g), rodape = $(".gaveta-rodape", g);
@@ -329,13 +332,75 @@
     });
     $$("a", menu).forEach((a) => a.addEventListener("click", () => { menu.classList.remove("aberto"); btnMenu.setAttribute("aria-expanded", "false"); }));
   }
+  /* =========================================================
+     Animações
+     ========================================================= */
+  const menosMovimento = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Em sequência: cada item de uma grade entra um pouco depois do anterior
+  function escalonar(raiz) {
+    $$(".grade-3, .grade-2, .dores, .passos, .selos, .valores, .grade-servicos, .faq, .lista-check", raiz || document).forEach((g) => {
+      Array.from(g.children).forEach((el, i) => { el.style.setProperty("--i", Math.min(i, 8)); if (g.matches(".lista-check") && !el.classList.contains("revelar")) { el.classList.add("revelar", "lado"); } });
+    });
+    $$(".fundadora > .retrato, .analise > .analise-texto").forEach((el) => el.classList.add("lado"));
+    $$(".fundadora > .revelar:not(.retrato), .analise > .form").forEach((el) => el.classList.add("lado-dir"));
+    $$(".cta.revelar, .caixa-aviso").forEach((el) => el.classList.add("zoom"));
+  }
+  let obsRevelar = null;
   function observarRevelar() {
-    const itens = $$(".revelar:not(.visivel)");
-    if (!("IntersectionObserver" in window)) return itens.forEach((el) => el.classList.add("visivel"));
-    const obs = new IntersectionObserver((l) => l.forEach((i) => { if (i.isIntersecting) { i.target.classList.add("visivel"); obs.unobserve(i.target); } }), { threshold: 0.12 });
-    itens.forEach((el) => obs.observe(el));
+    escalonar();
+    const itens = $$(".revelar:not(.visivel), .assinatura:not(.escrita), .rotulo:not(.visivel)").filter((el) => !(el.classList.contains("assinatura") && el.closest(".hero-foto")));
+    if (!("IntersectionObserver" in window) || menosMovimento) { itens.forEach((el) => el.classList.add("visivel", "escrita")); return; }
+    obsRevelar = obsRevelar || new IntersectionObserver((l) => l.forEach((i) => {
+      if (!i.isIntersecting) return;
+      i.target.classList.add(i.target.classList.contains("assinatura") ? "escrita" : "visivel");
+      obsRevelar.unobserve(i.target);
+    }), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    itens.forEach((el) => obsRevelar.observe(el));
   }
   observarRevelar();
+  window.MGAnimar = observarRevelar;
+
+  // Cabeçalho encolhe e barra de leitura acompanha a rolagem
+  const cab = $(".cabecalho");
+  const barra = document.createElement("div");
+  barra.className = "barra-leitura"; barra.setAttribute("aria-hidden", "true");
+  document.body.appendChild(barra);
+  let pedidoQuadro = 0;
+  function aoRolar() {
+    pedidoQuadro = 0;
+    const y = window.scrollY, total = document.documentElement.scrollHeight - innerHeight;
+    if (cab) cab.classList.toggle("rolou", y > 40);
+    barra.style.transform = `scaleX(${total > 0 ? Math.min(1, y / total) : 0})`;
+    if (!menosMovimento) {
+      const foto = $(".hero-foto .moldura img");
+      if (foto && y < 900) foto.style.translate = `0 ${y * 0.06}px`;
+    }
+  }
+  window.addEventListener("scroll", () => { if (!pedidoQuadro) pedidoQuadro = requestAnimationFrame(aoRolar); }, { passive: true });
+  aoRolar();
+
+  // Foto do topo acompanha o mouse de leve
+  const heroFoto = $(".hero-foto");
+  if (heroFoto && !menosMovimento && matchMedia("(pointer: fine)").matches) {
+    const hero = heroFoto.closest(".hero");
+    hero.addEventListener("mousemove", (e) => {
+      const r = hero.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y2 = (e.clientY - r.top) / r.height - .5;
+      heroFoto.style.transform = `perspective(1200px) rotateY(${x * 5}deg) rotateX(${-y2 * 4}deg)`;
+    });
+    hero.addEventListener("mouseleave", () => { heroFoto.style.transform = ""; });
+    heroFoto.style.transition = "transform .6s cubic-bezier(.2,.7,.2,1)";
+  }
+
+  // Onda no toque dos botões
+  if (!menosMovimento) document.addEventListener("pointerdown", (e) => {
+    const b = e.target.closest(".btn, .chip-filtro");
+    if (!b) return;
+    const r = b.getBoundingClientRect(), d = Math.max(r.width, r.height), o = document.createElement("span");
+    o.className = "onda";
+    o.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d / 2}px;top:${e.clientY - r.top - d / 2}px`;
+    b.appendChild(o);
+    setTimeout(() => o.remove(), 650);
+  });
 
   /* ---------- Medidor de score (animação) ---------- */
   const medidor = $("[data-medidor]");
@@ -413,7 +478,7 @@
   if ($("[data-categorias]") || $("[data-catalogo]") || form || Solicitacao.ids().length || $("[data-abrir-solicitacao]")) {
     D.catalogo(true).then((c) => {
       CAT = c;
-      desenharCatalogo(); opcoesServicoForm(); atualizarGaveta();
+      desenharCatalogo(); opcoesServicoForm(); atualizarGaveta(); observarRevelar();
       if (new URLSearchParams(location.search).get("solicitacao") === "1") abrirGaveta();
     }).catch((e) => console.warn(e));
   }

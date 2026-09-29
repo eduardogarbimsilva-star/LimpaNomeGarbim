@@ -706,6 +706,161 @@ body.sem-rolagem { overflow: hidden; }
 .conversa-lado time { font-size: 0.74rem; color: var(--texto-suave); }
 .adm-resumo { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important; }
 
+
+/* =========================================================
+   Animações (desligadas para quem pede menos movimento)
+   ========================================================= */
+@media (prefers-reduced-motion: no-preference) {
+  /* Entrada da página */
+  body { animation: pagina-entra .6s ease both; }
+  @keyframes pagina-entra { from { opacity: 0; } }
+
+  /* Revelar ao rolar: em sequência dentro das grades */
+  .revelar { transition: opacity .8s cubic-bezier(.2, .7, .2, 1), transform .8s cubic-bezier(.2, .7, .2, 1); transition-delay: calc(var(--i, 0) * 90ms); }
+  .revelar.zoom { transform: scale(.94); }
+  .revelar.lado { transform: translateX(-28px); }
+  .revelar.lado-dir { transform: translateX(28px); }
+  .revelar.visivel.zoom, .revelar.visivel.lado, .revelar.visivel.lado-dir { transform: none; }
+
+  /* Hero: título linha a linha, texto e botões em seguida */
+  .hero .sobretitulo, .hero h1, .hero .lead, .hero .hero-botoes, .hero .hero-confianca, .hero .nota-ilustracao {
+    animation: sobe .9s cubic-bezier(.2, .7, .2, 1) both;
+  }
+  .hero h1 { animation-delay: .12s; }
+  .hero .lead { animation-delay: .26s; }
+  .hero .hero-botoes { animation-delay: .38s; }
+  .hero .hero-confianca { animation-delay: .5s; }
+  .hero .nota-ilustracao { animation-delay: .6s; }
+  @keyframes sobe { from { opacity: 0; transform: translateY(26px); } }
+  .hero h1 em { background: linear-gradient(90deg, var(--rosa-forte), var(--champanhe), var(--rosa-forte)); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; animation: brilho-texto 6s linear infinite; padding-right: .04em; }
+  @keyframes brilho-texto { to { background-position: 200% center; } }
+
+  /* Hero: manchas de cor se movendo ao fundo */
+  .hero::before, .hero::after { content: ""; position: absolute; border-radius: 50%; filter: blur(60px); opacity: .55; pointer-events: none; z-index: 0; }
+  .hero::before { width: 420px; height: 420px; background: #f3c6d2; top: -120px; right: 8%; animation: flutua-mancha 16s ease-in-out infinite alternate; }
+  .hero::after { width: 360px; height: 360px; background: #f3e1cc; bottom: -140px; left: -80px; animation: flutua-mancha 20s ease-in-out infinite alternate-reverse; }
+  .hero > .container { position: relative; z-index: 1; }
+  @keyframes flutua-mancha { to { transform: translate(-60px, 50px) scale(1.15); } }
+
+  /* Foto da Milena: entra com zoom suave, moldura desenhando e cartões flutuando */
+  .hero-foto .moldura { animation: foto-entra 1.2s cubic-bezier(.2, .7, .2, 1) .15s both; }
+  @keyframes foto-entra { from { opacity: 0; transform: scale(.92) translateY(20px); } }
+  .hero-foto::before { animation: moldura-entra 1.4s ease .5s both; }
+  @keyframes moldura-entra { from { opacity: 0; transform: translate(14px, -14px); } }
+  .hero-foto .moldura img { transition: transform 1.2s ease; }
+  .hero-foto:hover .moldura img { transform: scale(1.04); }
+  .chip { animation: chip-entra .8s cubic-bezier(.2, .7, .2, 1) both, flutuar 6s ease-in-out infinite; }
+  .chip-score { animation-delay: .9s, 1.7s; }
+  .chip-ok { animation-delay: 1.1s, 2.6s; }
+  @keyframes chip-entra { from { opacity: 0; transform: translateY(18px) scale(.9); } }
+  @keyframes flutuar { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
+  .hero-foto .assina-foto { animation: chip-entra .8s cubic-bezier(.2, .7, .2, 1) 1.3s both; }
+
+  /* Assinatura se escrevendo */
+  .assinatura { display: inline-block; }
+  .hero-foto .assinatura, .retrato .cracha .assinatura, .cta .assinatura, .citacao .assinatura, .rodape .assinatura, .login-lado .assinatura, .analise-assinatura .assinatura {
+    clip-path: inset(0 100% 0 0); transition: clip-path 1.8s cubic-bezier(.6, .1, .3, 1) .2s;
+  }
+  .hero-foto .assinatura { animation: escrever 2s cubic-bezier(.6, .1, .3, 1) 1.6s forwards; transition: none; }
+  .assinatura.escrita { clip-path: inset(0 0 0 0) !important; }
+  @keyframes escrever { to { clip-path: inset(0 0 0 0); } }
+
+  /* Rótulos: traço dourado crescendo */
+  .rotulo::before, .secao-titulo .rotulo::after { transform: scaleX(0); transition: transform .9s ease .3s; }
+  .rotulo::before { transform-origin: right; }
+  .secao-titulo .rotulo::after { transform-origin: left; }
+  .visivel .rotulo::before, .visivel .rotulo::after, .rotulo.visivel::before, .rotulo.visivel::after, .topo-pagina .rotulo::before { transform: scaleX(1); }
+
+  /* Topo das páginas internas */
+  .topo-pagina .migalhas, .topo-pagina h1, .topo-pagina p { animation: sobe .8s cubic-bezier(.2, .7, .2, 1) both; }
+  .topo-pagina h1 { animation-delay: .1s; }
+  .topo-pagina p { animation-delay: .2s; }
+
+  /* Cartões: sobem e o ícone dá um pulinho */
+  .cartao .ic, .valor-item .ic, .selos .ic, .catalogo-cab .ic { transition: transform .4s cubic-bezier(.3, 1.6, .5, 1), background .3s; }
+  .cartao:hover .ic, .valor-item:hover .ic, .selos > div:hover .ic { transform: translateY(-4px) rotate(-6deg) scale(1.08); }
+  .valor-item, .dor, .passo, .servico-card { transition: transform .3s ease, box-shadow .3s ease, border-color .3s; }
+  .valor-item:hover, .dor:hover, .passo:hover, .servico-card:hover { transform: translateY(-4px); box-shadow: var(--sombra-forte); }
+  .dor:hover .icone-svg { animation: balanca .5s ease; }
+  @keyframes balanca { 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
+  .servico-foto img { transition: transform .8s ease; }
+  .servico-card:hover .servico-foto img { transform: scale(1.06); }
+  .servico-card.destaque .etiqueta { animation: pulso-suave 2.6s ease-in-out infinite; }
+  @keyframes pulso-suave { 50% { box-shadow: 0 0 0 6px rgba(201, 162, 126, .18); } }
+
+  /* Passos: número e linha que se desenha */
+  .passo::after { content: ""; position: absolute; left: 24px; right: 24px; bottom: 0; height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--rosa), var(--champanhe)); transform: scaleX(0); transform-origin: left; transition: transform 1s ease calc(var(--i, 0) * 180ms + .3s); }
+  .passo.visivel::after { transform: scaleX(1); }
+  .passo::before { transition: transform .4s ease; display: inline-block; }
+  .passo:hover::before { transform: scale(1.15) rotate(-4deg); }
+
+  /* Fotos da Milena nas seções */
+  .retrato .moldura img { transition: transform 1.2s ease; }
+  .retrato:hover .moldura img { transform: scale(1.04); }
+  .retrato::before { transition: transform 1.2s ease; }
+  .retrato.visivel::before { animation: moldura-entra 1.2s ease .3s both; }
+  .logo-foto { transition: transform .5s cubic-bezier(.3, 1.6, .5, 1); }
+  .logo:hover .logo-foto { transform: rotate(-8deg) scale(1.06); }
+
+  /* Botões: brilho passando e toque com onda */
+  .btn { position: relative; overflow: hidden; isolation: isolate; }
+  .btn-primario::after { content: ""; position: absolute; top: 0; left: -80%; width: 50%; height: 100%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .35), transparent); transform: skewX(-20deg); z-index: -1; transition: left .7s ease; }
+  .btn-primario:hover::after { left: 130%; }
+  .onda { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, .45); transform: scale(0); animation: onda .6s ease-out forwards; pointer-events: none; }
+  .btn-contorno-rosa .onda, .chip-filtro .onda { background: rgba(196, 111, 135, .25); }
+  @keyframes onda { to { transform: scale(2.6); opacity: 0; } }
+
+  /* WhatsApp flutuante: ondas chamando atenção */
+  .whats-flutuante { animation: chip-entra .6s ease 1.5s both; }
+  .whats-flutuante::before, .whats-flutuante::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--whats); animation: anel 2.8s ease-out infinite; }
+  .whats-flutuante::after { animation-delay: 1.4s; }
+  @keyframes anel { from { transform: scale(1); opacity: .7; } to { transform: scale(1.7); opacity: 0; } }
+
+  /* Contador da solicitação pulando quando muda */
+  .contador.pulou { animation: pular .5s cubic-bezier(.3, 1.8, .5, 1); }
+  @keyframes pular { 40% { transform: scale(1.5); } }
+  .btn-adicionado .icone-svg { animation: check-entra .4s cubic-bezier(.3, 1.8, .5, 1); }
+  @keyframes check-entra { from { transform: scale(0) rotate(-45deg); } }
+
+  /* Dúvidas abrindo com suavidade */
+  .faq details { transition: box-shadow .3s, border-color .3s; }
+  .faq details:hover { border-color: #f0c9d3; }
+  .faq details[open] { box-shadow: var(--sombra); }
+  .faq details[open] > p { animation: sobe .45s ease both; }
+
+  /* Filtro do catálogo e seções aparecendo */
+  .catalogo-cat:not([hidden]) { animation: sobe .6s cubic-bezier(.2, .7, .2, 1) both; }
+  .chip-filtro { position: relative; overflow: hidden; transition: background .25s, color .25s, border-color .25s, transform .2s; }
+  .chip-filtro:active { transform: scale(.96); }
+
+  /* Gaveta, modais e chat */
+  .modal-fundo, .chat-fundo { animation: pagina-entra .25s ease both; }
+  .modal { animation: modal-entra .35s cubic-bezier(.2, .8, .2, 1) both; }
+  @keyframes modal-entra { from { opacity: 0; transform: translateY(24px) scale(.97); } }
+  .gaveta-lista li { animation: sobe .4s ease both; }
+  .gaveta-ok .icone-svg.grande { animation: check-entra .6s cubic-bezier(.3, 1.8, .5, 1) both; }
+  .chat-msg { animation: msg-entra .3s cubic-bezier(.2, .8, .2, 1) both; }
+  .chat-msg.minha { transform-origin: bottom right; }
+  .chat-msg.dele { transform-origin: bottom left; }
+  @keyframes msg-entra { from { opacity: 0; transform: scale(.85) translateY(8px); } }
+  .selo-chat, .selo-msg { animation: pular .5s cubic-bezier(.3, 1.8, .5, 1); }
+  .pedido-cartao { transition: box-shadow .3s, transform .3s; }
+  .pedido-cartao:hover { box-shadow: var(--sombra-forte); }
+  .progresso li.atual span { animation: pulso-rosa 2s ease-in-out infinite; }
+  @keyframes pulso-rosa { 50% { box-shadow: 0 0 0 7px rgba(196, 111, 135, .18); } }
+
+  /* Selos da faixa */
+  .selos > div { transition: transform .3s; }
+}
+
+/* Barra de progresso da leitura e cabeçalho que encolhe ao rolar */
+.barra-leitura { position: fixed; top: 0; left: 0; height: 3px; width: 100%; transform-origin: left; transform: scaleX(0); background: linear-gradient(90deg, var(--rosa), var(--champanhe)); z-index: 70; pointer-events: none; }
+/* (só visual: a altura do cabeçalho não muda, para a página não "pular") */
+.cabecalho { transition: box-shadow .3s ease, background .3s ease; }
+.cabecalho.rolou { box-shadow: 0 8px 30px rgba(122, 64, 86, .12); background: rgba(255, 253, 252, .9); }
+.cabecalho .logo-foto { transition: transform .4s cubic-bezier(.3, 1.6, .5, 1); }
+.cabecalho.rolou .logo-foto { transform: scale(.86); }
+
 /* ---------- Responsivo ---------- */
 @media (max-width: 1100px) {
   .menu a { padding: 10px 9px; font-size: 0.88rem; }
