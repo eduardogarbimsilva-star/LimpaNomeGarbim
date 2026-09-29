@@ -160,3 +160,30 @@ troque o endereço no `og:image` das páginas.
 Cliente e equipe podem mandar fotos (opcional) na conversa: documentos, comprovantes, prints. No banco, elas ficam
 na pasta **privada** `chat`, separada por pedido: só o cliente do pedido e a equipe conseguem ver, por links que
 expiram. Rode o `setup.sql` atualizado para criar essa pasta.
+
+## Assistente virtual com IA
+
+Botão **“Dúvidas? Pergunte à assistente”** no canto da tela (no celular, a bolinha com a foto da Milena). Ela tira
+dúvidas sobre nome sujo, Bacen, score, prazos e os serviços, e termina com botões para o próximo passo
+(Diagnóstico, Serviços, WhatsApp da Milena, Minha conta). Ela se apresenta como IA, não promete resultados, não pede
+CPF nem senhas e passa para a Milena quando o caso pede.
+
+**Dois modos:**
+- **Modo IA** (quando a função estiver ligada): respostas do **Claude Opus 5.5** (Anthropic), escritas em tempo real.
+  O conhecimento vem do próprio site — serviços, preços, dúvidas e contatos editados no painel — atualizado a cada 5 min.
+- **Modo básico** (hoje, sem banco): responde com as dúvidas frequentes e os serviços do site, sem custo.
+
+**Ligar a IA (depois do Supabase):**
+1. Crie uma chave em <https://console.anthropic.com> (**API Keys**) e coloque créditos na conta (a cobrança é por uso).
+2. No Supabase: **Edge Functions → Deploy a new function**, nome `assistente`, cole o conteúdo de
+   [`supabase/functions/assistente/index.ts`](supabase/functions/assistente/index.ts) e publique.
+3. **Edge Functions → Secrets**: crie `ANTHROPIC_API_KEY` com a sua chave. **Nunca** coloque essa chave no site.
+4. Com domínio próprio, crie também o secret `ORIGENS_PERMITIDAS` com o endereço do site (ex.: `https://limpanomegarbim.com.br`).
+5. Pronto: o site encontra a função sozinho pelo `supabase.url` do `config.js`.
+
+**Custos e proteções:** cada visitante pode mandar até 40 mensagens a cada 10 minutos; o histórico enviado é limitado
+às últimas 20 mensagens; o conhecimento fixo usa cache para ficar mais barato. Se a IA recusar um assunto, a API tenta
+automaticamente outro modelo recomendado; se tudo falhar, a assistente oferece o WhatsApp.
+
+**Para melhorar com o tempo:** as regras de conversa estão em `INSTRUCOES`, no começo da função. É só ajustar o texto
+(tom, o que pode ou não dizer) e publicar de novo.

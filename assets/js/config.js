@@ -24,6 +24,9 @@ window.SITE_CONFIG = {
     url: "",       // ex.: "https://SEU-PROJETO.supabase.co"
     anonKey: ""    // chave pública (anon / publishable). NUNCA coloque aqui a chave secreta (service_role).
   },
+  // Assistente virtual com IA. Vazio = usa a função "assistente" do próprio Supabase (supabase/functions/assistente).
+  // Sem Supabase, a assistente funciona em "modo básico" (responde com as dúvidas e serviços do site).
+  assistente: { endpoint: "" },
   // Quantos dígitos tem o código do e-mail (Supabase: Authentication → Email → "Email OTP Length").
   tamanhoCodigo: 8
 };
