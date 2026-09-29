@@ -405,14 +405,65 @@
     });
   }
 
+  // Palavra girando no topo ("Especialista em ...")
+  const giro = $(".rotativo-palavras");
+  if (giro) {
+    const palavras = $$("b", giro);
+    let i = 0;
+    setTimeout(() => setInterval(() => {
+      const atual = palavras[i]; i = (i + 1) % palavras.length;
+      atual.classList.remove("ativa"); atual.classList.add("saindo");
+      setTimeout(() => atual.classList.remove("saindo"), 650);
+      palavras[i].classList.add("ativa");
+    }, 2600), document.body.classList.contains("com-abertura") ? 2600 : 600);
+  }
+
+  // Cartão "Seu pedido" do topo passando pelas etapas
+  const etapas = $("[data-etapas]");
+  if (etapas) {
+    const itens = $$("li", etapas);
+    let e = 0;
+    setInterval(() => {
+      e = (e + 1) % itens.length;
+      itens.forEach((li, k) => { li.classList.toggle("ativa", k === e); li.classList.toggle("feita", k < e); });
+    }, 1800);
+  }
+
+  // Cartão do chat do topo: "digitando..." e depois a mensagem
+  const chipChat = $(".chip-chat");
+  if (chipChat) {
+    const ciclo = () => { chipChat.classList.remove("escreveu"); setTimeout(() => chipChat.classList.add("escreveu"), 2200); };
+    setTimeout(() => { ciclo(); setInterval(ciclo, 7000); }, document.body.classList.contains("com-abertura") ? 3200 : 1200);
+  }
+
+  // Brilho que segue o mouse dentro dos cartões
+  document.addEventListener("pointermove", (ev) => {
+    const c = ev.target.closest && ev.target.closest(".cartao, .servico-card, .valor-item");
+    if (!c) return;
+    const r = c.getBoundingClientRect();
+    c.style.setProperty("--mx", (ev.clientX - r.left) + "px");
+    c.style.setProperty("--my", (ev.clientY - r.top) + "px");
+  }, { passive: true });
+
+  // Botão voltar ao topo
+  const botaoTopo = document.createElement("button");
+  botaoTopo.type = "button"; botaoTopo.className = "voltar-topo"; botaoTopo.setAttribute("aria-label", "Voltar ao topo");
+  botaoTopo.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+  botaoTopo.addEventListener("click", () => window.scrollTo({ top: 0, behavior: menosMovimento ? "auto" : "smooth" }));
+  document.body.appendChild(botaoTopo);
+  window.addEventListener("scroll", () => botaoTopo.classList.toggle("mostrar", window.scrollY > 700), { passive: true });
+
   let obsRevelar = null;
   function observarRevelar() {
     escalonar();
-    const itens = $$(".revelar:not(.visivel), .assinatura:not(.escrita), .rotulo:not(.visivel)").filter((el) => !el.closest(".hero-foto, .abertura") || el.classList.contains("hero-foto"));
-    if (!("IntersectionObserver" in window)) { itens.forEach((el) => el.classList.add("visivel", "escrita")); return; }
+    // a assinatura começa recortada (invisível para o navegador), então observamos o bloco em volta dela
+    const assinaturas = $$(".assinatura:not(.escrita)").filter((el) => !el.closest(".hero-foto, .abertura")).map((el) => { el.parentElement.dataset.temAssinatura = "1"; return el.parentElement; });
+    const itens = $$(".revelar:not(.visivel), .rotulo:not(.visivel), .flutuantes-titulo:not(.visivel)").filter((el) => !el.closest(".hero-foto, .abertura") || el.classList.contains("hero-foto")).concat(assinaturas);
+    if (!("IntersectionObserver" in window)) { itens.forEach((el) => el.classList.add("visivel")); $$(".assinatura").forEach((x) => x.classList.add("escrita")); return; }
     obsRevelar = obsRevelar || new IntersectionObserver((l) => l.forEach((i) => {
       if (!i.isIntersecting) return;
-      i.target.classList.add(i.target.classList.contains("assinatura") ? "escrita" : "visivel");
+      if (i.target.dataset.temAssinatura) $$(".assinatura", i.target).forEach((x) => x.classList.add("escrita"));
+      if (!i.target.dataset.temAssinatura || i.target.classList.contains("revelar")) i.target.classList.add("visivel");
       obsRevelar.unobserve(i.target);
     }), { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
     itens.forEach((el) => obsRevelar.observe(el));
