@@ -3,8 +3,7 @@
 -- Cole TUDO em: Supabase > SQL Editor > New query > Run
 -- Pode rodar de novo sem problema (não apaga dados).
 --
--- Depois de rodar, libere o seu e-mail como administradora
--- (última linha deste arquivo).
+-- A última linha libera millenagarbim@gmail.com como administradora do painel.
 -- =========================================================
 
 create extension if not exists pgcrypto;
@@ -333,6 +332,7 @@ insert into public.servicos (id, categoria, ordem, ativo, dados) values ('empres
 notify pgrst, 'reload schema';
 
 -- =========================================================
--- >>> TROQUE PELO SEU E-MAIL E RODE ESTA LINHA (tire os dois traços do começo) <<<
--- insert into public.equipe (email, papel) values ('seu-email@exemplo.com', 'admin') on conflict (email) do update set papel = 'admin';
+-- Administradora do painel: Milena Garbim.
+-- Para liberar outra pessoa, use a aba Equipe do painel (ou rode esta linha com outro e-mail).
+insert into public.equipe (email, papel) values ('millenagarbim@gmail.com', 'admin') on conflict (email) do update set papel = 'admin';
 -- =========================================================

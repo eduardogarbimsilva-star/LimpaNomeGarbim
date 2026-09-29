@@ -75,11 +75,8 @@ e-mail que entrar no painel vira administrador. Serve para testar e mostrar. **N
 2. **SQL Editor → New query**: cole todo o [`supabase/setup.sql`](supabase/setup.sql) e clique em **Run**.
    Isso cria tabelas, regras de segurança (cada cliente só vê os próprios dados), funções, a pasta de fotos e o
    catálogo inicial. Pode rodar de novo quando o arquivo for atualizado — não apaga nada.
-3. Ainda no SQL Editor, libere o seu e-mail como administradora (troque o e-mail e rode):
-   ```sql
-   insert into public.equipe (email, papel) values ('seu-email@exemplo.com', 'admin')
-   on conflict (email) do update set papel = 'admin';
-   ```
+3. O próprio `setup.sql` já libera **millenagarbim@gmail.com** como administradora do painel. Outras pessoas
+   são liberadas depois, pela aba **Equipe**.
 4. **Authentication → Sign In / Providers → Email**: deixe o e-mail habilitado.
 5. **Authentication → Emails → Templates**: em **Confirm signup** e em **Magic Link**, cole o conteúdo de
    [`supabase/emails/codigo-acesso.html`](supabase/emails/codigo-acesso.html) (assunto sugerido:
