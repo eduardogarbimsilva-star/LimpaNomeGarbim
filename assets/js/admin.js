@@ -59,7 +59,7 @@
       const b = e.target.closest("[data-excluir-pedido]");
       if (!b) return;
       const ped = pedidos.find((x) => x.id === b.dataset.excluirPedido);
-      if (!confirm(`Excluir o pedido ${ped.numero}? Isso não pode ser desfeito.`)) return;
+      if (!(await MG.confirmar(`Excluir o pedido ${ped.numero}? Isso não pode ser desfeito.`))) return;
       await comBotao(b, async () => { await A.excluirPedido(ped.id); avisar("Pedido excluído."); await recarregarPedidos(); });
     });
     await recarregarPedidos();
@@ -307,11 +307,11 @@
     if (acao === "novo-servico") return formServico({ categoria: catId, ativo: true, aPartir: true, itens: [], ordem: CAT.servicos.filter((s) => s.categoria === catId).length + 1 });
     if (acao === "editar-serv") return formServico(serv);
     if (acao === "excluir-cat") {
-      if (!confirm(`Excluir a categoria "${cat.nome}"?`)) return;
+      if (!(await MG.confirmar(`Excluir a categoria "${cat.nome}"?`))) return;
       return comBotao(b, async () => { await A.excluirCategoria(catId); avisar("Categoria excluída."); await recarregarCatalogo(); });
     }
     if (acao === "excluir-serv") {
-      if (!confirm(`Excluir o serviço "${serv.nome}"? Pedidos antigos continuam com o nome dele.`)) return;
+      if (!(await MG.confirmar(`Excluir o serviço "${serv.nome}"? Pedidos antigos continuam com o nome dele.`))) return;
       return comBotao(b, async () => { await A.excluirServico(serv.id); avisar("Serviço excluído."); await recarregarCatalogo(); });
     }
     if (acao === "alternar-serv") return comBotao(b, async () => { await A.salvarServico(Object.assign({}, serv, { ativo: !serv.ativo })); await recarregarCatalogo(); });
@@ -344,7 +344,7 @@
 
   function formServico(s) {
     const novo = !s.id;
-    let foto = s.foto || "";
+    let fotos = (Array.isArray(s.fotos) && s.fotos.length ? s.fotos : s.foto ? [s.foto] : []).slice(0, 6);
     const m = modal(`<h2>${novo ? "Novo serviço" : "Editar serviço"}</h2>
       <form class="form-modal" novalidate>
         <div class="campos">
@@ -356,10 +356,8 @@
           <label class="campo campo-cheio"><span>O que está incluso <small>(um por linha)</small></span><textarea name="itens" rows="3" maxlength="1000">${esc((s.itens || []).join("\n"))}</textarea></label>
           <label class="campo"><span>Preço em R$ <small>(vazio = “Sob consulta”)</small></span><input name="preco" type="number" min="0" step="0.01" inputmode="decimal" value="${typeof s.preco === "number" ? s.preco : ""}"></label>
           <label class="aceite"><input type="checkbox" name="aPartir"${s.aPartir !== false ? " checked" : ""}><span>Mostrar “a partir de” antes do preço</span></label>
-          <div class="campo campo-cheio"><span class="rotulo-campo">Foto <small>(opcional)</small></span>
-            <div class="foto-campo"><div class="foto-previa">${foto ? `<img src="${esc(foto)}" alt="">` : icone("foto")}</div>
-              <div><label class="btn btn-contorno-rosa">${icone("foto")}Escolher foto<input type="file" accept="image/*" name="arquivo" hidden></label>
-              <button type="button" class="btn-texto" data-tirar-foto${foto ? "" : " hidden"}>Remover foto</button></div></div></div>
+          <div class="campo campo-cheio"><span class="rotulo-campo">Fotos <small>(opcional · até 6 · a primeira é a capa do cartão)</small></span>
+            <div class="galeria-editar" data-galeria></div></div>
           <label class="campo"><span>Ordem na categoria</span><input name="ordem" type="number" min="0" max="999" value="${esc(s.ordem ?? 0)}"></label>
           <div class="campo"><label class="aceite"><input type="checkbox" name="destaque"${s.destaque ? " checked" : ""}><span>Destaque (“Mais procurado”)</span></label>
           <label class="aceite"><input type="checkbox" name="ativo"${s.ativo !== false ? " checked" : ""}><span>Visível no site</span></label></div>
@@ -368,21 +366,38 @@
       </form>`);
     m.classList.add("modal-largo");
     const f = $("form", m);
-    f.arquivo.addEventListener("change", async () => {
-      const arq = f.arquivo.files[0];
-      if (!arq) return;
-      $(".foto-previa", m).innerHTML = `<span class="carregando">Enviando...</span>`;
-      try { foto = await A.enviarFoto(arq, "servicos"); $(".foto-previa", m).innerHTML = `<img src="${esc(foto)}" alt="">`; $("[data-tirar-foto]", m).hidden = false; }
-      catch (e) { avisar(e.message); $(".foto-previa", m).innerHTML = foto ? `<img src="${esc(foto)}" alt="">` : icone("foto"); }
+    const gal = $("[data-galeria]", m);
+    let enviando = 0;
+    function desenharGaleria() {
+      gal.innerHTML = fotos.map((u, i) => `<figure class="${i === 0 ? "capa" : ""}"><img src="${esc(u)}" alt="">
+          ${i === 0 ? `<span class="selo-capa">Capa</span>` : `<button type="button" class="galeria-acao" data-capa="${i}" title="Usar como capa">★</button>`}
+          <button type="button" class="galeria-acao tirar" data-tirar="${i}" title="Remover foto" aria-label="Remover foto">×</button></figure>`).join("")
+        + Array.from({ length: enviando }, () => `<figure class="carregando-foto"><span>Enviando...</span></figure>`).join("")
+        + (fotos.length + enviando < 6 ? `<label class="galeria-mais">${icone("mais")}<span>${fotos.length ? "Adicionar" : "Adicionar fotos"}</span><input type="file" accept="image/*" multiple hidden></label>` : "");
+      const inp = $("input[type=file]", gal);
+      if (inp) inp.addEventListener("change", async () => {
+        const arqs = Array.from(inp.files).slice(0, 6 - fotos.length);
+        enviando += arqs.length; desenharGaleria();
+        for (const arq of arqs) {
+          try { fotos.push(await A.enviarFoto(arq, "servicos")); } catch (e) { avisar(e.message); }
+          enviando--; desenharGaleria();
+        }
+      });
+    }
+    gal.addEventListener("click", (e) => {
+      const t = e.target.closest("[data-tirar]"), c = e.target.closest("[data-capa]");
+      if (t) { fotos.splice(+t.dataset.tirar, 1); desenharGaleria(); }
+      if (c) { const [x] = fotos.splice(+c.dataset.capa, 1); fotos.unshift(x); desenharGaleria(); }
     });
-    $("[data-tirar-foto]", m).addEventListener("click", (e) => { foto = ""; $(".foto-previa", m).innerHTML = icone("foto"); e.target.hidden = true; });
+    desenharGaleria();
     f.addEventListener("submit", (e) => {
       e.preventDefault();
       comBotao($("button[type=submit]", f), async () => {
+        if (enviando) throw new Error("Espere as fotos terminarem de enviar.");
         await A.salvarServico(Object.assign({}, s, {
           nome: f.nome.value, categoria: f.categoria.value, prazo: f.prazo.value.trim(), resumo: f.resumo.value.trim(), descricao: f.descricao.value.trim(),
           itens: f.itens.value.split("\n").map((t) => t.trim()).filter(Boolean).slice(0, 12),
-          preco: f.preco.value === "" ? null : +f.preco.value, aPartir: f.aPartir.checked, foto,
+          preco: f.preco.value === "" ? null : +f.preco.value, aPartir: f.aPartir.checked, fotos: fotos.slice(), foto: fotos[0] || "",
           ordem: +f.ordem.value || 0, destaque: f.destaque.checked, ativo: f.ativo.checked
         }));
         m.closest(".modal-fundo").remove();
@@ -485,7 +500,7 @@
       if (e.target.closest("[data-mover]")) { ler(); const j = i + +e.target.closest("[data-mover]").dataset.mover; [lista[i], lista[j]] = [lista[j], lista[i]]; desenhar(); }
       else if (e.target.closest("[data-tirar]")) { ler(); lista.splice(i, 1); desenhar(); }
       else if (e.target.closest("[data-nova]")) { ler(); lista.push({ p: "", r: "" }); desenhar(); const l = $$(".adm-faq [name=p]", p).pop(); l && l.focus(); }
-      else if (e.target.closest("[data-padrao]")) { if (confirm("Voltar às perguntas originais? As suas alterações serão perdidas.")) { lista = PADRAO.faq.map((x) => Object.assign({}, x)); desenhar(); } }
+      else if (e.target.closest("[data-padrao]")) { MG.confirmar("Voltar às perguntas originais? As suas alterações serão perdidas.", { titulo: "Voltar ao original?", botao: "Sim, voltar" }).then((ok) => { if (ok) { lista = PADRAO.faq.map((x) => Object.assign({}, x)); desenhar(); } }); }
     });
     p.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -576,7 +591,7 @@
       const b = e.target.closest("[data-remover-membro]");
       if (!b) return;
       const email = b.closest("tr").dataset.email;
-      if (!confirm(`Remover ${email} da equipe?`)) return;
+      if (!(await MG.confirmar(`Remover ${email} da equipe?`, { botao: "Sim, remover" }))) return;
       try { await A.removerMembro(email); avisar("Removido da equipe."); await desenhar(); } catch (err) { avisar(err.message); }
     });
     p.addEventListener("submit", (e) => {

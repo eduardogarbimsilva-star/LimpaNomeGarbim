@@ -296,22 +296,32 @@ create table if not exists public.mensagens (
   pedido_id uuid not null references public.pedidos (id) on delete cascade,
   autor text not null check (autor in ('cliente', 'equipe')),
   nome text,
-  texto text not null check (length(texto) between 1 and 2000),
+  texto text not null default '' check (length(texto) <= 2000),
+  anexo text,                 -- foto enviada no chat (caminho na pasta privada "chat")
   criado_em timestamptz not null default now(),
   lida_em timestamptz
 );
+-- Mensagem com foto: o texto passa a ser opcional
+alter table public.mensagens add column if not exists anexo text;
+alter table public.mensagens alter column texto set default '';
+alter table public.mensagens drop constraint if exists mensagens_texto_check;
+alter table public.mensagens drop constraint if exists mensagens_conteudo;
+alter table public.mensagens add constraint mensagens_conteudo check (length(texto) <= 2000 and (texto <> '' or anexo is not null));
 create index if not exists mensagens_pedido on public.mensagens (pedido_id, criado_em);
 alter table public.mensagens enable row level security;
 drop policy if exists "chat: cliente do pedido e equipe" on public.mensagens;
 create policy "chat: cliente do pedido e equipe" on public.mensagens for select to authenticated
   using (public.eh_equipe() or exists (select 1 from public.pedidos p where p.id = pedido_id and p.cliente_id = auth.uid()));
 
--- p_como: 'cliente' (dono do pedido) ou 'equipe'
-create or replace function public.enviar_mensagem(p_pedido uuid, p_texto text, p_como text default 'cliente')
+-- p_como: 'cliente' (dono do pedido) ou 'equipe'; p_anexo: foto já enviada para a pasta "chat/<pedido>/..."
+drop function if exists public.enviar_mensagem(uuid, text, text);
+create or replace function public.enviar_mensagem(p_pedido uuid, p_texto text, p_como text default 'cliente', p_anexo text default null)
 returns jsonb language plpgsql security definer set search_path = public as $$
-declare v_p public.pedidos; v_texto text := left(nullif(trim(p_texto), ''), 2000); v_nome text; r public.mensagens;
+declare v_p public.pedidos; v_texto text := coalesce(left(trim(p_texto), 2000), ''); v_nome text; r public.mensagens;
 begin
-  if v_texto is null then raise exception 'Escreva a mensagem.'; end if;
+  if v_texto = '' and p_anexo is null then raise exception 'Escreva a mensagem.'; end if;
+  if p_anexo is not null and (p_anexo not like p_pedido::text || '/%' or p_anexo ~ '\.\.' or length(p_anexo) > 200) then
+    raise exception 'Foto inválida.'; end if;
   select * into v_p from public.pedidos where id = p_pedido;
   if not found then raise exception 'Pedido não encontrado.'; end if;
   if p_como = 'equipe' then
@@ -321,7 +331,7 @@ begin
     if v_p.cliente_id is distinct from auth.uid() then raise exception 'Pedido não encontrado.'; end if;
   else raise exception 'Remetente inválido.'; end if;
   if v_p.confirmado_em is null or v_p.status = 'cancelado' then raise exception 'CHAT_FECHADO'; end if;
-  insert into public.mensagens (pedido_id, autor, nome, texto) values (p_pedido, p_como, v_nome, v_texto) returning * into r;
+  insert into public.mensagens (pedido_id, autor, nome, texto, anexo) values (p_pedido, p_como, v_nome, v_texto, p_anexo) returning * into r;
   update public.pedidos set atualizado_em = now() where id = p_pedido;
   return to_jsonb(r);
 end $$;
@@ -334,6 +344,25 @@ begin
   if p_como = 'cliente' and not exists (select 1 from public.pedidos where id = p_pedido and cliente_id = auth.uid()) then return; end if;
   update public.mensagens set lida_em = now() where pedido_id = p_pedido and lida_em is null and autor <> p_como;
 end $$;
+
+-- Fotos do chat: pasta PRIVADA "chat", organizada por pedido (chat/<id do pedido>/foto.jpg).
+-- Só o cliente do pedido e a equipe veem; enviar só com o chat aberto.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('chat', 'chat', false, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update set public = false;
+create or replace function public.pode_ver_foto_chat(p_nome text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select public.eh_equipe() or exists (select 1 from public.pedidos p where p.id::text = split_part(p_nome, '/', 1) and p.cliente_id = auth.uid())
+$$;
+create or replace function public.pode_enviar_foto_chat(p_nome text) returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.pedidos p where p.id::text = split_part(p_nome, '/', 1)
+    and p.confirmado_em is not null and p.status <> 'cancelado' and (p.cliente_id = auth.uid() or public.eh_equipe()))
+$$;
+drop policy if exists "fotos do chat: ver" on storage.objects;
+create policy "fotos do chat: ver" on storage.objects for select to authenticated using (bucket_id = 'chat' and public.pode_ver_foto_chat(name));
+drop policy if exists "fotos do chat: enviar" on storage.objects;
+create policy "fotos do chat: enviar" on storage.objects for insert to authenticated with check (bucket_id = 'chat' and public.pode_enviar_foto_chat(name));
 
 -- Mensagens chegam na hora (Supabase Realtime)
 do $$ begin
@@ -367,9 +396,10 @@ grant select, delete on public.pedidos to authenticated;
 grant select, insert, update, delete on public.equipe to authenticated;
 grant select on public.mensagens to authenticated;
 revoke execute on function public.criar_pedido(jsonb, text), public.atualizar_pedido(uuid, text, text),
-  public.enviar_mensagem(uuid, text, text), public.marcar_lidas(uuid, text) from public, anon;
+  public.enviar_mensagem(uuid, text, text, text), public.marcar_lidas(uuid, text) from public, anon;
 grant execute on function public.criar_pedido(jsonb, text), public.atualizar_pedido(uuid, text, text),
-  public.enviar_mensagem(uuid, text, text), public.marcar_lidas(uuid, text),
+  public.enviar_mensagem(uuid, text, text, text), public.marcar_lidas(uuid, text),
+  public.pode_ver_foto_chat(text), public.pode_enviar_foto_chat(text),
   public.meu_papel(), public.meu_nome_equipe(), public.eh_equipe(), public.eh_admin() to authenticated;
 grant execute on function public.email_ja_cadastrado(text) to anon, authenticated;
 

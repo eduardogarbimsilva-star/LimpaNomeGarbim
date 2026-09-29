@@ -22,6 +22,16 @@
     const x = new Date(d);
     return x.toDateString() === new Date().toDateString() ? hora(d) : dia(d) === "Ontem" ? "Ontem" : x.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
   }
+  const RAPIDAS = {
+    cliente: ["Olá, Milena! 😊", "Enviei os documentos", "Qual é o prazo?", "Tenho uma dúvida", "Obrigada! 💕"],
+    equipe: ["Olá! Recebi seu pedido 😊", "Pode me enviar uma foto do documento (frente e verso)?", "Já estou analisando e te retorno em breve.", "Consegui um ótimo acordo! Posso te explicar?", "Tudo certo por aqui ✅"]
+  };
+  const EMOJIS = ["😊", "🙏", "💕", "🌸", "✅", "👍", "👏", "🎉", "📄", "📷", "⏳", "💬"];
+  const CLIPE = '<svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/></svg>';
+  function ampliarFoto(url) {
+    const m = MG.modal(`<img class="foto-ampliada" src="${esc(url)}" alt="Foto enviada no chat"><a class="btn btn-contorno-rosa" href="${esc(url)}" target="_blank" rel="noopener" download>Abrir em tamanho real</a>`);
+    m.classList.add("modal-foto-chat");
+  }
   const avatar = (o) => (o.foto ? `<img src="${esc(o.foto)}" alt="" width="44" height="44">` : `<span class="chat-avatar">${esc(String(o.titulo || "?").charAt(0).toUpperCase())}</span>`);
 
   /**
@@ -39,7 +49,12 @@
         ${o.aoFechar ? `<button type="button" class="modal-fechar" data-chat-fechar aria-label="Fechar">×</button>` : ""}
       </header>
       <div class="chat-mensagens" aria-live="polite"><p class="vazio">Carregando conversa...</p></div>
-      ${aberto ? `<form class="chat-envio">
+      ${aberto ? `<div class="chat-rapidas" aria-label="Respostas rápidas">${RAPIDAS[como].map((t) => `<button type="button" data-rapida="${esc(t)}">${esc(t)}</button>`).join("")}</div>
+      <div class="chat-emojis" hidden>${EMOJIS.map((e) => `<button type="button" data-emoji="${e}">${e}</button>`).join("")}</div>
+      <div class="chat-previa" hidden><img alt=""><div><strong>Foto pronta para enviar</strong><small>Escreva uma legenda (opcional) e toque em enviar.</small></div><button type="button" class="modal-fechar" data-tirar-foto aria-label="Tirar foto">×</button></div>
+      <form class="chat-envio">
+        <label class="chat-anexar" title="Enviar foto (opcional)">${CLIPE}<input type="file" accept="image/*" hidden aria-label="Enviar foto"></label>
+        <button type="button" class="chat-emoji-botao" data-abrir-emojis aria-label="Emojis">😊</button>
         <textarea name="texto" rows="1" maxlength="2000" placeholder="Escreva sua mensagem..." aria-label="Mensagem"></textarea>
         <button type="submit" class="chat-enviar" aria-label="Enviar">${icone("enviar")}</button>
       </form>
@@ -65,11 +80,19 @@
         const nova = jaDesenhou && !vistas.has(m.id);
         return `${sep}<div class="chat-msg ${minha ? "minha" : "dele"}${nova ? " nova" : ""}">
           ${!minha ? `<span class="chat-quem">${esc(quem)}</span>` : ""}
-          <p>${esc(m.texto).replace(/\n/g, "<br>")}</p>
+          ${m.anexo ? `<button type="button" class="chat-foto" data-anexo="${esc(m.anexo)}" aria-label="Ver foto"><span class="chat-foto-carregando">${icone("foto")}</span></button>` : ""}
+          ${m.texto ? `<p>${esc(m.texto).replace(/\n/g, "<br>")}</p>` : ""}
           <span class="chat-hora">${esc(hora(m.criado_em))}${minha ? ` <span class="chat-lida${m.lida_em ? " sim" : ""}" title="${m.lida_em ? "Lida" : "Enviada"}">${m.lida_em ? "✓✓" : "✓"}</span>` : ""}</span>
         </div>`;
       }).join("") : `<div class="chat-inicio">${icone("chat", "icone-svg grande")}<p>${!aberto ? "Nenhuma mensagem nesta conversa." : como === "cliente" ? "Seu pedido foi confirmado! Mande sua mensagem para a Milena por aqui." : "Nenhuma mensagem ainda. Dê as boas-vindas ao cliente."}</p></div>`;
       lista.forEach((m) => vistas.add(m.id));
+      $$(".chat-foto[data-anexo]", caixa).forEach((b) => {
+        D.Chat.urlFoto(b.dataset.anexo).then((url) => {
+          const img = new Image();
+          img.alt = "Foto enviada"; img.onload = () => { const perto = caixa.scrollHeight - caixa.scrollTop - caixa.clientHeight < 260; b.innerHTML = ""; b.appendChild(img); b.dataset.url = url; if (perto) caixa.scrollTop = caixa.scrollHeight; };
+          img.src = url;
+        }).catch(() => { b.innerHTML = `<span class="chat-foto-carregando">Foto indisponível</span>`; });
+      });
       jaDesenhou = true;
       if (noFim || !caixa.dataset.rolou) { caixa.scrollTop = caixa.scrollHeight; caixa.dataset.rolou = "1"; }
     }
@@ -84,26 +107,49 @@
       } catch (e) { caixa.innerHTML = `<p class="vazio">${esc(e.message)}</p>`; }
     }
 
+    let fotoEscolhida = null;
+    const previa = $(".chat-previa", alvo), emojis = $(".chat-emojis", alvo);
+    function tirarFoto() { fotoEscolhida = null; if (previa) { previa.hidden = true; $("img", previa).removeAttribute("src"); } const inp = $(".chat-anexar input", alvo); if (inp) inp.value = ""; }
     if (form) {
+      $(".chat-anexar input", alvo).addEventListener("change", (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        if (!/^image\//.test(f.type)) { avisar("Escolha uma foto (JPG, PNG ou WEBP)."); return tirarFoto(); }
+        if (f.size > 15 * 1024 * 1024) { avisar("Foto muito grande (máx. 15 MB)."); return tirarFoto(); }
+        fotoEscolhida = f;
+        $("img", previa).src = URL.createObjectURL(f);
+        previa.hidden = false;
+        campo.focus({ preventScroll: true });
+      });
+      alvo.addEventListener("click", (e) => {
+        const r = e.target.closest("[data-rapida]");
+        if (r) { campo.value = r.dataset.rapida; campo.dispatchEvent(new Event("input")); campo.focus({ preventScroll: true }); return; }
+        if (e.target.closest("[data-abrir-emojis]")) { emojis.hidden = !emojis.hidden; return; }
+        const em = e.target.closest("[data-emoji]");
+        if (em) { const i = campo.selectionStart ?? campo.value.length; campo.value = campo.value.slice(0, i) + em.dataset.emoji + campo.value.slice(i); emojis.hidden = true; campo.focus({ preventScroll: true }); return; }
+        if (e.target.closest("[data-tirar-foto]")) tirarFoto();
+      });
       campo.addEventListener("input", () => { campo.style.height = "auto"; campo.style.height = Math.min(campo.scrollHeight, 140) + "px"; });
       campo.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); } });
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
         const texto = campo.value.trim();
-        if (!texto) return;
+        if (!texto && !fotoEscolhida) return;
         const b = $(".chat-enviar", form);
-        b.disabled = true;
+        b.disabled = true; b.classList.add("enviando");
         try {
-          await D.Chat.enviar(p.id, texto, como);
-          campo.value = ""; campo.style.height = "auto";
+          await D.Chat.enviar(p.id, texto, como, fotoEscolhida);
+          campo.value = ""; campo.style.height = "auto"; tirarFoto();
           caixa.dataset.rolou = "";
           await atualizar();
           if (o.aoMudar) o.aoMudar();
         } catch (err) { avisar(err.message); }
-        finally { b.disabled = false; campo.focus(); }
+        finally { b.disabled = false; b.classList.remove("enviando"); campo.focus({ preventScroll: true }); }
       });
     }
     alvo.addEventListener("click", (e) => {
+      const foto = e.target.closest(".chat-foto[data-url]");
+      if (foto) { ampliarFoto(foto.dataset.url); return; }
       if (e.target.closest("[data-chat-voltar]") && o.aoVoltar) o.aoVoltar();
       if (e.target.closest("[data-chat-fechar]") && o.aoFechar) o.aoFechar();
     });
@@ -162,7 +208,7 @@
         .sort((a, b) => (naoLidas[b.pedido.id] ? 1 : 0) - (naoLidas[a.pedido.id] ? 1 : 0) || String(ordem(b)).localeCompare(String(ordem(a))));
       lista.innerHTML = filtradas.length ? filtradas.map((c) => {
         const m = ultimas[c.pedido.id], n = naoLidas[c.pedido.id] || 0, fechada = !D.Chat.aberto(c.pedido);
-        const previa = m ? (m.autor === o.como ? "Você: " : "") + m.texto : fechada ? "Conversa encerrada" : "Nenhuma mensagem ainda";
+        const previa = m ? (m.autor === o.como ? "Você: " : "") + (m.texto || "📷 Foto") : fechada ? "Conversa encerrada" : "Nenhuma mensagem ainda";
         return `<li><button type="button" class="ce-item${n ? " nova" : ""}${atual === c.pedido.id ? " ativa" : ""}" data-conversa="${esc(c.pedido.id)}">
           ${avatar(c)}
           <span class="ce-texto"><strong>${esc(c.titulo)}</strong><small>${esc(c.subtitulo || "")}</small><em>${esc(previa.slice(0, 80))}</em></span>

@@ -136,3 +136,27 @@ empresa não é órgão de proteção ao crédito. Ao editar pelo painel, manten
 assessoria séria e evita problemas com o Código de Defesa do Consumidor. Depoimentos só devem ser publicados se
 forem reais e autorizados pelos clientes. As frases atribuídas à Milena são sugestões: troque pelas palavras dela
 em **Painel → Textos**.
+
+## Recursos inspirados em sites de referência
+
+| Referência | O que tem de marcante | Como foi aplicado aqui |
+|---|---|---|
+| **Serasa** (Limpa Nome) e **Nubank** | Ferramentas simples que dão uma resposta na hora | **Diagnóstico em 30 segundos**: 3 perguntas, serviço indicado, botão Solicitar, WhatsApp com o resumo e Compartilhar |
+| **Apple** | Frases grandes que “acendem” conforme a rolagem | **Manifesto**: “Dívida não define ninguém…” acendendo palavra por palavra (texto editável no painel) |
+| **Glossier / marcas de beleza no Instagram** | Selos redondos e giratórios, tom próximo e feminino | **Selo giratório** “Nome limpo • Crédito de volta • Diagnóstico grátis” no topo |
+| **Nubank / Natura** | Conteúdo educativo fácil de compartilhar e indicação entre amigas | **Dicas da Milena** (carrossel com botão Compartilhar em cada dica) e **Indique para uma amiga** (WhatsApp e copiar link) |
+| **Stripe** | Bordas com gradiente em movimento, acabamento “premium” | Borda animada no **serviço em destaque** e no **diagnóstico** |
+| **Apps (iFood, Mercado Livre, bancos)** | Atalhos fixos na parte de baixo da tela do celular | **Barra de atalhos no celular**: Diagnóstico, Serviços, Minha conta, WhatsApp |
+| **WhatsApp / Mercado Livre** | Conversa com lista, fotos e respostas rápidas | **Chat** com fotos (opcional), respostas rápidas, emojis e foto ampliada |
+| **Airbnb** | Galeria de fotos com setas e miniaturas | **Serviços com até 6 fotos** e galeria nos detalhes |
+| Sites premiados (Awwwards) | Transições entre páginas e botões “magnéticos” | Transição suave ao trocar de página e botões que seguem o mouse |
+
+**Prévia no WhatsApp/Instagram/Facebook:** ao mandar o link do site, aparece a imagem
+`assets/img/compartilhar.jpg` (1200×630) com a foto e a marca da Milena. Se o endereço do site mudar (domínio próprio),
+troque o endereço no `og:image` das páginas.
+
+## Fotos no chat
+
+Cliente e equipe podem mandar fotos (opcional) na conversa: documentos, comprovantes, prints. No banco, elas ficam
+na pasta **privada** `chat`, separada por pedido: só o cliente do pedido e a equipe conseguem ver, por links que
+expiram. Rode o `setup.sql` atualizado para criar essa pasta.

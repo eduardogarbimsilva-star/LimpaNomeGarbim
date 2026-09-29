@@ -249,6 +249,24 @@ window.PADRAO = {
    "valor": "Vamos olhar o seu caso juntos?",
    "longo": false
   },
+  "inicio.manifesto": {
+   "grupo": "Página inicial",
+   "rotulo": "Frase grande que acende ao rolar",
+   "valor": "Dívida não define ninguém. Com informação, calma e um plano feito para você, o seu nome volta a ser só seu.",
+   "longo": true
+  },
+  "inicio.indique.titulo": {
+   "grupo": "Página inicial",
+   "rotulo": "Indique — título",
+   "valor": "Conhece alguém que precisa limpar o nome?",
+   "longo": false
+  },
+  "inicio.indique.texto": {
+   "grupo": "Página inicial",
+   "rotulo": "Indique — texto",
+   "valor": "Mande este site para uma amiga ou alguém da família. Às vezes, tudo o que falta é a pessoa certa para ajudar.",
+   "longo": true
+  },
   "cta.texto": {
    "grupo": "Geral",
    "rotulo": "Chamada final — texto",

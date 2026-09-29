@@ -110,10 +110,11 @@
     </article>`;
   }
 
+  const fotosDe = (s) => (Array.isArray(s.fotos) && s.fotos.length ? s.fotos : s.foto ? [s.foto] : []);
   function cartaoServico(s) {
     const na = Solicitacao.tem(s.id);
     return `<article class="servico-card${s.destaque ? " destaque" : ""}" data-servico="${esc(s.id)}">
-      ${s.foto ? `<div class="servico-foto"><img src="${esc(s.foto)}" alt="" loading="lazy"></div>` : ""}
+      ${fotosDe(s).length ? `<button type="button" class="servico-foto" data-detalhes="${esc(s.id)}" aria-label="Ver fotos de ${esc(s.nome)}"><img src="${esc(fotosDe(s)[0])}" alt="" loading="lazy">${fotosDe(s).length > 1 ? `<span class="qtd-fotos">${icone("foto")}${fotosDe(s).length}</span>` : ""}</button>` : ""}
       <div class="servico-corpo">
         ${s.destaque ? `<span class="etiqueta">Mais procurado</span>` : ""}
         <h3>${esc(s.nome)}</h3>
@@ -122,7 +123,7 @@
         <div class="servico-rodape">
           <div>${textoPreco(s)}${s.prazo ? `<small class="prazo">${icone("relogio")}${esc(s.prazo)}</small>` : ""}</div>
           <div class="servico-botoes">
-            ${s.descricao ? `<button type="button" class="btn-texto" data-detalhes="${esc(s.id)}">Detalhes</button>` : ""}
+            ${s.descricao || fotosDe(s).length ? `<button type="button" class="btn-texto" data-detalhes="${esc(s.id)}">Detalhes</button>` : ""}
             <button type="button" class="btn ${na ? "btn-adicionado" : "btn-primario"}" data-adicionar="${esc(s.id)}">${na ? icone("check") + "Adicionado" : icone("mais") + "Solicitar"}</button>
           </div>
         </div>
@@ -176,12 +177,44 @@
     if (!s) return;
     const c = CAT.categorias.find((x) => x.id === s.categoria) || {};
     const m = modal(`<span class="rotulo">${esc(c.nome || "")}</span><h2>${esc(s.nome)}</h2>
-      ${s.foto ? `<img class="modal-foto" src="${esc(s.foto)}" alt="">` : ""}
+      ${galeria(fotosDe(s))}
       <p class="modal-resumo">${esc(s.resumo || "")}</p>
       <div class="modal-descricao">${fmt(s.descricao || "")}</div>
       ${(s.itens || []).length ? `<ul class="lista-check">${s.itens.map((t) => `<li>${icone("check")}<span>${esc(t)}</span></li>`).join("")}</ul>` : ""}
       <div class="servico-rodape">${textoPreco(s)}<button type="button" class="btn btn-primario" data-adicionar="${esc(s.id)}" data-fechar>${Solicitacao.tem(s.id) ? "Já está na solicitação" : "Adicionar à solicitação"}</button></div>`);
     m.classList.add("modal-servico");
+    iniciarGaleria(m);
+  }
+
+  /* Galeria de fotos do serviço (setas, miniaturas e arrastar) */
+  function galeria(fotos) {
+    if (!fotos.length) return "";
+    return `<div class="galeria" data-galeria-ver data-i="0">
+      <div class="galeria-palco">${fotos.map((u, i) => `<img src="${esc(u)}" alt="Foto ${i + 1} de ${fotos.length}" class="${i ? "" : "ativa"}"${i ? ' loading="lazy"' : ""}>`).join("")}
+        ${fotos.length > 1 ? `<button type="button" class="galeria-seta ant" data-passo="-1" aria-label="Foto anterior">‹</button><button type="button" class="galeria-seta prox" data-passo="1" aria-label="Próxima foto">›</button><span class="galeria-contador">1 / ${fotos.length}</span>` : ""}
+      </div>
+      ${fotos.length > 1 ? `<div class="galeria-miniaturas">${fotos.map((u, i) => `<button type="button" data-ir="${i}" class="${i ? "" : "ativa"}" aria-label="Ver foto ${i + 1}"><img src="${esc(u)}" alt="" loading="lazy"></button>`).join("")}</div>` : ""}
+    </div>`;
+  }
+  function iniciarGaleria(raiz) {
+    const g = $("[data-galeria-ver]", raiz);
+    if (!g) return;
+    const imgs = $$(".galeria-palco img", g), minis = $$(".galeria-miniaturas button", g), cont = $(".galeria-contador", g);
+    let i = 0;
+    const ir = (n) => {
+      i = (n + imgs.length) % imgs.length;
+      imgs.forEach((im, k) => im.classList.toggle("ativa", k === i));
+      minis.forEach((b, k) => b.classList.toggle("ativa", k === i));
+      if (cont) cont.textContent = `${i + 1} / ${imgs.length}`;
+    };
+    g.addEventListener("click", (e) => {
+      const p = e.target.closest("[data-passo]"), m = e.target.closest("[data-ir]");
+      if (p) ir(i + +p.dataset.passo);
+      if (m) ir(+m.dataset.ir);
+    });
+    let x0 = null;
+    g.addEventListener("pointerdown", (e) => { x0 = e.clientX; });
+    g.addEventListener("pointerup", (e) => { if (x0 !== null && Math.abs(e.clientX - x0) > 40) ir(i + (e.clientX < x0 ? 1 : -1)); x0 = null; });
   }
 
   function modal(html) {
@@ -309,7 +342,29 @@
       btn.disabled = false; btn.textContent = "Enviar solicitação";
     }
   }
-  window.MG = { abrirGaveta, avisar, esc, fmt, brl, icone, modal };
+  /** Janela de confirmação no estilo do site (no lugar do confirm do navegador). Devolve true/false. */
+  function confirmar(texto, opcoes) {
+    opcoes = opcoes || {};
+    const perigo = opcoes.perigo ?? /^(excluir|remover|apagar)/i.test(texto);
+    return new Promise((resolve) => {
+      const fundo = document.createElement("div");
+      fundo.className = "modal-fundo";
+      fundo.innerHTML = `<div class="modal modal-confirmar" role="alertdialog" aria-modal="true" aria-labelledby="conf-titulo">
+        <span class="conf-icone${perigo ? " perigo" : ""}">${icone(perigo ? "lixo" : "alerta")}</span>
+        <h2 id="conf-titulo">${esc(opcoes.titulo || (perigo ? "Tem certeza?" : "Confirmar"))}</h2>
+        <p>${esc(texto)}</p>
+        <div class="botoes-form"><button type="button" class="btn btn-contorno-rosa" data-r="0">Cancelar</button>
+        <button type="button" class="btn ${perigo ? "btn-perigo" : "btn-primario"}" data-r="1">${esc(opcoes.botao || (perigo ? "Sim, excluir" : "Confirmar"))}</button></div>
+      </div>`;
+      document.body.appendChild(fundo);
+      const fim = (v) => { document.removeEventListener("keydown", tecla); fundo.classList.add("saindo"); setTimeout(() => fundo.remove(), 180); resolve(v); };
+      const tecla = (e) => { if (e.key === "Escape") fim(false); };
+      document.addEventListener("keydown", tecla);
+      fundo.addEventListener("click", (e) => { const b = e.target.closest("[data-r]"); if (b) fim(b.dataset.r === "1"); else if (e.target === fundo) fim(false); });
+      setTimeout(() => $('[data-r="0"]', fundo).focus(), 30);
+    });
+  }
+  window.MG = { abrirGaveta, avisar, esc, fmt, brl, icone, modal, confirmar };
 
   /* =========================================================
      Cabeçalho: conta e solicitação

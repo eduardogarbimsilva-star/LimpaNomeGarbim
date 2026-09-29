@@ -168,6 +168,7 @@
   /* =========================================================
      Chat do pedido (cliente <-> vendedora)
      ========================================================= */
+  const cacheFotos = {};
   const Chat = {
     aberto: chatAberto,
     async mensagens(pedidoId) {
@@ -175,20 +176,40 @@
       const sb = await supabase();
       return (await rodar(sb.from("mensagens").select("*").eq("pedido_id", pedidoId).order("criado_em").limit(500))) || [];
     },
-    /** como: "cliente" | "equipe" */
-    async enviar(pedidoId, texto, como) {
+    /** como: "cliente" | "equipe"; foto: arquivo de imagem (opcional) */
+    async enviar(pedidoId, texto, como, foto) {
       texto = String(texto || "").trim().slice(0, 2000);
-      if (!texto) throw new Error("Escreva a mensagem.");
-      if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("enviar_mensagem", { p_pedido: pedidoId, p_texto: texto, p_como: como })); }
+      if (!texto && !foto) throw new Error("Escreva a mensagem.");
+      let anexo = null;
+      if (foto) {
+        const blob = await reduzirFoto(foto, 1400);
+        if (ONLINE) {
+          const sb = await supabase();
+          anexo = `${pedidoId}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+          await rodar(sb.storage.from("chat").upload(anexo, blob, { contentType: "image/jpeg" }));
+        } else anexo = await blobParaDataUrl(await reduzirFoto(foto, 900));
+      }
+      if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("enviar_mensagem", { p_pedido: pedidoId, p_texto: texto, p_como: como, p_anexo: anexo })); }
       const todos = ler(K.pedidos, []), p = todos.find((x) => x.id === pedidoId);
       if (!p || (como === "cliente" && p.cliente_id !== (usuarioAtual || {}).email)) throw new Error("Pedido não encontrado.");
       if (!chatAberto(p)) throw new Error("O chat abre quando a Milena confirmar o pedido.");
       let nome = null;
       if (como === "equipe") { const m = ler(K.equipe, []).find((x) => x.email === (usuarioAtual || {}).email); nome = (m && m.nome) || "Equipe Milena Garbim"; }
-      const msg = { id: "m" + Date.now() + Math.random().toString(36).slice(2, 6), pedido_id: pedidoId, autor: como, nome, texto, criado_em: new Date().toISOString(), lida_em: null };
+      const msg = { id: "m" + Date.now() + Math.random().toString(36).slice(2, 6), pedido_id: pedidoId, autor: como, nome, texto, anexo, criado_em: new Date().toISOString(), lida_em: null };
       const lista = ler(K.mensagens, []); lista.push(msg); gravar(K.mensagens, lista);
       p.atualizado_em = msg.criado_em; gravar(K.pedidos, todos);
       return msg;
+    },
+    /** Endereço para mostrar a foto do chat (no banco: link temporário e protegido) */
+    async urlFoto(anexo) {
+      if (!anexo) return "";
+      if (!ONLINE || /^data:/.test(anexo)) return anexo;
+      if (cacheFotos[anexo] && cacheFotos[anexo].ate > Date.now()) return cacheFotos[anexo].url;
+      const sb = await supabase();
+      const { data, error } = await sb.storage.from("chat").createSignedUrl(anexo, 3600);
+      if (error) throw traduzirErro(error);
+      cacheFotos[anexo] = { url: data.signedUrl, ate: Date.now() + 3000 * 1000 };
+      return data.signedUrl;
     },
     async marcarLidas(pedidoId, como) {
       if (ONLINE) { const sb = await supabase(); await sb.rpc("marcar_lidas", { p_pedido: pedidoId, p_como: como }); return; }
