@@ -86,6 +86,7 @@ WhatsApp com a mensagem pronta (nada é gravado).
 | Aparência | **Cores** (6 paletas ou “Minha cor”, com aviso de contraste), **mostrar/ocultar seções** da página inicial, ligar/desligar pergunta inicial, abertura, assistente e botão do WhatsApp, e **faixa de aviso** no topo (promoções, recados) | Administrador |
 | Fotos | Foto principal e foto do rosto da Milena (a foto é reduzida antes de enviar) | Administrador |
 | Dúvidas | Perguntas e respostas: editar, reordenar, adicionar, remover | Administrador |
+| Depoimentos | Depoimentos **reais** de clientes (nome, cidade, serviço, estrelas, texto), com confirmação de autorização. Sem nenhum cadastrado, a seção fica escondida | Administrador |
 | Seus direitos | Cartões da página “Seus direitos” (título, explicação, fonte e link oficial): editar, reordenar, adicionar, remover | Administrador |
 | Contato e links | WhatsApp, telefone, e-mail, CNPJ, horário, endereço e redes sociais | Administrador |
 | Equipe | Adicionar pessoas como **Administrador** ou **Atendente** e o **nome que aparece no chat** | Administrador |
@@ -227,14 +228,14 @@ por isso não aparecem como oferta no site.
 5. Um **domínio próprio** (ex.: milenagarbim.com.br) e um e-mail com o domínio.
 
 **Conteúdo que deixaria o site mais forte:**
-- **Depoimentos reais** de clientes (com autorização) e números reais (casos atendidos, anos de experiência).
+- **Depoimentos reais** de clientes (com autorização) — já dá para cadastrar em Painel → Depoimentos — e números reais (casos atendidos, anos de experiência).
 - Mais **fotos** da Milena (atendendo, no escritório) para as seções e para as redes sociais.
 - **Vídeo curto** de apresentação da Milena no topo ou em “Quem somos”.
 - **Blog / dicas** com artigos curtos (bom para o Google e para postar no Instagram).
 
 **Melhorias técnicas planejadas:**
-- Painel: **editar a faixa rolante e os cartões flutuantes** do topo; trocar ícones de seções; ordem das seções da página inicial.
-- **Avaliações** após o pedido concluído (estrelas + comentário, com aprovação da Milena antes de aparecer).
+- Painel: editar os **cartões flutuantes** do topo; trocar ícones de seções; ordem das seções da página inicial. (A faixa rolante e as palavras de “Especialista em …” já são editáveis em Textos → Topo.)
+- **Avaliações pelo próprio cliente** após o pedido concluído (hoje a Milena cadastra os depoimentos no painel).
 - **Notificações** por e-mail/WhatsApp para a Milena quando chega pedido ou mensagem.
 - **Upload de documentos** pelo cliente dentro do pedido (RG, contratos, comprovantes), em área privada.
 - **Agenda** para marcar a conversa inicial.

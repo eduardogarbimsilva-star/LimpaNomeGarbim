@@ -608,6 +608,7 @@
     ["dicas", "Dicas da Milena", "Carrossel de dicas para compartilhar"],
     ["analise", "Formulário de análise", "Pedido de análise sem conta"],
     ["indique", "Indique", "Mandar o site para alguém"],
+    ["depoimentos", "Depoimentos", "Aparece quando houver depoimentos cadastrados"],
     ["direitos", "Seus direitos", "3 direitos com link para a página completa"],
     ["faq", "Perguntas frequentes", "As 5 primeiras dúvidas"],
     ["cta", "Chamada final", "“Vamos olhar o seu caso juntos?”"]
@@ -733,6 +734,51 @@
       const ruim = limpa.find((d) => d.link && !/^https:\/\//i.test(d.link));
       if (ruim) return avisar(`O link de “${ruim.titulo}” precisa começar com https://`);
       comBotao($("button[type=submit]", p), async () => { await A.salvarSite("direitos", limpa); lista = limpa; desenhar(); avisar("Direitos salvos!"); });
+    });
+  };
+
+  /* =========================================================
+     DEPOIMENTOS (aparecem na página inicial; só reais e com autorização)
+     ========================================================= */
+  CARREGAR.depoimentos = async function () {
+    const p = painel("depoimentos");
+    let lista = [];
+    try { const s = await A.lerSite(); if (Array.isArray(s.depoimentos)) lista = s.depoimentos; } catch (e) { avisar(e.message); }
+    lista = lista.map((x) => Object.assign({}, x));
+    function desenhar() {
+      p.innerHTML = `<p class="adm-dica">Publique só depoimentos <strong>reais</strong>, com a <strong>autorização</strong> do cliente (de preferência por escrito, no WhatsApp). Enquanto não houver nenhum, a seção fica escondida no site. Dica: use só o primeiro nome e a cidade.</p>
+        <form id="form-depo"><ol class="adm-faq">${lista.map((d, i) => `<li data-i="${i}">
+          <div class="campos">
+            <label class="campo"><span>Nome <small>(ex.: Ana P.)</small></span><input name="nome" maxlength="40" value="${esc(d.nome || "")}"></label>
+            <label class="campo"><span>Cidade <small>(opcional)</small></span><input name="cidade" maxlength="40" value="${esc(d.cidade || "")}" placeholder="Ribeirão Preto - SP"></label>
+            <label class="campo"><span>Serviço <small>(opcional)</small></span><input name="servico" maxlength="50" value="${esc(d.servico || "")}" list="lista-servicos-depo"></label>
+            <label class="campo"><span>Estrelas</span><select name="estrelas">${[5, 4, 3, 2, 1].map((n) => `<option value="${n}"${(+d.estrelas || 5) === n ? " selected" : ""}>${"★".repeat(n)} (${n})</option>`).join("")}</select></label>
+          </div>
+          <label class="campo"><span>Depoimento</span><textarea name="texto" rows="3" maxlength="600">${esc(d.texto || "")}</textarea></label>
+          <label class="aceite"><input type="checkbox" name="autorizado"${d.autorizado ? " checked" : ""}><span>O cliente autorizou a publicação deste depoimento.</span></label>
+          <div class="adm-botoes"><button type="button" class="btn-texto" data-mover="-1"${i ? "" : " disabled"}>↑ Subir</button><button type="button" class="btn-texto" data-mover="1"${i < lista.length - 1 ? "" : " disabled"}>↓ Descer</button><button type="button" class="btn-texto perigo" data-tirar>${icone("lixo")}Remover</button></div>
+        </li>`).join("")}</ol>
+        ${lista.length ? "" : `<p class="vazio">Nenhum depoimento ainda.</p>`}
+        <datalist id="lista-servicos-depo">${(PADRAO.servicos || []).map((s) => `<option value="${esc(s.nome)}">`).join("")}</datalist>
+        <div class="barra-salvar"><button type="button" class="btn btn-contorno-rosa" data-novo>${icone("mais")}Novo depoimento</button><button type="submit" class="btn btn-primario">Salvar depoimentos</button></div></form>`;
+    }
+    const ler = () => { $$(".adm-faq li", p).forEach((li) => { const g = (n) => li.querySelector(`[name=${n}]`); lista[+li.dataset.i] = { nome: g("nome").value, cidade: g("cidade").value, servico: g("servico").value, estrelas: +g("estrelas").value, texto: g("texto").value, autorizado: g("autorizado").checked }; }); };
+    desenhar();
+    p.addEventListener("click", (e) => {
+      const li = e.target.closest("li[data-i]"), i = li ? +li.dataset.i : -1;
+      if (e.target.closest("[data-mover]")) { ler(); const j = i + +e.target.closest("[data-mover]").dataset.mover; [lista[i], lista[j]] = [lista[j], lista[i]]; desenhar(); }
+      else if (e.target.closest("[data-tirar]")) { ler(); lista.splice(i, 1); desenhar(); }
+      else if (e.target.closest("[data-novo]")) { ler(); lista.push({ nome: "", cidade: "", servico: "", estrelas: 5, texto: "", autorizado: false }); desenhar(); const l = $$(".adm-faq [name=nome]", p).pop(); l && l.focus(); }
+    });
+    p.addEventListener("submit", (e) => {
+      e.preventDefault();
+      ler();
+      const limpa = lista.map((d) => ({ nome: d.nome.trim(), cidade: d.cidade.trim(), servico: d.servico.trim(), estrelas: d.estrelas, texto: d.texto.trim(), autorizado: d.autorizado })).filter((d) => d.nome || d.texto);
+      const falta = limpa.find((d) => !d.nome || !d.texto);
+      if (falta) return avisar("Cada depoimento precisa de nome e texto.");
+      const sem = limpa.find((d) => !d.autorizado);
+      if (sem) return avisar(`Confirme a autorização de “${sem.nome}” antes de publicar.`);
+      comBotao($("button[type=submit]", p), async () => { await A.salvarSite("depoimentos", limpa); lista = limpa; desenhar(); avisar(limpa.length ? "Depoimentos salvos! Já aparecem na página inicial." : "Salvo. Sem depoimentos, a seção fica escondida."); });
     });
   };
 

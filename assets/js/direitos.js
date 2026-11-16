@@ -53,7 +53,7 @@
       if (hoje() > limite) {
         out.classList.add("alerta");
         out.innerHTML = `<strong>Já passou do prazo.</strong>
-          <p>O registro só poderia ficar até <b>${fmtData(limite)}</b>. Se ainda aparece no Serasa, SPC ou Boa Vista, ele deve ser retirado.</p>
+          <p>O registro só poderia ficar até <b>${fmtData(limite)}</b>. Se ainda aparece no SPC, Serasa, Boa Vista ou Cenprot, ele deve ser retirado.</p>
           <p class="calc-obs">A dívida não deixa de existir — mas a negativação tem limite. Atenção: plataformas de acordo (como o “Limpa Nome” do Serasa) não são negativação.</p>
           ${botaoZap("Olá, Milena! Usei a calculadora do site: tenho uma negativação com vencimento em " + data.toLocaleDateString("pt-BR") + ", que já passou de 5 anos. Pode me ajudar?")}`;
       } else {

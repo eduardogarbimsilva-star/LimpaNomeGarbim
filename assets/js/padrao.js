@@ -24,7 +24,7 @@ window.PADRAO = {
   "inicio.lead": {
    "grupo": "Página inicial",
    "rotulo": "Texto abaixo do título",
-   "valor": "Negociamos suas dívidas, contestamos negativações indevidas e orientamos a recuperação do seu score — com transparência do primeiro contato até a baixa no Serasa, SPC e Boa Vista.",
+   "valor": "Retiramos seu nome dos órgãos de proteção ao crédito com medida judicial de urgência, contestamos negativações indevidas e orientamos a recuperação do seu score — com transparência do primeiro contato até a baixa no Serasa, SPC, Boa Vista e Cenprot.",
    "longo": true
   },
   "inicio.dores.titulo": {
@@ -54,7 +54,7 @@ window.PADRAO = {
   "orientacao.titulo": {
    "grupo": "Página inicial",
    "rotulo": "Orientação financeira — título",
-   "valor": "Antes de negociar, *entender*.",
+   "valor": "Antes de decidir, *entender*.",
    "longo": false
   },
   "orientacao.texto": {
@@ -150,13 +150,13 @@ window.PADRAO = {
   "passos.3.titulo": {
    "grupo": "Como funciona",
    "rotulo": "Passo 3 — título",
-   "valor": "Negociação e contestação",
+   "valor": "Medida judicial e contestação",
    "longo": false
   },
   "passos.3.texto": {
    "grupo": "Como funciona",
    "rotulo": "Passo 3 — texto",
-   "valor": "Negociamos com os credores e contestamos o que for indevido, sempre com você aprovando cada acordo.",
+   "valor": "Entramos com a medida judicial de urgência e contestamos o que for indevido, com você informado de cada passo.",
    "longo": true
   },
   "passos.4.titulo": {
@@ -198,7 +198,7 @@ window.PADRAO = {
   "servicos.aviso": {
    "grupo": "Serviços",
    "rotulo": "Aviso de transparência",
-   "valor": "Não somos banco, nem Serasa, SPC ou Boa Vista, e não prometemos “apagar” dívidas. Trabalhamos com negociação, contestação de registros indevidos e, quando necessário, com advogados parceiros. Resultados e prazos variam conforme cada caso e são explicados na proposta.",
+   "valor": "Não somos banco, nem SPC, Serasa, Boa Vista ou Cenprot, e não prometemos “apagar” dívidas. Trabalhamos com medidas judiciais de urgência, contestação de registros indevidos e, quando necessário, com advogados parceiros. Resultados e prazos variam conforme cada caso e são explicados na proposta.",
    "longo": true
   },
   "sobre.titulo": {
@@ -569,8 +569,8 @@ window.PADRAO = {
   },
   "inicio.dicas.4": {
    "grupo": "Página inicial · Dicas",
-   "rotulo": "Texto — “Serasa, SPC, Boa Vista e o Registrat…”",
-   "valor": "Serasa, SPC, Boa Vista e o Registrato (do Banco Central) mostram as pendências no seu nome sem custo. Comece por aí.",
+   "rotulo": "Texto — “Serasa, SPC, Boa Vista, Cenprot e o…”",
+   "valor": "Serasa, SPC, Boa Vista, Cenprot e o Registrato (do Banco Central) mostram as pendências no seu nome sem custo. Comece por aí.",
    "longo": true
   },
   "inicio.dicas.5": {
@@ -1067,8 +1067,8 @@ window.PADRAO = {
   },
   "pg-privacidade.conteudo.9": {
    "grupo": "Privacidade · Conteúdo",
-   "rotulo": "Item — “Negociar com credores e contestar re…”",
-   "valor": "Negociar com credores e contestar registros em seu nome, quando contratado;",
+   "rotulo": "Item — “Tomar as medidas judiciais e contes…”",
+   "valor": "Tomar as medidas judiciais e contestar registros em seu nome, quando contratado;",
    "longo": false
   },
   "pg-privacidade.conteudo.10": {
@@ -1184,6 +1184,30 @@ window.PADRAO = {
    "rotulo": "Selo 4 — texto",
    "valor": "cada etapa na sua conta",
    "longo": false
+  },
+  "inicio.rotativo": {
+   "grupo": "Página inicial · Topo",
+   "rotulo": "Palavras que giram em “Especialista em …” (separe por vírgula)",
+   "valor": "Limpa Nome, Perícia de crédito, Rating, Bacen, Revisão de juros, Score e crédito, Empresas (CNPJ)",
+   "longo": false
+  },
+  "inicio.faixa": {
+   "grupo": "Página inicial · Topo",
+   "rotulo": "Faixa rolante abaixo do topo (separe por vírgula)",
+   "valor": "Limpa Nome, Perícia de crédito, Rating, Bacen, Negativação indevida, Revisão de juros, Score e crédito, Empresas (CNPJ), Atendimento humano, Proposta por escrito",
+   "longo": true
+  },
+  "depoimentos.titulo": {
+   "grupo": "Página inicial · Depoimentos",
+   "rotulo": "Título dos depoimentos",
+   "valor": "Quem já passou por aqui",
+   "longo": false
+  },
+  "depoimentos.texto": {
+   "grupo": "Página inicial · Depoimentos",
+   "rotulo": "Texto dos depoimentos",
+   "valor": "Histórias reais de clientes que voltaram a ter o nome limpo — publicadas com autorização.",
+   "longo": true
   }
  },
  "fotos": {
@@ -1193,11 +1217,11 @@ window.PADRAO = {
  "faq": [
   {
    "p": "O que é “limpar o nome”?",
-   "r": "É retirar o seu CPF ou CNPJ dos cadastros de inadimplentes (Serasa, SPC, Boa Vista e protestos em cartório). Isso acontece quando a dívida é negociada e paga, quando o registro é indevido ou quando ele passa do prazo legal."
+   "r": "É retirar o seu CPF ou CNPJ dos cadastros de inadimplentes (SPC, Serasa, Boa Vista e protestos no Cenprot). Isso pode acontecer por decisão judicial, quando o registro é indevido, quando a dívida é paga ou quando ele passa do prazo legal."
   },
   {
    "p": "Vocês apagam a dívida?",
-   "r": "Não. Nenhuma empresa séria “apaga” dívida. O que fazemos é negociar descontos e prazos, contestar o que é indevido e cobrar a baixa correta dos registros. Desconfie de quem promete sumir com a dívida."
+   "r": "Não. Nenhuma empresa séria “apaga” dívida. O que fazemos é buscar na Justiça a retirada do seu nome dos cadastros, contestar o que é indevido e cobrar a baixa correta dos registros. Desconfie de quem promete sumir com a dívida."
   },
   {
    "p": "O que é o Bacen (SCR / Registrato)?",
@@ -1240,7 +1264,7 @@ window.PADRAO = {
   {
    "id": "limpa-nome",
    "nome": "Limpa Nome",
-   "descricao": "Negociação das suas dívidas para tirar seu CPF do Serasa, SPC e Boa Vista.",
+   "descricao": "Medida judicial de urgência para retirar seu CPF ou CNPJ do SPC, Serasa, Boa Vista e Cenprot.",
    "icone": "aperto",
    "ordem": 1,
    "ativo": true
@@ -1254,11 +1278,27 @@ window.PADRAO = {
    "ativo": true
   },
   {
+   "id": "pericia",
+   "nome": "Perícia de crédito",
+   "descricao": "Análise técnica de contratos e extratos para encontrar cobranças acima do permitido.",
+   "icone": "lupa",
+   "ordem": 3,
+   "ativo": true
+  },
+  {
+   "id": "rating",
+   "nome": "Rating bancário",
+   "descricao": "A nota que os bancos dão para você ou para a sua empresa — e como melhorá-la.",
+   "icone": "grafico2",
+   "ordem": 4,
+   "ativo": true
+  },
+  {
    "id": "negativacao-indevida",
    "nome": "Negativação indevida",
    "descricao": "Dívida que você não fez, já paga, prescrita ou sem aviso prévio.",
    "icone": "balanca",
-   "ordem": 3,
+   "ordem": 5,
    "ativo": true
   },
   {
@@ -1266,7 +1306,7 @@ window.PADRAO = {
    "nome": "Revisão de juros",
    "descricao": "Contratos com juros acima da média do mercado.",
    "icone": "doc",
-   "ordem": 4,
+   "ordem": 6,
    "ativo": true
   },
   {
@@ -1274,7 +1314,7 @@ window.PADRAO = {
    "nome": "Score e crédito",
    "descricao": "Reconstrução do seu score e do acesso ao crédito.",
    "icone": "grafico",
-   "ordem": 5,
+   "ordem": 7,
    "ativo": true
   },
   {
@@ -1282,7 +1322,7 @@ window.PADRAO = {
    "nome": "Empresas (CNPJ)",
    "descricao": "Protestos, dívidas bancárias e restrições no CNPJ.",
    "icone": "empresa",
-   "ordem": 6,
+   "ordem": 8,
    "ativo": true
   },
   {
@@ -1290,7 +1330,7 @@ window.PADRAO = {
    "nome": "Diagnóstico e orientação",
    "descricao": "Entender o cenário antes de agir: o que existe no seu nome e qual caminho faz sentido.",
    "icone": "lupa",
-   "ordem": 7,
+   "ordem": 9,
    "ativo": true
   }
  ],
@@ -1299,12 +1339,12 @@ window.PADRAO = {
    "id": "limpa-nome",
    "categoria": "limpa-nome",
    "nome": "Limpa Nome",
-   "resumo": "Negociamos suas dívidas diretamente com bancos, lojas e financeiras para buscar descontos, parcelas que cabem no bolso e a retirada do seu nome dos cadastros de inadimplentes.",
-   "descricao": "Fazemos o levantamento completo das pendências no seu CPF, negociamos com cada credor e acompanhamos até a baixa da negativação.\nVocê aprova cada acordo antes de ele ser fechado.",
+   "resumo": "Uma decisão judicial de urgência que obriga a retirada imediata do seu CPF do SPC, Serasa, Boa Vista e Cenprot. Indicada para casos de cobranças indevidas, abusivas ou prescritas, garantindo que você recupere seu crédito de forma rápida enquanto a dívida é negociada.",
+   "descricao": "Acelere a retirada do seu nome dos órgãos de proteção ao crédito através de uma medida judicial de urgência. Limpamos seu CPF para você voltar a ter autonomia financeira enquanto tratamos a regularização das dívidas.",
    "itens": [
-    "Levantamento de todas as dívidas no seu CPF",
-    "Negociação de descontos e parcelamento",
-    "Acompanhamento até a baixa da negativação"
+    "Levantamento de todas as dívidas no seu CPF ou CNPJ",
+    "Medida judicial de urgência para a retirada do nome",
+    "Acompanhamento até a baixa no SPC, Serasa, Boa Vista e Cenprot"
    ],
    "preco": null,
    "aPartir": true,
@@ -1314,7 +1354,8 @@ window.PADRAO = {
    "ordem": 1,
    "ativo": true,
    "perfis": [
-    "pf"
+    "pf",
+    "pj"
    ],
    "situacoes": [
     "restricao"
@@ -1381,7 +1422,7 @@ window.PADRAO = {
    "resumo": "Verificamos cada apontamento e buscamos a exclusão e, quando cabível, a reparação pelos danos.",
    "descricao": "Casos comuns: dívida que você não reconhece, já paga, prescrita (mais de 5 anos) ou incluída sem o aviso prévio exigido pelo Código de Defesa do Consumidor.",
    "itens": [
-    "Análise de cada registro no Serasa, SPC e Boa Vista",
+    "Análise de cada registro no Serasa, SPC, Boa Vista e Cenprot",
     "Contestação junto ao credor e aos órgãos",
     "Encaminhamento jurídico com advogado parceiro"
    ],
@@ -1409,7 +1450,7 @@ window.PADRAO = {
    "itens": [
     "Cálculo comparado com as taxas do Banco Central",
     "Financiamento, consignado e cartão",
-    "Orientação sobre renegociação ou revisão judicial"
+    "Orientação sobre a revisão judicial do contrato"
    ],
    "preco": null,
    "aPartir": true,
@@ -1457,11 +1498,11 @@ window.PADRAO = {
    "id": "empresas-cnpj",
    "categoria": "empresas",
    "nome": "Regularização de CNPJ",
-   "resumo": "Organizamos o passivo e negociamos para a empresa voltar a operar com crédito.",
+   "resumo": "Retiramos as restrições do CNPJ com medida judicial de urgência e organizamos o passivo para a empresa voltar a operar com crédito.",
    "descricao": "",
    "itens": [
     "Levantamento de protestos e restrições",
-    "Negociação de dívidas bancárias e com fornecedores",
+    "Medida judicial para retirar o CNPJ do SPC, Serasa, Boa Vista e Cenprot",
     "Certidões e regularização do CNPJ"
    ],
    "preco": null,
@@ -1483,7 +1524,7 @@ window.PADRAO = {
    "id": "diagnostico-completo",
    "categoria": "orientacao",
    "nome": "Diagnóstico completo do CPF ou CNPJ",
-   "resumo": "Levantamos o que existe no seu nome — Serasa, SPC, Boa Vista, protestos e Registrato do Bacen — e explicamos, em linguagem simples, o que pesa e por quê.",
+   "resumo": "Levantamos o que existe no seu nome — Serasa, SPC, Boa Vista, protestos no Cenprot e Registrato do Bacen — e explicamos, em linguagem simples, o que pesa e por quê.",
    "descricao": "É o ponto de partida ideal para quem não sabe exatamente o que está acontecendo.\nVocê recebe um retrato organizado das pendências e a indicação do caminho mais adequado para cada uma.",
    "itens": [
     "Consulta aos principais birôs e ao Registrato",
@@ -1531,6 +1572,60 @@ window.PADRAO = {
    "situacoes": [
     "restricao",
     "limpo"
+   ]
+  },
+  {
+   "id": "pericia-credito",
+   "categoria": "pericia",
+   "nome": "Perícia de crédito",
+   "resumo": "Análise técnica dos seus contratos, extratos e faturas para identificar juros, tarifas e encargos cobrados acima do permitido — com laudo que pode embasar a revisão na Justiça.",
+   "descricao": "Indicada para empréstimos, financiamentos, cartão de crédito e cheque especial.\nVocê recebe o cálculo do que foi cobrado a mais e a orientação sobre o melhor caminho.",
+   "itens": [
+    "Análise de contratos, extratos e faturas",
+    "Cálculo dos valores cobrados a mais",
+    "Laudo técnico para a revisão judicial"
+   ],
+   "preco": null,
+   "aPartir": true,
+   "prazo": "",
+   "foto": "",
+   "destaque": false,
+   "ordem": 1,
+   "ativo": true,
+   "perfis": [
+    "pf",
+    "pj"
+   ],
+   "situacoes": [
+    "restricao",
+    "limpo"
+   ]
+  },
+  {
+   "id": "rating-bancario",
+   "categoria": "rating",
+   "nome": "Rating bancário",
+   "resumo": "Trabalhamos o seu rating — a nota interna que os bancos usam para liberar crédito — para aumentar as chances de você ou a sua empresa voltar a ter limites, cartões e financiamentos aprovados.",
+   "descricao": "Mesmo com o nome limpo, o banco pode negar crédito por causa do rating.\nAnalisamos o seu histórico nos bancos e no Banco Central e montamos um plano para melhorar essa nota.",
+   "itens": [
+    "Diagnóstico do seu perfil nos bancos e no Bacen",
+    "Plano para melhorar o relacionamento bancário",
+    "Orientação para pedir crédito no momento certo"
+   ],
+   "preco": null,
+   "aPartir": true,
+   "prazo": "",
+   "foto": "",
+   "destaque": false,
+   "ordem": 1,
+   "ativo": true,
+   "perfis": [
+    "pf",
+    "pj"
+   ],
+   "situacoes": [
+    "limpo",
+    "restricao"
    ]
   }
  ],
@@ -1594,7 +1689,7 @@ window.PADRAO = {
  "direitos": [
   {
    "titulo": "Aviso antes de negativar",
-   "texto": "Antes de incluir o seu nome no Serasa, SPC ou Boa Vista, você precisa ser avisado por escrito. Sem esse aviso prévio, a negativação pode ser contestada.",
+   "texto": "Antes de incluir o seu nome no SPC, Serasa, Boa Vista ou Cenprot, você precisa ser avisado por escrito. Sem esse aviso prévio, a negativação pode ser contestada.",
    "fonte": "CDC, art. 43, §2º · Súmula 359 do STJ",
    "link": "https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm"
   },
@@ -1659,5 +1754,6 @@ window.PADRAO = {
    "texto": "",
    "link": ""
   }
- }
+ },
+ "depoimentos": []
 };

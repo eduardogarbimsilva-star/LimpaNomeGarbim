@@ -110,6 +110,7 @@
       fotos: Object.assign({}, PADRAO.fotos, salvo.fotos || {}),
       faq: Array.isArray(salvo.faq) && salvo.faq.length ? salvo.faq : PADRAO.faq,
       direitos: Array.isArray(salvo.direitos) && salvo.direitos.length ? salvo.direitos : (PADRAO.direitos || []),
+      depoimentos: Array.isArray(salvo.depoimentos) ? salvo.depoimentos : (PADRAO.depoimentos || []),
       aparencia: Object.assign({}, PADRAO.aparencia || {}, salvo.aparencia || {}, {
         secoes: Object.assign({}, (PADRAO.aparencia || {}).secoes || {}, (salvo.aparencia || {}).secoes || {}),
         aviso: Object.assign({}, (PADRAO.aparencia || {}).aviso || {}, (salvo.aparencia || {}).aviso || {})
@@ -142,14 +143,26 @@
     if (!cats) { cats = copia(PADRAO.categorias); gravar(K.categorias, cats); }
     if (!servs) { servs = copia(PADRAO.servicos); gravar(K.servicos, servs); }
     // Atualização do catálogo de demonstração: novos serviços padrão e perfis (PF/PJ) e situações
-    if (ler("mg_demo_catalogo_v", 0) < 2) {
-      PADRAO.categorias.forEach((c) => { if (!cats.some((x) => x.id === c.id)) cats.push(copia(c)); });
+    const versao = ler("mg_demo_catalogo_v", 0);
+    if (versao < 3) {
+      PADRAO.categorias.forEach((c) => {
+        const x = cats.find((y) => y.id === c.id);
+        if (!x) cats.push(copia(c));
+        else {
+          x.ordem = c.ordem;   // nova ordem: Limpa Nome, Bacen, Perícia, Rating...
+          if (/negocia/i.test(x.descricao || "")) x.descricao = c.descricao;
+        }
+      });
       PADRAO.servicos.forEach((p) => {
         const s = servs.find((x) => x.id === p.id);
         if (!s) servs.push(copia(p));
-        else if (!s.perfis && p.perfis) Object.assign(s, { perfis: copia(p.perfis), situacoes: copia(p.situacoes || []) });
+        else {
+          if (!s.perfis && p.perfis) Object.assign(s, { perfis: copia(p.perfis), situacoes: copia(p.situacoes || []) });
+          // textos antigos que falavam em "negociar" (a empresa trabalha com medida judicial)
+          if (/negocia/i.test([s.resumo, s.descricao].concat(s.itens || []).join(" ")) && versao < 3) Object.assign(s, { resumo: p.resumo, descricao: p.descricao, itens: copia(p.itens || []), perfis: copia(p.perfis || []) });
+        }
       });
-      try { gravar(K.categorias, cats); gravar(K.servicos, servs); gravar("mg_demo_catalogo_v", 2); } catch (e) { /* navegador sem espaço: usa só nesta visita */ }
+      try { gravar(K.categorias, cats); gravar(K.servicos, servs); gravar("mg_demo_catalogo_v", 3); } catch (e) { /* navegador sem espaço: usa só nesta visita */ }
     }
     return { categorias: cats, servicos: servs };
   }
@@ -566,7 +579,7 @@
       const d = await rodar(sb.from("configuracoes").select("dados").eq("id", 1).maybeSingle());
       return (d && d.dados) || {};
     },
-    /** parte: "textos" | "fotos" | "faq" | "contatos" | "direitos" | "aparencia" */
+    /** parte: "textos" | "fotos" | "faq" | "contatos" | "direitos" | "aparencia" | "depoimentos" */
     async salvarSite(parte, valor) {
       const atual = await this.lerSite();
       atual[parte] = valor;

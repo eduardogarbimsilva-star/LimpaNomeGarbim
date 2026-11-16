@@ -107,7 +107,7 @@
     aplicarTema(ap);
     if (document.body.classList.contains("pagina-painel")) return;   // o painel só pega as cores
     const secoes = ap.secoes || {};
-    $$("[data-secao]").forEach((el) => { el.hidden = secoes[el.getAttribute("data-secao")] === false; });
+    $$("[data-secao]").forEach((el) => { el.hidden = secoes[el.getAttribute("data-secao")] === false || el.dataset.vazio === "1"; });
     document.body.classList.toggle("sem-assistente", ap.assistente === false);
     document.body.classList.toggle("sem-whats-flutuante", ap.whatsFlutuante === false);
     // faixa de aviso no topo
@@ -142,6 +142,28 @@
     $$("[data-faq]").forEach((el) => {
       const lim = +el.getAttribute("data-faq") || s.faq.length;
       el.innerHTML = s.faq.slice(0, lim).map((f) => `<details class="revelar visivel"><summary>${esc(f.p)}</summary><p>${fmt(f.r)}</p></details>`).join("");
+    });
+    // Faixa rolante (lista editável em Textos → Topo)
+    const faixa = $("[data-faixa]"), listaFaixa = String(s.textos["inicio.faixa"] || "").split(",").map((t) => t.trim()).filter(Boolean);
+    if (faixa && listaFaixa.length) {
+      const html = listaFaixa.map((t) => `<span>${esc(t)}</span>`).join("") + listaFaixa.map((t) => `<span aria-hidden="true">${esc(t)}</span>`).join("");
+      if (faixa.innerHTML !== html) faixa.innerHTML = html;
+    }
+    // Depoimentos (só aparecem quando a Milena cadastra algum no painel)
+    $$("[data-depoimentos]").forEach((el) => {
+      const lista = (s.depoimentos || []).filter((d) => d && d.texto && d.nome);
+      const secao = el.closest("[data-secao]");
+      if (secao) { secao.dataset.vazio = lista.length ? "" : "1"; if (!lista.length) secao.hidden = true; }
+      el.innerHTML = lista.map((d, i) => {
+        const n = Math.max(0, Math.min(5, +d.estrelas || 5));
+        const inicial = esc(String(d.nome).trim().charAt(0).toUpperCase());
+        return `<figure class="depoimento revelar visivel" style="--i:${i}">
+          <div class="depo-estrelas" aria-label="${n} de 5 estrelas">${"★".repeat(n)}<span>${"★".repeat(5 - n)}</span></div>
+          <blockquote>${fmt(d.texto)}</blockquote>
+          <figcaption>${d.foto && /^(https:|data:image\/)/.test(d.foto) ? `<img src="${esc(d.foto)}" alt="" loading="lazy">` : `<span class="depo-inicial" aria-hidden="true">${inicial}</span>`}
+            <span><strong>${esc(d.nome)}</strong><small>${esc([d.cidade, d.servico].filter(Boolean).join(" · "))}</small></span></figcaption>
+        </figure>`;
+      }).join("");
     });
     $$("[data-direitos]").forEach((el) => {
       const lim = +el.getAttribute("data-direitos") || s.direitos.length;
@@ -314,7 +336,7 @@
           <h2>Como está o seu nome <em>hoje</em>?</h2>
           <p class="triagem-sub">Assim mostramos só as frentes que fazem sentido para você.</p>
           <div class="triagem-ops">
-            ${op("data-t-situacao", "restricao", "alerta", "Estou com restrição", "Negativado no Serasa/SPC, protesto ou apontamento no Bacen")}
+            ${op("data-t-situacao", "restricao", "alerta", "Estou com restrição", "Negativado no SPC/Serasa/Boa Vista, protesto no Cenprot ou apontamento no Bacen")}
             ${op("data-t-situacao", "limpo", "check", "Meu nome está limpo", "Mas o crédito não sai, ou quero organizar as finanças")}
             ${op("data-t-situacao", "", "lupa", "Não sei ao certo", "Quero entender o que existe no meu nome")}
           </div>
@@ -680,16 +702,30 @@
     });
   }
 
-  // Palavra girando no topo ("Especialista em ...")
+  // Palavra girando no topo ("Especialista em ..."): lista editável no painel (Textos → Topo)
   const giro = $(".rotativo-palavras");
   if (giro) {
-    const palavras = $$("b", giro);
     let i = 0;
+    const medir = () => { const b = $("b.ativa", giro); if (b) giro.style.setProperty("--sublinha", b.offsetWidth + "px"); };
+    const montar = (lista) => {
+      lista = lista.map((t) => t.trim()).filter(Boolean).slice(0, 12);
+      if (!lista.length) return;
+      giro.innerHTML = lista.map((t, n) => `<b${n === 0 ? ' class="ativa"' : ""}>${esc(t)}</b>`).join("");
+      const p = giro.closest("[data-rotativo]"); if (p) p.setAttribute("aria-label", "Especialista em " + lista.join(", "));
+      i = 0; medir();
+    };
+    medir();
+    window.addEventListener("resize", medir);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(medir);
+    D.site().then((s) => { const v = s.textos && s.textos["inicio.rotativo"]; if (v) montar(v.split(",")); }).catch(() => {});
     setTimeout(() => setInterval(() => {
-      const atual = palavras[i]; i = (i + 1) % palavras.length;
+      const palavras = $$("b", giro);
+      if (palavras.length < 2) return;
+      const atual = palavras[i % palavras.length]; i = (i + 1) % palavras.length;
       atual.classList.remove("ativa"); atual.classList.add("saindo");
       setTimeout(() => atual.classList.remove("saindo"), 650);
       palavras[i].classList.add("ativa");
+      medir();
     }, 2600), document.body.classList.contains("com-abertura") ? 2600 : 600);
   }
 
