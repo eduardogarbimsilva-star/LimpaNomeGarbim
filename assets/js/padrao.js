@@ -41,14 +41,32 @@ window.PADRAO = {
   },
   "inicio.servicos.titulo": {
    "grupo": "Página inicial",
-   "rotulo": "Título dos serviços",
-   "valor": "Como podemos ajudar",
+   "rotulo": "Título das frentes de atuação",
+   "valor": "Escolha por onde começar",
    "longo": false
   },
   "inicio.servicos.texto": {
    "grupo": "Página inicial",
-   "rotulo": "Texto dos serviços",
-   "valor": "Cada caso tem uma solução. Depois da análise, indicamos o caminho mais rápido e seguro para o seu.",
+   "rotulo": "Texto das frentes de atuação",
+   "valor": "Filtre pelo seu perfil e pela situação do seu nome. Cada frente mostra o que fazemos — e você já pode chamar a Milena com o assunto pronto.",
+   "longo": true
+  },
+  "orientacao.titulo": {
+   "grupo": "Página inicial",
+   "rotulo": "Orientação financeira — título",
+   "valor": "Antes de negociar, *entender*.",
+   "longo": false
+  },
+  "orientacao.texto": {
+   "grupo": "Página inicial",
+   "rotulo": "Orientação financeira — texto",
+   "valor": "Nem todo caso começa com uma ação. Às vezes, o primeiro passo é olhar com calma para o orçamento e para as propostas que estão na mesa.",
+   "longo": true
+  },
+  "orientacao.aviso": {
+   "grupo": "Página inicial",
+   "rotulo": "Aviso de comunicação responsável",
+   "valor": "Não prometemos aprovação de crédito, aumento de score nem baixa de restrições em prazo garantido — esses resultados dependem de bancos, credores e órgãos de proteção ao crédito. O que garantimos é análise honesta, proposta por escrito e acompanhamento de perto.",
    "longo": true
   },
   "inicio.milena.titulo": {
@@ -372,6 +390,14 @@ window.PADRAO = {
    "icone": "empresa",
    "ordem": 6,
    "ativo": true
+  },
+  {
+   "id": "orientacao",
+   "nome": "Diagnóstico e orientação",
+   "descricao": "Entender o cenário antes de agir: o que existe no seu nome e qual caminho faz sentido.",
+   "icone": "lupa",
+   "ordem": 7,
+   "ativo": true
   }
  ],
  "servicos": [
@@ -392,7 +418,13 @@ window.PADRAO = {
    "foto": "",
    "destaque": true,
    "ordem": 1,
-   "ativo": true
+   "ativo": true,
+   "perfis": [
+    "pf"
+   ],
+   "situacoes": [
+    "restricao"
+   ]
   },
   {
    "id": "bacen-administrativo",
@@ -411,7 +443,15 @@ window.PADRAO = {
    "foto": "",
    "destaque": false,
    "ordem": 1,
-   "ativo": true
+   "ativo": true,
+   "perfis": [
+    "pf",
+    "pj"
+   ],
+   "situacoes": [
+    "restricao",
+    "limpo"
+   ]
   },
   {
    "id": "bacen-judicial",
@@ -430,7 +470,15 @@ window.PADRAO = {
    "foto": "",
    "destaque": false,
    "ordem": 2,
-   "ativo": true
+   "ativo": true,
+   "perfis": [
+    "pf",
+    "pj"
+   ],
+   "situacoes": [
+    "restricao",
+    "limpo"
+   ]
   },
   {
    "id": "negativacao-indevida",
@@ -449,7 +497,14 @@ window.PADRAO = {
    "foto": "",
    "destaque": false,
    "ordem": 1,
-   "ativo": true
+   "ativo": true,
+   "perfis": [
+    "pf",
+    "pj"
+   ],
+   "situacoes": [
+    "restricao"
+   ]
   },
   {
    "id": "revisao-juros",
@@ -468,7 +523,15 @@ window.PADRAO = {
    "foto": "",
    "destaque": false,
    "ordem": 1,
-   "ativo": true
+   "ativo": true,
+   "perfis": [
+    "pf",
+    "pj"
+   ],
+   "situacoes": [
+    "restricao",
+    "limpo"
+   ]
   },
   {
    "id": "score-credito",
@@ -487,7 +550,14 @@ window.PADRAO = {
    "foto": "",
    "destaque": false,
    "ordem": 1,
-   "ativo": true
+   "ativo": true,
+   "perfis": [
+    "pf"
+   ],
+   "situacoes": [
+    "limpo",
+    "restricao"
+   ]
   },
   {
    "id": "empresas-cnpj",
@@ -506,7 +576,68 @@ window.PADRAO = {
    "foto": "",
    "destaque": false,
    "ordem": 1,
-   "ativo": true
+   "ativo": true,
+   "perfis": [
+    "pj"
+   ],
+   "situacoes": [
+    "restricao",
+    "limpo"
+   ]
+  },
+  {
+   "id": "diagnostico-completo",
+   "categoria": "orientacao",
+   "nome": "Diagnóstico completo do CPF ou CNPJ",
+   "resumo": "Levantamos o que existe no seu nome — Serasa, SPC, Boa Vista, protestos e Registrato do Bacen — e explicamos, em linguagem simples, o que pesa e por quê.",
+   "descricao": "É o ponto de partida ideal para quem não sabe exatamente o que está acontecendo.\nVocê recebe um retrato organizado das pendências e a indicação do caminho mais adequado para cada uma.",
+   "itens": [
+    "Consulta aos principais birôs e ao Registrato",
+    "Relatório explicado, sem juridiquês",
+    "Indicação do melhor caminho para o seu caso"
+   ],
+   "preco": null,
+   "aPartir": true,
+   "prazo": "",
+   "foto": "",
+   "destaque": false,
+   "ordem": 1,
+   "ativo": true,
+   "perfis": [
+    "pf",
+    "pj"
+   ],
+   "situacoes": [
+    "restricao",
+    "limpo"
+   ]
+  },
+  {
+   "id": "orientacao-financeira",
+   "categoria": "orientacao",
+   "nome": "Orientação financeira",
+   "resumo": "Leitura do seu orçamento e análise de propostas de acordo ou de crédito antes de você assinar — para não trocar uma dívida por outra.",
+   "descricao": "Uma conversa franca sobre a sua realidade: quanto entra, quanto sai e o que cabe de verdade.\nAnalisamos propostas recebidas de bancos e credores e ajudamos você a decidir com calma.",
+   "itens": [
+    "Leitura do orçamento mensal",
+    "Análise de propostas de acordo e de crédito",
+    "Plano simples para manter o nome limpo"
+   ],
+   "preco": null,
+   "aPartir": true,
+   "prazo": "",
+   "foto": "",
+   "destaque": false,
+   "ordem": 2,
+   "ativo": true,
+   "perfis": [
+    "pf",
+    "pj"
+   ],
+   "situacoes": [
+    "restricao",
+    "limpo"
+   ]
   }
  ],
  "icones": {

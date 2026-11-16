@@ -136,6 +136,16 @@
     let cats = ler(K.categorias, null), servs = ler(K.servicos, null);
     if (!cats) { cats = copia(PADRAO.categorias); gravar(K.categorias, cats); }
     if (!servs) { servs = copia(PADRAO.servicos); gravar(K.servicos, servs); }
+    // Atualização do catálogo de demonstração: novos serviços padrão e perfis (PF/PJ) e situações
+    if (ler("mg_demo_catalogo_v", 0) < 2) {
+      PADRAO.categorias.forEach((c) => { if (!cats.some((x) => x.id === c.id)) cats.push(copia(c)); });
+      PADRAO.servicos.forEach((p) => {
+        const s = servs.find((x) => x.id === p.id);
+        if (!s) servs.push(copia(p));
+        else if (!s.perfis && p.perfis) Object.assign(s, { perfis: copia(p.perfis), situacoes: copia(p.situacoes || []) });
+      });
+      try { gravar(K.categorias, cats); gravar(K.servicos, servs); gravar("mg_demo_catalogo_v", 2); } catch (e) { /* navegador sem espaço: usa só nesta visita */ }
+    }
     return { categorias: cats, servicos: servs };
   }
 

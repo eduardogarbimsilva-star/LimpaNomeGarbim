@@ -27,11 +27,22 @@ Cada **categoria** agrupa um ou mais **serviços**:
 
 - **Limpa Nome** → um serviço só (aparece como uma opção).
 - **Bacen** → dois métodos (**administrativo** e **judicial**), cada um é um serviço dentro da categoria.
-- Negativação indevida, Revisão de juros, Score e crédito, Empresas (CNPJ).
+- Negativação indevida, Revisão de juros, Score e crédito, Empresas (CNPJ), Diagnóstico e orientação.
 
 Tudo é editável no painel: nome, descrição, ícone e ordem da categoria; nome, resumo, descrição completa, itens
 inclusos, **preço** (vazio = “Sob consulta”, com opção “a partir de”), prazo, **foto**, destaque e visível/oculto
 de cada serviço. Categoria sem serviço visível não aparece no site.
+
+### Frentes de atuação (página inicial)
+
+A página inicial mostra os serviços como **frentes numeradas (01, 02, 03...)**, com dois filtros:
+**Para quem é** (Pessoa física / Empresa) e **Como está o seu nome** (Com restrição / Nome limpo).
+Na primeira visita aparece a pergunta **“Como está o seu nome hoje?”** (2 passos), que já aplica os filtros.
+Cada frente tem **“Falar no WhatsApp”** com a mensagem pronta (serviço + perfil + situação escolhidos) e **“Solicitar”**.
+
+No painel → Catálogo → Editar serviço, marque **para quem é** cada serviço (pessoa física, empresa,
+quem está com restrição, quem está com nome limpo). Também há a seção **Orientação financeira** com o aviso de
+**Comunicação responsável** (textos editáveis em Painel → Textos).
 
 ## Como funciona o pedido (solicitação)
 

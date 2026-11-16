@@ -351,6 +351,13 @@
           <label class="campo campo-cheio"><span>Nome do serviço</span><input name="nome" maxlength="80" required value="${esc(s.nome || "")}" placeholder="Ex.: Bacen — Método administrativo"></label>
           <label class="campo"><span>Categoria</span><select name="categoria">${CAT.categorias.map((c) => `<option value="${esc(c.id)}"${c.id === s.categoria ? " selected" : ""}>${esc(c.nome)}</option>`).join("")}</select></label>
           <label class="campo"><span>Prazo estimado <small>(opcional)</small></span><input name="prazo" maxlength="60" value="${esc(s.prazo || "")}" placeholder="Ex.: 30 a 90 dias"></label>
+          <div class="campo campo-cheio"><span class="rotulo-campo">Para quem é <small>(filtros “Pessoa física / Empresa” e “Como está seu nome” do site)</small></span>
+            <div class="marcadores">
+              <label class="aceite"><input type="checkbox" name="perfil_pf"${!s.perfis || s.perfis.includes("pf") ? " checked" : ""}><span>Pessoa física (CPF)</span></label>
+              <label class="aceite"><input type="checkbox" name="perfil_pj"${!s.perfis || s.perfis.includes("pj") ? " checked" : ""}><span>Empresa (CNPJ)</span></label>
+              <label class="aceite"><input type="checkbox" name="sit_restricao"${!s.situacoes || s.situacoes.includes("restricao") ? " checked" : ""}><span>Quem está com restrição</span></label>
+              <label class="aceite"><input type="checkbox" name="sit_limpo"${!s.situacoes || s.situacoes.includes("limpo") ? " checked" : ""}><span>Quem está com nome limpo</span></label>
+            </div></div>
           <label class="campo campo-cheio"><span>Resumo (aparece no cartão)</span><textarea name="resumo" rows="2" maxlength="300">${esc(s.resumo || "")}</textarea></label>
           <label class="campo campo-cheio"><span>Descrição completa (aparece em “Detalhes”)</span><textarea name="descricao" rows="4" maxlength="2000">${esc(s.descricao || "")}</textarea></label>
           <label class="campo campo-cheio"><span>O que está incluso <small>(um por linha)</small></span><textarea name="itens" rows="3" maxlength="1000">${esc((s.itens || []).join("\n"))}</textarea></label>
@@ -394,11 +401,14 @@
       e.preventDefault();
       comBotao($("button[type=submit]", f), async () => {
         if (enviando) throw new Error("Espere as fotos terminarem de enviar.");
+        if (!f.perfil_pf.checked && !f.perfil_pj.checked) throw new Error("Marque pelo menos um público: pessoa física ou empresa.");
+        if (!f.sit_restricao.checked && !f.sit_limpo.checked) throw new Error("Marque pelo menos uma situação: com restrição ou nome limpo.");
         await A.salvarServico(Object.assign({}, s, {
           nome: f.nome.value, categoria: f.categoria.value, prazo: f.prazo.value.trim(), resumo: f.resumo.value.trim(), descricao: f.descricao.value.trim(),
           itens: f.itens.value.split("\n").map((t) => t.trim()).filter(Boolean).slice(0, 12),
           preco: f.preco.value === "" ? null : +f.preco.value, aPartir: f.aPartir.checked, fotos: fotos.slice(), foto: fotos[0] || "",
-          ordem: +f.ordem.value || 0, destaque: f.destaque.checked, ativo: f.ativo.checked
+          ordem: +f.ordem.value || 0, destaque: f.destaque.checked, ativo: f.ativo.checked,
+          perfis: ["pf", "pj"].filter((x) => f["perfil_" + x].checked), situacoes: ["restricao", "limpo"].filter((x) => f["sit_" + x].checked)
         }));
         m.closest(".modal-fundo").remove();
         avisar("Serviço salvo.");

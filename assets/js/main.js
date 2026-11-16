@@ -132,6 +132,7 @@
   }
 
   function desenharCatalogo() {
+    desenharFrentes();
     $$("[data-categorias]").forEach((el) => {
       const cats = CAT.categorias.filter((c) => servicosDa(c.id).length);
       if (cats.length) el.innerHTML = cats.map(cartaoCategoria).join("");
@@ -156,6 +157,146 @@
       </section>`;
     }).join("") : `<p class="vazio">Nenhum serviço disponível no momento. Fale com a gente pelo WhatsApp.</p>`;
     if (location.hash && /^#cat-/.test(location.hash)) { const alvo = document.getElementById(location.hash.slice(1)); if (alvo) setTimeout(() => alvo.scrollIntoView(), 50); }
+  }
+
+  /* =========================================================
+     Frentes de atuação (página inicial): filtros "Para quem é"
+     e "Como está o seu nome", cartões numerados e WhatsApp com
+     o assunto já preenchido. Triagem "Como está o seu nome hoje?"
+     ========================================================= */
+  const PERFIS = { pf: "Pessoa física", pj: "Empresa (CNPJ)" };
+  const SITUACOES = { restricao: "Estou com restrição no nome", limpo: "Meu nome está limpo" };
+  const Triagem = {
+    estado: (() => { try { return JSON.parse(localStorage.getItem("mg_triagem")) || {}; } catch (e) { return {}; } })(),
+    salvar(novo) {
+      Object.assign(this.estado, novo, { visto: true });
+      try { localStorage.setItem("mg_triagem", JSON.stringify(this.estado)); } catch (e) { /* sem armazenamento: vale só nesta visita */ }
+    }
+  };
+  const serve = (s, campo, valor) => !valor || !Array.isArray(s[campo]) || !s[campo].length || s[campo].includes(valor);
+
+  function mensagemFrente(s) {
+    const { perfil, situacao } = Triagem.estado;
+    return ["Olá, Milena! Vim pelo site e quero falar sobre: *" + s.nome + "*.",
+      perfil && PERFIS[perfil] ? "Perfil: " + PERFIS[perfil] : "",
+      situacao && SITUACOES[situacao] ? "Situação: " + SITUACOES[situacao] : ""].filter(Boolean).join("\n");
+  }
+
+  function cartaoFrente(s, n) {
+    const c = CAT.categorias.find((x) => x.id === s.categoria) || {};
+    const na = Solicitacao.tem(s.id);
+    const link = linkWhats(mensagemFrente(s));
+    const tags = (Array.isArray(s.perfis) && s.perfis.length ? s.perfis : ["pf", "pj"]).map((p) => `<span>${p === "pj" ? "Empresa" : "Pessoa física"}</span>`).join("");
+    return `<article class="frente" data-servico="${esc(s.id)}" style="--i:${n}">
+      <div class="frente-topo"><span class="frente-num">${String(n + 1).padStart(2, "0")}</span><span class="frente-cat">${icone(c.icone)}${esc(c.nome || "")}</span></div>
+      <h3>${esc(s.nome)}</h3>
+      <p>${esc(s.resumo || "")}</p>
+      ${(s.itens || []).length ? `<ul>${s.itens.slice(0, 3).map((t) => `<li>${icone("check")}<span>${esc(t)}</span></li>`).join("")}</ul>` : ""}
+      <div class="frente-tags">${tags}${s.destaque ? `<span class="tag-destaque">Mais procurado</span>` : ""}</div>
+      <div class="frente-acoes">
+        ${link ? `<a class="btn btn-whats" href="${esc(link)}" target="_blank" rel="noopener" data-frente-whats="${esc(s.id)}">${icone("chat")}Falar no WhatsApp</a>` : ""}
+        <button type="button" class="btn ${na ? "btn-adicionado" : (link ? "btn-contorno-rosa" : "btn-primario")}" data-adicionar="${esc(s.id)}">${na ? icone("check") + "Adicionado" : icone("mais") + "Solicitar"}</button>
+        ${s.descricao || fotosDe(s).length ? `<button type="button" class="btn-texto" data-detalhes="${esc(s.id)}">Detalhes</button>` : ""}
+      </div>
+    </article>`;
+  }
+
+  function desenharFrentes() {
+    const grade = $("[data-frentes]");
+    if (!grade || !CAT.servicos.length) return;
+    const { perfil = "", situacao = "" } = Triagem.estado;
+    $$("[data-perfil]").forEach((b) => { const on = b.getAttribute("data-perfil") === perfil; b.classList.toggle("ativo", on); b.setAttribute("aria-pressed", on); });
+    $$("[data-situacao]").forEach((b) => { const on = b.getAttribute("data-situacao") === situacao; b.classList.toggle("ativo", on); b.setAttribute("aria-pressed", on); });
+    const ordemCat = (id) => { const c = CAT.categorias.find((x) => x.id === id); return c ? c.ordem ?? 0 : 999; };
+    const lista = CAT.servicos.filter((s) => serve(s, "perfis", perfil) && serve(s, "situacoes", situacao))
+      .sort((a, b) => ordemCat(a.categoria) - ordemCat(b.categoria) || (a.ordem ?? 0) - (b.ordem ?? 0));
+    const resumo = $("[data-frentes-resumo]");
+    if (resumo) {
+      const partes = [perfil && PERFIS[perfil], situacao && (situacao === "limpo" ? "nome limpo" : "com restrição")].filter(Boolean);
+      resumo.innerHTML = partes.length
+        ? `<strong>${lista.length}</strong> ${lista.length === 1 ? "frente indicada" : "frentes indicadas"} para <strong>${esc(partes.join(" · "))}</strong> <button type="button" class="btn-texto" data-limpar-filtros>Ver todas</button>`
+        : `<strong>${lista.length}</strong> frentes de atuação`;
+    }
+    grade.innerHTML = lista.length ? lista.map(cartaoFrente).join("")
+      : `<div class="vazio">Nenhuma frente com esse filtro ainda. <a class="link" data-whats>Fale com a Milena</a> e ela indica o caminho.</div>`;
+    grade.classList.remove("trocando"); void grade.offsetWidth; grade.classList.add("trocando");
+    if (!lista.length) aplicarContatos(CFG);
+  }
+
+  document.addEventListener("click", (e) => {
+    const p = e.target.closest("[data-perfil]"), si = e.target.closest("[data-situacao]");
+    if (p || si) {
+      Triagem.salvar(p ? { perfil: p.getAttribute("data-perfil") } : { situacao: si.getAttribute("data-situacao") });
+      desenharFrentes();
+      return;
+    }
+    if (e.target.closest("[data-limpar-filtros]")) { Triagem.salvar({ perfil: "", situacao: "" }); desenharFrentes(); return; }
+    if (e.target.closest("[data-triagem]")) abrirTriagem();
+  });
+
+  function abrirTriagem() {
+    if ($(".modal-triagem")) return;
+    const op = (attr, valor, ic, titulo, sub) => `<button type="button" class="triagem-op" ${attr}="${valor}"><span class="ic">${icone(ic)}</span><span class="triagem-txt"><strong>${titulo}</strong><small>${sub}</small></span>${icone("seta")}</button>`;
+    const m = modal(`<div class="triagem" data-etapa="1">
+        <div class="triagem-passo" data-passo-triagem="1">
+          <span class="rotulo">Passo 1 de 2</span>
+          <h2>Como está o seu nome <em>hoje</em>?</h2>
+          <p class="triagem-sub">Assim mostramos só as frentes que fazem sentido para você.</p>
+          <div class="triagem-ops">
+            ${op("data-t-situacao", "restricao", "alerta", "Estou com restrição", "Negativado no Serasa/SPC, protesto ou apontamento no Bacen")}
+            ${op("data-t-situacao", "limpo", "check", "Meu nome está limpo", "Mas o crédito não sai, ou quero organizar as finanças")}
+            ${op("data-t-situacao", "", "lupa", "Não sei ao certo", "Quero entender o que existe no meu nome")}
+          </div>
+        </div>
+        <div class="triagem-passo" data-passo-triagem="2" hidden>
+          <span class="rotulo">Passo 2 de 2</span>
+          <h2>O atendimento é para <em>quem</em>?</h2>
+          <p class="triagem-sub">Pessoa física e empresa têm caminhos diferentes.</p>
+          <div class="triagem-ops">
+            ${op("data-t-perfil", "pf", "pessoa", "Para mim", "Pessoa física · CPF")}
+            ${op("data-t-perfil", "pj", "empresa", "Para a minha empresa", "Pessoa jurídica · CNPJ")}
+          </div>
+          <button type="button" class="btn-texto" data-t-voltar>← Voltar</button>
+        </div>
+        <button type="button" class="btn-texto triagem-pular" data-t-pular>Prefiro explorar sozinho</button>
+      </div>`);
+    m.classList.add("modal-triagem");
+    const fundo = m.closest(".modal-fundo");
+    const fechar = () => fundo.click();
+    const escolha = {};
+    const irPara = (n) => {
+      $("[data-passo-triagem='1']", m).hidden = n !== 1; $("[data-passo-triagem='2']", m).hidden = n !== 2;
+      $(".triagem", m).dataset.etapa = String(n);
+      const b = $(`[data-passo-triagem='${n}'] .triagem-op`, m); if (b) b.focus();
+    };
+    m.addEventListener("click", (e) => {
+      const s1 = e.target.closest("[data-t-situacao]"), s2 = e.target.closest("[data-t-perfil]");
+      if (s1) { escolha.situacao = s1.getAttribute("data-t-situacao"); irPara(2); }
+      else if (e.target.closest("[data-t-voltar]")) irPara(1);
+      else if (s2) {
+        escolha.perfil = s2.getAttribute("data-t-perfil");
+        Triagem.salvar(escolha);
+        fechar();
+        desenharFrentes();
+        const alvo = document.getElementById("frentes");
+        if (alvo) alvo.scrollIntoView({ behavior: "smooth", block: "start" });
+        const n = $$("[data-frentes] .frente").length;
+        avisar(n ? `Pronto! Separamos ${n} ${n === 1 ? "frente" : "frentes"} para o seu caso.` : "Fale com a Milena: ela indica o caminho para o seu caso.");
+      } else if (e.target.closest("[data-t-pular]")) { Triagem.salvar({}); fechar(); }
+    });
+    // fechar no "×", com Esc ou clicando fora também conta como "já vi"
+    fundo.addEventListener("click", (e) => { if (e.target === fundo || e.target.closest(".modal-fechar")) Triagem.salvar({}); });
+    document.addEventListener("keydown", function esc1(e) { if (e.key === "Escape") { Triagem.salvar({}); document.removeEventListener("keydown", esc1); } });
+  }
+
+  function talvezAbrirTriagem() {
+    if (!$("[data-frentes]") || Triagem.estado.visto || location.hash) return;
+    const espera = document.body.classList.contains("com-abertura") ? 3600 : 1800;
+    setTimeout(() => {
+      if (Triagem.estado.visto || $(".modal-fundo") || $(".gaveta:not([hidden])") || document.body.classList.contains("ia-aberta")) return;
+      if (window.scrollY > window.innerHeight * 1.5) return;   // já está explorando: não interrompe
+      abrirTriagem();
+    }, espera);
   }
 
   document.addEventListener("click", (e) => {
@@ -245,7 +386,7 @@
       $$(`[data-adicionar="${CSS.escape(id)}"]`).forEach((b) => {
         if (b.closest(".modal")) return;
         const na = this.tem(id);
-        b.className = "btn " + (na ? "btn-adicionado" : "btn-primario");
+        b.className = "btn " + (na ? "btn-adicionado" : b.closest(".frente") && numeroWhats ? "btn-contorno-rosa" : "btn-primario");
         b.innerHTML = na ? icone("check") + "Adicionado" : icone("mais") + "Solicitar";
       });
     },
@@ -641,10 +782,10 @@
   aplicarContatos(Object.assign({}, CFG));
   atualizarGaveta();
   D.site().then((s) => { aplicarContatos(s.contatos); aplicarSite(s); }).catch((e) => console.warn(e));
-  if ($("[data-categorias]") || $("[data-catalogo]") || form || Solicitacao.ids().length || $("[data-abrir-solicitacao]")) {
+  if ($("[data-categorias]") || $("[data-catalogo]") || $("[data-frentes]") || form || Solicitacao.ids().length || $("[data-abrir-solicitacao]")) {
     D.catalogo(true).then((c) => {
       CAT = c;
-      desenharCatalogo(); opcoesServicoForm(); atualizarGaveta(); observarRevelar();
+      desenharCatalogo(); opcoesServicoForm(); atualizarGaveta(); observarRevelar(); talvezAbrirTriagem();
       if (new URLSearchParams(location.search).get("solicitacao") === "1") abrirGaveta();
     }).catch((e) => console.warn(e));
   }

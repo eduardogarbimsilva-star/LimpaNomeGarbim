@@ -26,7 +26,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Great+Vibes&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=15">
+  <link rel="stylesheet" href="assets/css/style.css?v=16">
 </head>
 <body>
   <script>
@@ -58,7 +58,8 @@
         <ul class="menu">
           <li><a href="index.html" class="ativo">Início</a></li>
           <li><a href="servicos.html">Serviços</a></li>
-          <li><a href="como-funciona.html">Como funciona</a></li>
+          <li><a href="como-funciona.html">Como trabalhamos</a></li>
+          <li><a href="#orientacao">Orientação</a></li>
           <li><a href="sobre.html">Quem somos</a></li>
           <li><a href="duvidas.html">Dúvidas</a></li>
         </ul>
@@ -80,8 +81,8 @@
           <p class="rotativo" aria-label="Especialista em Limpa Nome, Bacen, revisão de juros, score e crédito e empresas">Especialista em <span class="rotativo-palavras" aria-hidden="true"><b class="ativa">Limpa Nome</b><b>Bacen</b><b>Revisão de juros</b><b>Score e crédito</b><b>Empresas (CNPJ)</b></span></p>
           <p class="lead" data-texto="inicio.lead">Negociamos suas dívidas, contestamos negativações indevidas e orientamos a recuperação do seu score — com transparência do primeiro contato até a baixa no Serasa, SPC e Boa Vista.</p>
           <div class="hero-botoes">
-            <a href="servicos.html" class="btn btn-primario">Ver serviços</a>
-            <a href="#diagnostico" class="btn btn-contorno-rosa">Diagnóstico grátis</a>
+            <a href="#frentes" class="btn btn-primario">Conheça as frentes</a>
+            <a href="#como-funciona" class="btn btn-contorno-rosa">Entenda o método</a>
           </div>
           <div class="hero-confianca">
             <span><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Análise sem compromisso</span>
@@ -113,6 +114,19 @@
             <span class="selo-miolo">✦</span>
           </a>
         </div>
+      </div>
+    </section>
+
+    <section class="mapa-decisao" aria-label="Mapa de decisão">
+      <div class="container">
+        <span class="mapa-rotulo revelar">Mapa de decisão</span>
+        <h2 class="mapa-titulo revelar">Entender <em>antes</em> de avançar.</h2>
+        <ol class="mapa-etapas">
+          <li class="revelar"><span class="mapa-num">01</span><strong>Seu cenário</strong><small>Restrição, nome limpo, CPF ou CNPJ</small></li>
+          <li class="revelar"><span class="mapa-num">02</span><strong>A frente certa</strong><small>Só o que faz sentido para o seu caso</small></li>
+          <li class="revelar"><span class="mapa-num">03</span><strong>Conversa com a Milena</strong><small>Proposta clara, por escrito</small></li>
+        </ol>
+        <a href="#frentes" class="mapa-descer" aria-label="Descer para as frentes de atuação"><span class="mouse" aria-hidden="true"><span></span></span>Desça para explorar</a>
       </div>
     </section>
 
@@ -155,68 +169,35 @@
       </div>
     </section>
 
-    <section class="secao">
+    <section class="secao frentes" id="frentes">
       <div class="container">
         <div class="flutuantes-titulo" aria-hidden="true">
           <div class="card-flutuante cf-esq"><span class="cf-ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg></span><div><strong>Proposta por escrito</strong><small>antes de qualquer pagamento</small></div></div>
           <div class="card-flutuante cf-dir"><span class="cf-ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><div><strong>Sigilo total</strong><small>seus dados protegidos (LGPD)</small></div></div>
         </div>
         <div class="secao-titulo revelar">
-          <span class="rotulo">Serviços</span>
-          <h2 data-texto="inicio.servicos.titulo">Como podemos ajudar</h2>
-          <p data-texto="inicio.servicos.texto">Cada caso tem uma solução. Depois da análise, indicamos o caminho mais rápido e seguro para o seu.</p>
+          <span class="rotulo">Frentes de atuação</span>
+          <h2 data-texto="inicio.servicos.titulo">Escolha por onde começar</h2>
+          <p data-texto="inicio.servicos.texto">Filtre pelo seu perfil e pela situação do seu nome. Cada frente mostra o que fazemos — e você já pode chamar a Milena com o assunto pronto.</p>
         </div>
-        <div class="grade-3" data-categorias>
-          <article class="cartao revelar">
-            <div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.9-3.9a3 3 0 0 0-4.2 0l-.9.9a1 1 0 1 1-3-3l2.8-2.8a5 5 0 0 1 6 .8L21 9"/><path d="m3 13 6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 8 7 4l3 3"/></svg></div>
-            
-            <h3>Limpa Nome</h3>
-            <p>Negociação das suas dívidas para tirar seu CPF do Serasa, SPC e Boa Vista.</p>
-            <ul><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Levantamento de todas as dívidas no seu CPF</span></li><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Negociação de descontos e parcelamento</span></li><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Acompanhamento até a baixa da negativação</span></li></ul>
-            <a class="link" href="servicos.html#cat-limpa-nome">Ver serviço <svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          </article>
-          <article class="cartao revelar">
-            <div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 10v8M9 10v8M15 10v8M19 10v8M3 21h18"/></svg></div>
-            <span class="etiqueta-cat">2 opções</span>
-            <h3>Bacen</h3>
-            <p>Regularização de apontamentos no Sistema de Informações de Crédito (SCR) do Banco Central — o “Registrato”. Dois métodos, conforme o seu caso.</p>
-            <ul><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Bacen — Método administrativo</span></li><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Bacen — Método judicial</span></li></ul>
-            <a class="link" href="servicos.html#cat-bacen">Ver opções <svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          </article>
-          <article class="cartao revelar">
-            <div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/></svg></div>
-            
-            <h3>Negativação indevida</h3>
-            <p>Dívida que você não fez, já paga, prescrita ou sem aviso prévio.</p>
-            <ul><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Análise de cada registro no Serasa, SPC e Boa Vista</span></li><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Contestação junto ao credor e aos órgãos</span></li><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Encaminhamento jurídico com advogado parceiro</span></li></ul>
-            <a class="link" href="servicos.html#cat-negativacao-indevida">Ver serviço <svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          </article>
-          <article class="cartao revelar">
-            <div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg></div>
-            
-            <h3>Revisão de juros</h3>
-            <p>Contratos com juros acima da média do mercado.</p>
-            <ul><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Cálculo comparado com as taxas do Banco Central</span></li><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Financiamento, consignado e cartão</span></li><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Orientação sobre renegociação ou revisão judicial</span></li></ul>
-            <a class="link" href="servicos.html#cat-juros-abusivos">Ver serviço <svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          </article>
-          <article class="cartao revelar">
-            <div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 17v-4M10 17v-7M14 17v-5M18 17V8"/><path d="M5 9l5-4 4 3 5-5"/></svg></div>
-            
-            <h3>Score e crédito</h3>
-            <p>Reconstrução do seu score e do acesso ao crédito.</p>
-            <ul><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Diagnóstico do que está segurando o seu score</span></li><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Plano de ação simples, passo a passo</span></li><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Orientação para voltar a ter crédito com segurança</span></li></ul>
-            <a class="link" href="servicos.html#cat-score">Ver serviço <svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          </article>
-          <article class="cartao revelar">
-            <div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 7h2M14 7h2M8 11h2M14 11h2M8 15h2M14 15h2M10 21v-3h4v3"/></svg></div>
-            
-            <h3>Empresas (CNPJ)</h3>
-            <p>Protestos, dívidas bancárias e restrições no CNPJ.</p>
-            <ul><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Levantamento de protestos e restrições</span></li><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Negociação de dívidas bancárias e com fornecedores</span></li><li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Certidões e regularização do CNPJ</span></li></ul>
-            <a class="link" href="servicos.html#cat-empresas">Ver serviço <svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          </article>
+        <div class="frentes-filtros revelar">
+          <div class="seg" role="group" aria-label="Para quem é o atendimento">
+            <button type="button" class="ativo" data-perfil="" aria-pressed="true">Todos</button>
+            <button type="button" data-perfil="pf" aria-pressed="false"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Pessoa física</button>
+            <button type="button" data-perfil="pj" aria-pressed="false"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"/></svg>Empresa</button>
+          </div>
+          <div class="seg" role="group" aria-label="Como está o seu nome">
+            <button type="button" class="ativo" data-situacao="" aria-pressed="true">Qualquer situação</button>
+            <button type="button" data-situacao="restricao" aria-pressed="false">Com restrição</button>
+            <button type="button" data-situacao="limpo" aria-pressed="false">Nome limpo</button>
+          </div>
+          <button type="button" class="btn-ajuda" data-triagem><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/></svg>Me ajude a escolher</button>
         </div>
-        <p class="centro"><a href="servicos.html" class="btn btn-primario">Ver catálogo de serviços</a></p>
+        <p class="frentes-resumo" data-frentes-resumo aria-live="polite"></p>
+        <div class="frentes-grade" data-frentes>
+          <p class="vazio">Carregando as frentes de atuação...</p>
+        </div>
+        <p class="centro"><a href="servicos.html" class="btn btn-contorno-rosa">Ver catálogo completo</a></p>
       </div>
     </section>
 
@@ -251,6 +232,31 @@
           <div class="passo revelar"><h3 data-texto="passos.2.titulo">Diagnóstico e proposta</h3><p data-texto="passos.2.texto">Explicamos o que encontramos, qual o melhor caminho para cada dívida e o valor do serviço — tudo por escrito.</p></div>
           <div class="passo revelar"><h3 data-texto="passos.3.titulo">Negociação e contestação</h3><p data-texto="passos.3.texto">Negociamos com os credores e contestamos o que for indevido, sempre com você aprovando cada acordo.</p></div>
           <div class="passo revelar"><h3 data-texto="passos.4.titulo">Nome limpo e acompanhamento</h3><p data-texto="passos.4.texto">Acompanhamos a baixa nos órgãos de proteção ao crédito e orientamos a recuperação do seu score.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="secao orientacao" id="orientacao">
+      <div class="container orientacao-grade">
+        <div class="revelar">
+          <span class="rotulo">Orientação financeira</span>
+          <h2 data-texto="orientacao.titulo">Antes de negociar, <em>entender</em>.</h2>
+          <p class="lead" data-texto="orientacao.texto">Nem todo caso começa com uma ação. Às vezes, o primeiro passo é olhar com calma para o orçamento e para as propostas que estão na mesa.</p>
+          <div class="hero-botoes">
+            <a class="btn btn-primario" data-whats="Olá, Milena! Vim pelo site e quero conversar sobre o meu cenário financeiro." target="_blank" rel="noopener"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.2A8.5 8.5 0 1 1 21 12z"/></svg>Conversar sobre meu cenário</a>
+          </div>
+        </div>
+        <div class="orientacao-cards">
+          <article class="revelar"><span class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 17v-4M10 17V9M14 17v-6M18 17V5"/></svg></span><h3>Leitura do orçamento</h3><p>Quanto entra, quanto sai e quanto cabe de verdade numa parcela — sem julgamento.</p></article>
+          <article class="revelar"><span class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg></span><h3>Análise de propostas</h3><p>Recebeu um acordo ou uma oferta de crédito? Olhamos juros, prazos e letras miúdas antes de você assinar.</p></article>
+          <article class="revelar"><span class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.4 8.5 8 9 4.6-.5 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span><h3>Plano para seguir em dia</h3><p>Um passo a passo simples para o nome continuar limpo depois que tudo se resolver.</p></article>
+        </div>
+      </div>
+      <div class="container">
+        <div class="aviso-responsavel revelar">
+          <span class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span>
+          <div><strong>Comunicação responsável</strong>
+          <p data-texto="orientacao.aviso">Não prometemos aprovação de crédito, aumento de score nem baixa de restrições em prazo garantido — esses resultados dependem de bancos, credores e órgãos de proteção ao crédito. O que garantimos é análise honesta, proposta por escrito e acompanhamento de perto.</p></div>
         </div>
       </div>
     </section>
@@ -413,6 +419,7 @@
         <ul>
           <li><a href="sobre.html">Quem somos</a></li>
           <li><a href="como-funciona.html">Como funciona</a></li>
+          <li><a href="#orientacao">Orientação financeira</a></li>
           <li><a href="duvidas.html">Dúvidas frequentes</a></li>
           <li><a href="conta.html">Minha conta</a></li>
           <li><a href="privacidade.html">Política de Privacidade</a></li>
@@ -444,11 +451,11 @@
     <a class="barra-whats" data-whats><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2m0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2m4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2s.2-1.1.2-1.2-.2-.2-.4-.3"/></svg><span>WhatsApp</span></a>
   </nav>
 
-  <script src="assets/js/config.js?v=15"></script>
-  <script src="assets/js/padrao.js?v=15"></script>
-  <script src="assets/js/dados.js?v=15"></script>
-  <script src="assets/js/main.js?v=15"></script>
-  <script src="assets/js/destaques.js?v=15"></script>
-  <script src="assets/js/assistente.js?v=15"></script>
+  <script src="assets/js/config.js?v=16"></script>
+  <script src="assets/js/padrao.js?v=16"></script>
+  <script src="assets/js/dados.js?v=16"></script>
+  <script src="assets/js/main.js?v=16"></script>
+  <script src="assets/js/destaques.js?v=16"></script>
+  <script src="assets/js/assistente.js?v=16"></script>
 </body>
 </html>
