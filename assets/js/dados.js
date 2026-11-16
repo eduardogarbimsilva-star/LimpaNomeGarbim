@@ -109,6 +109,11 @@
       contatos, textos,
       fotos: Object.assign({}, PADRAO.fotos, salvo.fotos || {}),
       faq: Array.isArray(salvo.faq) && salvo.faq.length ? salvo.faq : PADRAO.faq,
+      direitos: Array.isArray(salvo.direitos) && salvo.direitos.length ? salvo.direitos : (PADRAO.direitos || []),
+      aparencia: Object.assign({}, PADRAO.aparencia || {}, salvo.aparencia || {}, {
+        secoes: Object.assign({}, (PADRAO.aparencia || {}).secoes || {}, (salvo.aparencia || {}).secoes || {}),
+        aviso: Object.assign({}, (PADRAO.aparencia || {}).aviso || {}, (salvo.aparencia || {}).aviso || {})
+      }),
       personalizado: salvo
     };
   }
@@ -561,7 +566,7 @@
       const d = await rodar(sb.from("configuracoes").select("dados").eq("id", 1).maybeSingle());
       return (d && d.dados) || {};
     },
-    /** parte: "textos" | "fotos" | "faq" | "contatos" */
+    /** parte: "textos" | "fotos" | "faq" | "contatos" | "direitos" | "aparencia" */
     async salvarSite(parte, valor) {
       const atual = await this.lerSite();
       atual[parte] = valor;

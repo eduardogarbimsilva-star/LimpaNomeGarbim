@@ -26,13 +26,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Great+Vibes&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=16">
+  <link rel="stylesheet" href="assets/css/style.css?v=17">
 </head>
 <body>
   <script>
     /* Abertura com a assinatura: uma vez por visita (pula para quem pede menos movimento) */
     (function () { try {
-      if (sessionStorage.getItem("mg_abertura") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      if (sessionStorage.getItem("mg_abertura") || (JSON.parse(localStorage.getItem("mg_aparencia") || "{}").abertura === false) || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       sessionStorage.setItem("mg_abertura", "1");
       document.body.classList.add("com-abertura");
       document.body.insertAdjacentHTML("afterbegin", '<div class="abertura" aria-hidden="true"><div class="abertura-miolo"><img src="assets/img/milena-garbim-avatar.jpg" alt="" data-foto="avatar"><span class="assinatura">Milena Garbim</span><small>Limpa Nome &amp; Crédito</small></div></div>');
@@ -56,10 +56,10 @@
       <a href="index.html" class="logo" aria-label="Milena Garbim - Limpa Nome - início"><span class="logo-foto"><img src="assets/img/milena-garbim-avatar.jpg" alt="" width="50" height="50" data-foto="avatar"></span><span class="logo-texto"><strong>Milena Garbim</strong><small>Limpa Nome &amp; Crédito</small></span></a>
       <nav aria-label="Menu principal">
         <ul class="menu">
-          <li><a href="index.html" class="ativo">Início</a></li>
           <li><a href="servicos.html">Serviços</a></li>
           <li><a href="como-funciona.html">Como trabalhamos</a></li>
           <li><a href="#orientacao">Orientação</a></li>
+          <li><a href="direitos.html">Seus direitos</a></li>
           <li><a href="sobre.html">Quem somos</a></li>
           <li><a href="duvidas.html">Dúvidas</a></li>
         </ul>
@@ -85,9 +85,9 @@
             <a href="#como-funciona" class="btn btn-contorno-rosa">Entenda o método</a>
           </div>
           <div class="hero-confianca">
-            <span><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Análise sem compromisso</span>
-            <span><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Proposta por escrito</span>
-            <span><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Acompanhe pela sua conta</span>
+            <span><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-texto="inicio.confianca.1">Análise sem compromisso</span></span>
+            <span><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-texto="inicio.confianca.2">Proposta por escrito</span></span>
+            <span><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-texto="inicio.confianca.3">Acompanhe pela sua conta</span></span>
           </div>
           <p class="nota-ilustracao">*Ilustração. Resultados variam conforme cada caso.</p>
         </div>
@@ -117,66 +117,66 @@
       </div>
     </section>
 
-    <section class="mapa-decisao" aria-label="Mapa de decisão">
+    <section class="mapa-decisao" aria-label="Mapa de decisão" data-secao="mapa">
       <div class="container">
-        <span class="mapa-rotulo revelar">Mapa de decisão</span>
-        <h2 class="mapa-titulo revelar">Entender <em>antes</em> de avançar.</h2>
+        <span class="mapa-rotulo revelar" data-texto="inicio.mapa-de-decisao.1">Mapa de decisão</span>
+        <h2 class="mapa-titulo revelar" data-texto="inicio.mapa-de-decisao.2">Entender <em>antes</em> de avançar.</h2>
         <ol class="mapa-etapas">
-          <li class="revelar"><span class="mapa-num">01</span><strong>Seu cenário</strong><small>Restrição, nome limpo, CPF ou CNPJ</small></li>
-          <li class="revelar"><span class="mapa-num">02</span><strong>A frente certa</strong><small>Só o que faz sentido para o seu caso</small></li>
-          <li class="revelar"><span class="mapa-num">03</span><strong>Conversa com a Milena</strong><small>Proposta clara, por escrito</small></li>
+          <li class="revelar"><span class="mapa-num">01</span><strong data-texto="inicio.mapa-de-decisao.3">Seu cenário</strong><small data-texto="inicio.mapa-de-decisao.4">Restrição, nome limpo, CPF ou CNPJ</small></li>
+          <li class="revelar"><span class="mapa-num">02</span><strong data-texto="inicio.mapa-de-decisao.5">A frente certa</strong><small data-texto="inicio.mapa-de-decisao.6">Só o que faz sentido para o seu caso</small></li>
+          <li class="revelar"><span class="mapa-num">03</span><strong data-texto="inicio.mapa-de-decisao.7">Conversa com a Milena</strong><small data-texto="inicio.mapa-de-decisao.8">Proposta clara, por escrito</small></li>
         </ol>
         <a href="#frentes" class="mapa-descer" aria-label="Descer para as frentes de atuação"><span class="mouse" aria-hidden="true"><span></span></span>Desça para explorar</a>
       </div>
     </section>
 
-    <div class="faixa-rolante" aria-label="Serviços">
+    <div class="faixa-rolante" aria-label="Serviços" data-secao="faixa">
       <div class="trilho"><span>Limpa Nome</span><span>Bacen</span><span>Negativação indevida</span><span>Revisão de juros</span><span>Score e crédito</span><span>Empresas (CNPJ)</span><span>Atendimento humano</span><span>Proposta por escrito</span><span aria-hidden="true">Limpa Nome</span><span aria-hidden="true">Bacen</span><span aria-hidden="true">Negativação indevida</span><span aria-hidden="true">Revisão de juros</span><span aria-hidden="true">Score e crédito</span><span aria-hidden="true">Empresas (CNPJ)</span><span aria-hidden="true">Atendimento humano</span><span aria-hidden="true">Proposta por escrito</span></div>
     </div>
 
-    <section class="faixa-selos">
+    <section class="faixa-selos" data-secao="selos">
       <div class="container selos">
-        <div class="revelar"><span class="ic"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><span><strong>Transparência</strong>tudo explicado por escrito</span></div>
-        <div class="revelar"><span class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><span><strong>Sigilo</strong>dados protegidos (LGPD)</span></div>
-        <div class="revelar"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-9-9.2C1.6 7.2 4 4 7.2 4c2 0 3.4 1 4.8 2.6C13.4 5 14.8 4 16.8 4 20 4 22.4 7.2 21 10.8 19 15.6 12 20 12 20z"/></svg></span><span><strong>Atendimento humano</strong>sem robô, sem julgamento</span></div>
-        <div class="revelar"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span><span><strong>Acompanhamento</strong>cada etapa na sua conta</span></div>
+        <div class="revelar"><span class="ic"><svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></span><span><strong data-texto="inicio.selos-de-confianca.1">Transparência</strong><span data-texto="inicio.selos.1.texto">tudo explicado por escrito</span></span></div>
+        <div class="revelar"><span class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><span><strong data-texto="inicio.selos-de-confianca.2">Sigilo</strong><span data-texto="inicio.selos.2.texto">dados protegidos (LGPD)</span></span></div>
+        <div class="revelar"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-9-9.2C1.6 7.2 4 4 7.2 4c2 0 3.4 1 4.8 2.6C13.4 5 14.8 4 16.8 4 20 4 22.4 7.2 21 10.8 19 15.6 12 20 12 20z"/></svg></span><span><strong data-texto="inicio.selos-de-confianca.3">Atendimento humano</strong><span data-texto="inicio.selos.3.texto">sem robô, sem julgamento</span></span></div>
+        <div class="revelar"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span><span><strong data-texto="inicio.selos-de-confianca.4">Acompanhamento</strong><span data-texto="inicio.selos.4.texto">cada etapa na sua conta</span></span></div>
       </div>
     </section>
 
-    <section class="secao secao-alt">
+    <section class="secao secao-alt" data-secao="dores">
       <div class="container">
         <div class="secao-titulo revelar">
-          <span class="rotulo">Você se identifica?</span>
+          <span class="rotulo" data-texto="inicio.voce-se-identifica.1">Você se identifica?</span>
           <h2 data-texto="inicio.dores.titulo">Nome sujo trava a vida. A gente destrava.</h2>
           <p data-texto="inicio.dores.texto">Se alguma dessas situações é a sua, dá para resolver — e você não precisa enfrentar isso sozinho.</p>
         </div>
         <div class="dores">
-          <div class="dor revelar"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg><div><strong>Crédito negado</strong><span>Cartão, empréstimo ou financiamento recusados na hora.</span></div></div>
-          <div class="dor revelar"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg><div><strong>Dívida que não é sua</strong><span>Apareceu no Serasa uma conta que você nunca fez.</span></div></div>
-          <div class="dor revelar"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg><div><strong>Prejuízo no Bacen</strong><span>Nome limpo no Serasa, mas o banco ainda recusa.</span></div></div>
-          <div class="dor revelar"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg><div><strong>Juros que não param</strong><span>Você paga todo mês e a dívida só cresce.</span></div></div>
-          <div class="dor revelar"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg><div><strong>Empresa travada</strong><span>Protesto no CNPJ impede compras e licitações.</span></div></div>
-          <div class="dor revelar"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg><div><strong>Cobrança sem fim</strong><span>Ligações e mensagens de cobrança todos os dias.</span></div></div>
+          <div class="dor revelar"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg><div><strong data-texto="inicio.voce-se-identifica.2">Crédito negado</strong><span data-texto="inicio.voce-se-identifica.3">Cartão, empréstimo ou financiamento recusados na hora.</span></div></div>
+          <div class="dor revelar"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg><div><strong data-texto="inicio.voce-se-identifica.4">Dívida que não é sua</strong><span data-texto="inicio.voce-se-identifica.5">Apareceu no Serasa uma conta que você nunca fez.</span></div></div>
+          <div class="dor revelar"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg><div><strong data-texto="inicio.voce-se-identifica.6">Prejuízo no Bacen</strong><span data-texto="inicio.voce-se-identifica.7">Nome limpo no Serasa, mas o banco ainda recusa.</span></div></div>
+          <div class="dor revelar"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg><div><strong data-texto="inicio.voce-se-identifica.8">Juros que não param</strong><span data-texto="inicio.voce-se-identifica.9">Você paga todo mês e a dívida só cresce.</span></div></div>
+          <div class="dor revelar"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg><div><strong data-texto="inicio.voce-se-identifica.10">Empresa travada</strong><span data-texto="inicio.voce-se-identifica.11">Protesto no CNPJ impede compras e licitações.</span></div></div>
+          <div class="dor revelar"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg><div><strong data-texto="inicio.voce-se-identifica.12">Cobrança sem fim</strong><span data-texto="inicio.voce-se-identifica.13">Ligações e mensagens de cobrança todos os dias.</span></div></div>
         </div>
       </div>
     </section>
 
 
-    <section class="manifesto" aria-label="Nosso jeito">
+    <section class="manifesto" aria-label="Nosso jeito" data-secao="manifesto">
       <div class="container">
         <p class="manifesto-texto" data-texto="inicio.manifesto" data-manifesto>Dívida não define ninguém. Com informação, calma e um plano feito para você, o seu nome volta a ser só seu.</p>
         <span class="assinatura" aria-hidden="true">Milena Garbim</span>
       </div>
     </section>
 
-    <section class="secao frentes" id="frentes">
+    <section class="secao frentes" id="frentes" data-secao="frentes">
       <div class="container">
         <div class="flutuantes-titulo" aria-hidden="true">
           <div class="card-flutuante cf-esq"><span class="cf-ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg></span><div><strong>Proposta por escrito</strong><small>antes de qualquer pagamento</small></div></div>
           <div class="card-flutuante cf-dir"><span class="cf-ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span><div><strong>Sigilo total</strong><small>seus dados protegidos (LGPD)</small></div></div>
         </div>
         <div class="secao-titulo revelar">
-          <span class="rotulo">Frentes de atuação</span>
+          <span class="rotulo" data-texto="inicio.frentes-de-atuacao.1">Frentes de atuação</span>
           <h2 data-texto="inicio.servicos.titulo">Escolha por onde começar</h2>
           <p data-texto="inicio.servicos.texto">Filtre pelo seu perfil e pela situação do seu nome. Cada frente mostra o que fazemos — e você já pode chamar a Milena com o assunto pronto.</p>
         </div>
@@ -201,15 +201,15 @@
       </div>
     </section>
 
-    <section class="secao secao-alt" id="diagnostico">
+    <section class="secao secao-alt" id="diagnostico" data-secao="diagnostico">
       <div class="container quiz-grade">
         <div class="revelar">
-          <span class="rotulo">Diagnóstico em 30 segundos</span>
+          <span class="rotulo" data-texto="inicio.diagnostico-quiz.1">Diagnóstico em 30 segundos</span>
           <h2 class="quiz-titulo">Descubra o caminho para o <em>seu</em> caso</h2>
           <p class="quiz-sub">Três perguntas rápidas, sem cadastro e sem pedir CPF. No fim, você vê o serviço indicado e pode falar direto com a Milena.</p>
           <ul class="lista-check">
-            <li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Gratuito e sem compromisso</span></li>
-            <li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Nada é enviado sem você querer</span></li>
+            <li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-texto="inicio.diagnostico-quiz.2">Gratuito e sem compromisso</span></li>
+            <li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-texto="inicio.diagnostico-quiz.3">Nada é enviado sem você querer</span></li>
           </ul>
         </div>
         <div class="quiz revelar" data-quiz>
@@ -220,10 +220,10 @@
       </div>
     </section>
 
-    <section class="secao secao-rosa" id="como-funciona">
+    <section class="secao secao-rosa" id="como-funciona" data-secao="como-funciona">
       <div class="container">
         <div class="secao-titulo revelar">
-          <span class="rotulo">Como funciona</span>
+          <span class="rotulo" data-texto="inicio.como-funciona.1">Como funciona</span>
           <h2 data-texto="passos.titulo">Quatro passos até o nome limpo</h2>
           <p data-texto="passos.texto">Você acompanha cada etapa e aprova cada acordo. Nada é feito sem o seu “ok”.</p>
         </div>
@@ -236,10 +236,10 @@
       </div>
     </section>
 
-    <section class="secao orientacao" id="orientacao">
+    <section class="secao orientacao" id="orientacao" data-secao="orientacao">
       <div class="container orientacao-grade">
         <div class="revelar">
-          <span class="rotulo">Orientação financeira</span>
+          <span class="rotulo" data-texto="inicio.orientacao-financeira.1">Orientação financeira</span>
           <h2 data-texto="orientacao.titulo">Antes de negociar, <em>entender</em>.</h2>
           <p class="lead" data-texto="orientacao.texto">Nem todo caso começa com uma ação. Às vezes, o primeiro passo é olhar com calma para o orçamento e para as propostas que estão na mesa.</p>
           <div class="hero-botoes">
@@ -247,21 +247,21 @@
           </div>
         </div>
         <div class="orientacao-cards">
-          <article class="revelar"><span class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 17v-4M10 17V9M14 17v-6M18 17V5"/></svg></span><h3>Leitura do orçamento</h3><p>Quanto entra, quanto sai e quanto cabe de verdade numa parcela — sem julgamento.</p></article>
-          <article class="revelar"><span class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg></span><h3>Análise de propostas</h3><p>Recebeu um acordo ou uma oferta de crédito? Olhamos juros, prazos e letras miúdas antes de você assinar.</p></article>
-          <article class="revelar"><span class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.4 8.5 8 9 4.6-.5 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span><h3>Plano para seguir em dia</h3><p>Um passo a passo simples para o nome continuar limpo depois que tudo se resolver.</p></article>
+          <article class="revelar"><span class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 17v-4M10 17V9M14 17v-6M18 17V5"/></svg></span><h3 data-texto="inicio.orientacao-financeira.2">Leitura do orçamento</h3><p data-texto="inicio.orientacao-financeira.3">Quanto entra, quanto sai e quanto cabe de verdade numa parcela — sem julgamento.</p></article>
+          <article class="revelar"><span class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg></span><h3 data-texto="inicio.orientacao-financeira.4">Análise de propostas</h3><p data-texto="inicio.orientacao-financeira.5">Recebeu um acordo ou uma oferta de crédito? Olhamos juros, prazos e letras miúdas antes de você assinar.</p></article>
+          <article class="revelar"><span class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.4 8.5 8 9 4.6-.5 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span><h3 data-texto="inicio.orientacao-financeira.6">Plano para seguir em dia</h3><p data-texto="inicio.orientacao-financeira.7">Um passo a passo simples para o nome continuar limpo depois que tudo se resolver.</p></article>
         </div>
       </div>
       <div class="container">
         <div class="aviso-responsavel revelar">
           <span class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span>
-          <div><strong>Comunicação responsável</strong>
+          <div><strong data-texto="inicio.orientacao-financeira.8">Comunicação responsável</strong>
           <p data-texto="orientacao.aviso">Não prometemos aprovação de crédito, aumento de score nem baixa de restrições em prazo garantido — esses resultados dependem de bancos, credores e órgãos de proteção ao crédito. O que garantimos é análise honesta, proposta por escrito e acompanhamento de perto.</p></div>
         </div>
       </div>
     </section>
 
-    <section class="secao">
+    <section class="secao" data-secao="fundadora">
       <div class="container fundadora">
         <div class="retrato revelar">
           <div class="moldura"><img src="assets/img/milena-garbim-retrato.jpg" alt="Milena Garbim" width="513" height="642" loading="lazy" data-foto="retrato"></div>
@@ -270,7 +270,7 @@
           <div class="card-flutuante cf-selo" aria-hidden="true"><span class="cf-ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-9-9.2C1.6 7.2 4 4 7.2 4c2 0 3.4 1 4.8 2.6C13.4 5 14.8 4 16.8 4 20 4 22.4 7.2 21 10.8 19 15.6 12 20 12 20z"/></svg></span><strong>Atendimento humano</strong></div>
         </div>
         <div class="revelar">
-          <span class="rotulo">Quem está à frente</span>
+          <span class="rotulo" data-texto="inicio.quem-esta-a-frente.1">Quem está à frente</span>
           <h2 data-texto="inicio.milena.titulo">Uma empresa com dona, rosto e compromisso</h2>
           <p data-texto="inicio.milena.p1">A Limpa Nome Garbim foi fundada por Milena Garbim, proprietária e acionista da empresa, que acompanha de perto cada atendimento. A ideia é simples: tratar quem está com o nome sujo com respeito, clareza e resultado.</p>
           <p data-texto="inicio.milena.p2">Aqui você não é um número de protocolo. Você sabe com quem está falando, o que vai ser feito e quanto vai custar — antes de começar.</p>
@@ -280,34 +280,34 @@
       </div>
     </section>
 
-    <section class="secao dicas-secao">
+    <section class="secao dicas-secao" data-secao="dicas">
       <div class="container">
         <div class="dicas-cab revelar">
-          <div><span class="rotulo">Dicas da Milena</span><h2>O que todo mundo devia saber sobre o próprio nome</h2></div>
+          <div><span class="rotulo" data-texto="inicio.dicas.1">Dicas da Milena</span><h2 data-texto="inicio.dicas.2">O que todo mundo devia saber sobre o próprio nome</h2></div>
           <div class="dicas-setas"><button type="button" data-dica-passo="-1" aria-label="Dica anterior">‹</button><button type="button" data-dica-passo="1" aria-label="Próxima dica">›</button></div>
         </div>
         <div class="dicas-trilho" data-dicas>
-          <article class="dica revelar"><span class="dica-num">01</span><h3>Consulte seu CPF de graça</h3><p>Serasa, SPC, Boa Vista e o Registrato (do Banco Central) mostram as pendências no seu nome sem custo. Comece por aí.</p><button type="button" class="dica-compartilhar" data-compartilhar="Dica da Milena Garbim — Consulte seu CPF de graça: Serasa, SPC, Boa Vista e o Registrato (do Banco Central) mostram as pendências no seu nome sem custo. Comece por aí."><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Compartilhar</button></article>
-          <article class="dica revelar"><span class="dica-num">02</span><h3>Negativação tem prazo</h3><p>Pelo Código de Defesa do Consumidor, ninguém pode ficar negativado por mais de 5 anos pela mesma dívida.</p><button type="button" class="dica-compartilhar" data-compartilhar="Dica da Milena Garbim — Negativação tem prazo: Pelo Código de Defesa do Consumidor, ninguém pode ficar negativado por mais de 5 anos pela mesma dívida."><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Compartilhar</button></article>
-          <article class="dica revelar"><span class="dica-num">03</span><h3>Pagou? A baixa tem prazo</h3><p>Depois do pagamento ou do acordo, o credor tem até 5 dias úteis para pedir a retirada do seu nome.</p><button type="button" class="dica-compartilhar" data-compartilhar="Dica da Milena Garbim — Pagou? A baixa tem prazo: Depois do pagamento ou do acordo, o credor tem até 5 dias úteis para pedir a retirada do seu nome."><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Compartilhar</button></article>
-          <article class="dica revelar"><span class="dica-num">04</span><h3>Você deve ser avisado antes</h3><p>A inclusão nos cadastros de inadimplentes precisa de aviso prévio por escrito. Sem aviso, dá para contestar.</p><button type="button" class="dica-compartilhar" data-compartilhar="Dica da Milena Garbim — Você deve ser avisado antes: A inclusão nos cadastros de inadimplentes precisa de aviso prévio por escrito. Sem aviso, dá para contestar."><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Compartilhar</button></article>
-          <article class="dica revelar"><span class="dica-num">05</span><h3>Desconfie de milagres</h3><p>Ninguém “apaga” dívida. Nunca pague nada sem contrato e nunca passe senhas de banco ou do Serasa.</p><button type="button" class="dica-compartilhar" data-compartilhar="Dica da Milena Garbim — Desconfie de milagres: Ninguém “apaga” dívida. Nunca pague nada sem contrato e nunca passe senhas de banco ou do Serasa."><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Compartilhar</button></article>
-          <article class="dica revelar"><span class="dica-num">06</span><h3>Pagar em dia sobe o score</h3><p>Com o Cadastro Positivo, cada conta paga em dia conta ponto. Depois do nome limpo, é isso que reconstrói o crédito.</p><button type="button" class="dica-compartilhar" data-compartilhar="Dica da Milena Garbim — Pagar em dia sobe o score: Com o Cadastro Positivo, cada conta paga em dia conta ponto. Depois do nome limpo, é isso que reconstrói o crédito."><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Compartilhar</button></article>
+          <article class="dica revelar"><span class="dica-num">01</span><h3 data-texto="inicio.dicas.3">Consulte seu CPF de graça</h3><p data-texto="inicio.dicas.4">Serasa, SPC, Boa Vista e o Registrato (do Banco Central) mostram as pendências no seu nome sem custo. Comece por aí.</p><button type="button" class="dica-compartilhar" data-compartilhar="Dica da Milena Garbim — Consulte seu CPF de graça: Serasa, SPC, Boa Vista e o Registrato (do Banco Central) mostram as pendências no seu nome sem custo. Comece por aí."><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Compartilhar</button></article>
+          <article class="dica revelar"><span class="dica-num">02</span><h3 data-texto="inicio.dicas.5">Negativação tem prazo</h3><p data-texto="inicio.dicas.6">Pelo Código de Defesa do Consumidor, ninguém pode ficar negativado por mais de 5 anos pela mesma dívida.</p><button type="button" class="dica-compartilhar" data-compartilhar="Dica da Milena Garbim — Negativação tem prazo: Pelo Código de Defesa do Consumidor, ninguém pode ficar negativado por mais de 5 anos pela mesma dívida."><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Compartilhar</button></article>
+          <article class="dica revelar"><span class="dica-num">03</span><h3 data-texto="inicio.dicas.7">Pagou? A baixa tem prazo</h3><p data-texto="inicio.dicas.8">Depois do pagamento ou do acordo, o credor tem até 5 dias úteis para pedir a retirada do seu nome.</p><button type="button" class="dica-compartilhar" data-compartilhar="Dica da Milena Garbim — Pagou? A baixa tem prazo: Depois do pagamento ou do acordo, o credor tem até 5 dias úteis para pedir a retirada do seu nome."><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Compartilhar</button></article>
+          <article class="dica revelar"><span class="dica-num">04</span><h3 data-texto="inicio.dicas.9">Você deve ser avisado antes</h3><p data-texto="inicio.dicas.10">A inclusão nos cadastros de inadimplentes precisa de aviso prévio por escrito. Sem aviso, dá para contestar.</p><button type="button" class="dica-compartilhar" data-compartilhar="Dica da Milena Garbim — Você deve ser avisado antes: A inclusão nos cadastros de inadimplentes precisa de aviso prévio por escrito. Sem aviso, dá para contestar."><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Compartilhar</button></article>
+          <article class="dica revelar"><span class="dica-num">05</span><h3 data-texto="inicio.dicas.11">Desconfie de milagres</h3><p data-texto="inicio.dicas.12">Ninguém “apaga” dívida. Nunca pague nada sem contrato e nunca passe senhas de banco ou do Serasa.</p><button type="button" class="dica-compartilhar" data-compartilhar="Dica da Milena Garbim — Desconfie de milagres: Ninguém “apaga” dívida. Nunca pague nada sem contrato e nunca passe senhas de banco ou do Serasa."><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Compartilhar</button></article>
+          <article class="dica revelar"><span class="dica-num">06</span><h3 data-texto="inicio.dicas.13">Pagar em dia sobe o score</h3><p data-texto="inicio.dicas.14">Com o Cadastro Positivo, cada conta paga em dia conta ponto. Depois do nome limpo, é isso que reconstrói o crédito.</p><button type="button" class="dica-compartilhar" data-compartilhar="Dica da Milena Garbim — Pagar em dia sobe o score: Com o Cadastro Positivo, cada conta paga em dia conta ponto. Depois do nome limpo, é isso que reconstrói o crédito."><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg>Compartilhar</button></article>
         </div>
       </div>
     </section>
 
-    <section class="secao secao-alt" id="analise">
+    <section class="secao secao-alt" id="analise" data-secao="analise">
       <div class="container analise">
         <div class="analise-texto revelar">
-          <span class="rotulo">Análise sem compromisso</span>
+          <span class="rotulo" data-texto="inicio.formulario-de-analise.1">Análise sem compromisso</span>
           <h2 data-texto="analise.titulo">Conte sua situação. A gente te mostra o caminho.</h2>
           <p data-texto="analise.texto">Preencha em menos de 1 minuto. Sua mensagem chega direto no nosso WhatsApp e respondemos no horário de atendimento.</p>
           <ul class="lista-check">
-            <li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Atendimento pessoal, com quem entende do assunto</span></li>
-            <li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Proposta clara e por escrito antes de qualquer pagamento</span></li>
-            <li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Sigilo total: seus dados usados só para o seu caso</span></li>
-            <li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>CPF e CNPJ, em qualquer cidade do Brasil</span></li>
+            <li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-texto="inicio.formulario-de-analise.2">Atendimento pessoal, com quem entende do assunto</span></li>
+            <li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-texto="inicio.formulario-de-analise.3">Proposta clara e por escrito antes de qualquer pagamento</span></li>
+            <li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-texto="inicio.formulario-de-analise.4">Sigilo total: seus dados usados só para o seu caso</span></li>
+            <li><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span data-texto="inicio.formulario-de-analise.5">CPF e CNPJ, em qualquer cidade do Brasil</span></li>
           </ul>
           <div class="analise-assinatura"><img src="assets/img/milena-garbim-avatar.jpg" alt="" width="58" height="58" loading="lazy" data-foto="avatar"><div><span class="assinatura">Milena Garbim</span><small data-texto="analise.assinatura">Eu mesma acompanho o seu caso.</small></div></div>
         </div>
@@ -340,7 +340,7 @@
       </div>
     </section>
 
-    <section class="secao indique-secao">
+    <section class="secao indique-secao" data-secao="indique">
       <div class="container">
         <div class="indique revelar">
           <div class="indique-fotos" aria-hidden="true"><img src="assets/img/milena-garbim-avatar.jpg" alt="" data-foto="avatar"><span>💕</span></div>
@@ -356,11 +356,39 @@
       </div>
     </section>
 
-    <section class="secao">
+    <section class="secao secao-alt" id="direitos" data-secao="direitos">
       <div class="container">
         <div class="secao-titulo revelar">
-          <span class="rotulo">Dúvidas</span>
-          <h2>Perguntas frequentes</h2>
+          <span class="rotulo" data-texto="inicio.seus-direitos.1">Seus direitos</span>
+          <h2 data-texto="inicio.seus-direitos.2">O que a lei garante para <em>você</em></h2>
+          <p data-texto="inicio.seus-direitos.3">Informação é a primeira ferramenta para limpar o nome. Veja três direitos que fazem diferença — com a fonte de cada um.</p>
+        </div>
+        <div class="direitos-grade" data-direitos="3">
+          <article class="direito revelar" style="--i:0">
+            <span class="direito-num">01</span>
+            <h3>Aviso antes de negativar</h3><p>Antes de incluir o seu nome no Serasa, SPC ou Boa Vista, você precisa ser avisado por escrito. Sem esse aviso prévio, a negativação pode ser contestada.</p>
+            <p class="direito-fonte"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg><a href="https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm" target="_blank" rel="noopener">CDC, art. 43, §2º · Súmula 359 do STJ</a></p>
+          </article>
+          <article class="direito revelar" style="--i:1">
+            <span class="direito-num">02</span>
+            <h3>No máximo 5 anos no cadastro</h3><p>Uma dívida pode ficar registrada nos cadastros de inadimplentes por, no máximo, 5 anos contados do vencimento. Depois disso, o registro tem que sair — mesmo que a dívida não tenha sido paga.</p>
+            <p class="direito-fonte"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg><a href="https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm" target="_blank" rel="noopener">CDC, art. 43, §1º · Súmula 323 do STJ</a></p>
+          </article>
+          <article class="direito revelar" style="--i:2">
+            <span class="direito-num">03</span>
+            <h3>Baixa em até 5 dias úteis depois de pagar</h3><p>Pagou a dívida (ou a entrada do acordo)? O credor tem até 5 dias úteis, a partir do pagamento efetivo, para pedir a retirada do seu nome. Passou disso, é possível cobrar a baixa e, em muitos casos, indenização.</p>
+            <p class="direito-fonte"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg><a href="https://scon.stj.jus.br/SCON/sumstj/toc.jsp?livre=548" target="_blank" rel="noopener">Súmula 548 do STJ</a></p>
+          </article>
+        </div>
+        <p class="centro"><a href="direitos.html" class="btn btn-contorno-rosa">Ver todos os direitos e calculadoras</a></p>
+      </div>
+    </section>
+
+    <section class="secao" data-secao="faq">
+      <div class="container">
+        <div class="secao-titulo revelar">
+          <span class="rotulo" data-texto="inicio.duvidas.1">Dúvidas</span>
+          <h2 data-texto="inicio.duvidas.2">Perguntas frequentes</h2>
         </div>
         <div class="faq" data-faq="5">
           <details class="revelar"><summary>O que é “limpar o nome”?</summary><p>É retirar o seu CPF ou CNPJ dos cadastros de inadimplentes (Serasa, SPC, Boa Vista e protestos em cartório). Isso acontece quando a dívida é negociada e paga, quando o registro é indevido ou quando ele passa do prazo legal.</p></details>
@@ -373,7 +401,7 @@
       </div>
     </section>
 
-    <section class="secao">
+    <section class="secao" data-secao="cta">
       <div class="container">
         <div class="cta revelar">
           <div>
@@ -412,6 +440,7 @@
           <li><a href="servicos.html#cat-juros-abusivos">Revisão de juros</a></li>
           <li><a href="servicos.html#cat-score">Score e crédito</a></li>
           <li><a href="servicos.html#cat-empresas">Empresas (CNPJ)</a></li>
+          <li><a href="servicos.html#cat-orientacao">Diagnóstico e orientação</a></li>
         </ul>
       </div>
       <div>
@@ -420,6 +449,7 @@
           <li><a href="sobre.html">Quem somos</a></li>
           <li><a href="como-funciona.html">Como funciona</a></li>
           <li><a href="#orientacao">Orientação financeira</a></li>
+          <li><a href="direitos.html">Seus direitos</a></li>
           <li><a href="duvidas.html">Dúvidas frequentes</a></li>
           <li><a href="conta.html">Minha conta</a></li>
           <li><a href="privacidade.html">Política de Privacidade</a></li>
@@ -451,11 +481,11 @@
     <a class="barra-whats" data-whats><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2m0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2m4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2s.2-1.1.2-1.2-.2-.2-.4-.3"/></svg><span>WhatsApp</span></a>
   </nav>
 
-  <script src="assets/js/config.js?v=16"></script>
-  <script src="assets/js/padrao.js?v=16"></script>
-  <script src="assets/js/dados.js?v=16"></script>
-  <script src="assets/js/main.js?v=16"></script>
-  <script src="assets/js/destaques.js?v=16"></script>
-  <script src="assets/js/assistente.js?v=16"></script>
+  <script src="assets/js/config.js?v=17"></script>
+  <script src="assets/js/padrao.js?v=17"></script>
+  <script src="assets/js/dados.js?v=17"></script>
+  <script src="assets/js/main.js?v=17"></script>
+  <script src="assets/js/destaques.js?v=17"></script>
+  <script src="assets/js/assistente.js?v=17"></script>
 </body>
 </html>

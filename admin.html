@@ -22,9 +22,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Great+Vibes&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=16">
+  <link rel="stylesheet" href="assets/css/style.css?v=17">
 </head>
-<body>
+<body class="pagina-painel">
   <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 
   <div class="barra-topo">
@@ -43,10 +43,10 @@
       <a href="index.html" class="logo" aria-label="Milena Garbim - Limpa Nome - início"><span class="logo-foto"><img src="assets/img/milena-garbim-avatar.jpg" alt="" width="50" height="50" data-foto="avatar"></span><span class="logo-texto"><strong>Milena Garbim</strong><small>Limpa Nome &amp; Crédito</small></span></a>
       <nav aria-label="Menu principal">
         <ul class="menu">
-          <li><a href="index.html">Início</a></li>
           <li><a href="servicos.html">Serviços</a></li>
           <li><a href="como-funciona.html">Como trabalhamos</a></li>
           <li><a href="index.html#orientacao">Orientação</a></li>
+          <li><a href="direitos.html">Seus direitos</a></li>
           <li><a href="sobre.html">Quem somos</a></li>
           <li><a href="duvidas.html">Dúvidas</a></li>
         </ul>
@@ -95,8 +95,10 @@
             <button type="button" role="tab" data-aba="clientes"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Clientes</button>
             <button type="button" role="tab" data-aba="catalogo" data-so-admin><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg>Catálogo</button>
             <button type="button" role="tab" data-aba="textos" data-so-admin><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Textos</button>
+            <button type="button" role="tab" data-aba="aparencia" data-so-admin><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1.2"/><circle cx="12" cy="7.5" r="1.2"/><circle cx="15.5" cy="10" r="1.2"/><path d="M12 21a3 3 0 0 1 0-6h1.5a2.5 2.5 0 0 0 0-5"/></svg>Aparência</button>
             <button type="button" role="tab" data-aba="fotos" data-so-admin><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 8"/></svg>Fotos</button>
             <button type="button" role="tab" data-aba="duvidas" data-so-admin><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12"/></svg>Dúvidas</button>
+            <button type="button" role="tab" data-aba="direitos" data-so-admin><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M7 21h10M5 7h14M5 7l-3 6a3 3 0 0 0 6 0zM19 7l-3 6a3 3 0 0 0 6 0z"/></svg>Seus direitos</button>
             <button type="button" role="tab" data-aba="contato" data-so-admin><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Contato e links</button>
             <button type="button" role="tab" data-aba="equipe" data-so-admin><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-9-9.2C1.6 7.2 4 4 7.2 4c2 0 3.4 1 4.8 2.6C13.4 5 14.8 4 16.8 4 20 4 22.4 7.2 21 10.8 19 15.6 12 20 12 20z"/></svg>Equipe</button>
           </div>
@@ -105,7 +107,9 @@
           <div data-painel="clientes" hidden></div>
           <div data-painel="catalogo" hidden></div>
           <div data-painel="textos" hidden></div>
+          <div data-painel="aparencia" hidden></div>
           <div data-painel="fotos" hidden></div>
+          <div data-painel="direitos" hidden></div>
           <div data-painel="duvidas" hidden></div>
           <div data-painel="contato" hidden></div>
           <div data-painel="equipe" hidden></div>
@@ -136,6 +140,7 @@
           <li><a href="servicos.html#cat-juros-abusivos">Revisão de juros</a></li>
           <li><a href="servicos.html#cat-score">Score e crédito</a></li>
           <li><a href="servicos.html#cat-empresas">Empresas (CNPJ)</a></li>
+          <li><a href="servicos.html#cat-orientacao">Diagnóstico e orientação</a></li>
         </ul>
       </div>
       <div>
@@ -144,6 +149,7 @@
           <li><a href="sobre.html">Quem somos</a></li>
           <li><a href="como-funciona.html">Como funciona</a></li>
           <li><a href="index.html#orientacao">Orientação financeira</a></li>
+          <li><a href="direitos.html">Seus direitos</a></li>
           <li><a href="duvidas.html">Dúvidas frequentes</a></li>
           <li><a href="conta.html">Minha conta</a></li>
           <li><a href="privacidade.html">Política de Privacidade</a></li>
@@ -175,13 +181,13 @@
     <a class="barra-whats" data-whats><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2m0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2m4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2s.2-1.1.2-1.2-.2-.2-.4-.3"/></svg><span>WhatsApp</span></a>
   </nav>
 
-  <script src="assets/js/config.js?v=16"></script>
-  <script src="assets/js/padrao.js?v=16"></script>
-  <script src="assets/js/dados.js?v=16"></script>
-  <script src="assets/js/br.js?v=16"></script>
-  <script src="assets/js/main.js?v=16"></script>
-  <script src="assets/js/destaques.js?v=16"></script>
-  <script src="assets/js/chat.js?v=16"></script>
-  <script src="assets/js/admin.js?v=16"></script>
+  <script src="assets/js/config.js?v=17"></script>
+  <script src="assets/js/padrao.js?v=17"></script>
+  <script src="assets/js/dados.js?v=17"></script>
+  <script src="assets/js/br.js?v=17"></script>
+  <script src="assets/js/main.js?v=17"></script>
+  <script src="assets/js/destaques.js?v=17"></script>
+  <script src="assets/js/chat.js?v=17"></script>
+  <script src="assets/js/admin.js?v=17"></script>
 </body>
 </html>

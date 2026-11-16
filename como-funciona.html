@@ -21,13 +21,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Great+Vibes&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=16">
+  <link rel="stylesheet" href="assets/css/style.css?v=17">
 </head>
 <body>
   <script>
     /* Abertura com a assinatura: uma vez por visita (pula para quem pede menos movimento) */
     (function () { try {
-      if (sessionStorage.getItem("mg_abertura") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      if (sessionStorage.getItem("mg_abertura") || (JSON.parse(localStorage.getItem("mg_aparencia") || "{}").abertura === false) || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       sessionStorage.setItem("mg_abertura", "1");
       document.body.classList.add("com-abertura");
       document.body.insertAdjacentHTML("afterbegin", '<div class="abertura" aria-hidden="true"><div class="abertura-miolo"><img src="assets/img/milena-garbim-avatar.jpg" alt="" data-foto="avatar"><span class="assinatura">Milena Garbim</span><small>Limpa Nome &amp; Crédito</small></div></div>');
@@ -51,10 +51,10 @@
       <a href="index.html" class="logo" aria-label="Milena Garbim - Limpa Nome - início"><span class="logo-foto"><img src="assets/img/milena-garbim-avatar.jpg" alt="" width="50" height="50" data-foto="avatar"></span><span class="logo-texto"><strong>Milena Garbim</strong><small>Limpa Nome &amp; Crédito</small></span></a>
       <nav aria-label="Menu principal">
         <ul class="menu">
-          <li><a href="index.html">Início</a></li>
           <li><a href="servicos.html">Serviços</a></li>
           <li><a href="como-funciona.html" class="ativo">Como trabalhamos</a></li>
           <li><a href="index.html#orientacao">Orientação</a></li>
+          <li><a href="direitos.html">Seus direitos</a></li>
           <li><a href="sobre.html">Quem somos</a></li>
           <li><a href="duvidas.html">Dúvidas</a></li>
         </ul>
@@ -94,15 +94,15 @@
     <section class="secao secao-alt">
       <div class="container">
         <div class="secao-titulo revelar">
-          <span class="rotulo">Para agilizar</span>
-          <h2>O que ter em mãos</h2>
-          <p>Não tem tudo? Sem problema. Começamos com o que você tiver e ajudamos a levantar o resto.</p>
+          <span class="rotulo" data-texto="pg-como.para-agilizar.1">Para agilizar</span>
+          <h2 data-texto="pg-como.para-agilizar.2">O que ter em mãos</h2>
+          <p data-texto="pg-como.para-agilizar.3">Não tem tudo? Sem problema. Começamos com o que você tiver e ajudamos a levantar o resto.</p>
         </div>
         <div class="valores valores-4">
-          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div><h3>Documento com foto</h3><p>RG ou CNH, para confirmar sua identidade.</p></div>
-          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg></div><h3>Contratos e boletos</h3><p>O que tiver das dívidas: contratos, faturas, acordos antigos.</p></div>
-          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg></div><h3>Comprovantes</h3><p>Pagamentos já feitos, para provar dívidas quitadas.</p></div>
-          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12"/></svg></div><h3>Sua história</h3><p>Quando começou, o que foi tentado e o que você consegue pagar.</p></div>
+          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div><h3 data-texto="pg-como.para-agilizar.4">Documento com foto</h3><p data-texto="pg-como.para-agilizar.5">RG ou CNH, para confirmar sua identidade.</p></div>
+          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg></div><h3 data-texto="pg-como.para-agilizar.6">Contratos e boletos</h3><p data-texto="pg-como.para-agilizar.7">O que tiver das dívidas: contratos, faturas, acordos antigos.</p></div>
+          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg></div><h3 data-texto="pg-como.para-agilizar.8">Comprovantes</h3><p data-texto="pg-como.para-agilizar.9">Pagamentos já feitos, para provar dívidas quitadas.</p></div>
+          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12"/></svg></div><h3 data-texto="pg-como.para-agilizar.10">Sua história</h3><p data-texto="pg-como.para-agilizar.11">Quando começou, o que foi tentado e o que você consegue pagar.</p></div>
         </div>
       </div>
     </section>
@@ -110,14 +110,14 @@
     <section class="secao">
       <div class="container">
         <div class="secao-titulo revelar">
-          <span class="rotulo">Seus direitos</span>
-          <h2>O que a lei garante a você</h2>
-          <p>Conhecer seus direitos é o primeiro passo para não pagar o que não deve.</p>
+          <span class="rotulo" data-texto="pg-como.seus-direitos.1">Seus direitos</span>
+          <h2 data-texto="pg-como.seus-direitos.2">O que a lei garante a você</h2>
+          <p data-texto="pg-como.seus-direitos.3">Conhecer seus direitos é o primeiro passo para não pagar o que não deve.</p>
         </div>
         <div class="grade-3">
-          <article class="cartao revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></div><h3>Aviso antes de negativar</h3><p>Você deve ser comunicado por escrito antes de ter o nome incluído em cadastro de inadimplentes (CDC, art. 43, §2º).</p></article>
-          <article class="cartao revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h3>Prazo máximo de 5 anos</h3><p>Nenhuma negativação pode durar mais de 5 anos. Passado o prazo, o registro precisa ser retirado (CDC, art. 43, §1º).</p></article>
-          <article class="cartao revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><h3>Baixa após o pagamento</h3><p>Quitada ou renegociada a dívida, o credor deve pedir a exclusão do registro em até 5 dias úteis (STJ, Súmula 548).</p></article>
+          <article class="cartao revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></div><h3 data-texto="pg-como.seus-direitos.4">Aviso antes de negativar</h3><p data-texto="pg-como.seus-direitos.5">Você deve ser comunicado por escrito antes de ter o nome incluído em cadastro de inadimplentes (CDC, art. 43, §2º).</p></article>
+          <article class="cartao revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h3 data-texto="pg-como.seus-direitos.6">Prazo máximo de 5 anos</h3><p data-texto="pg-como.seus-direitos.7">Nenhuma negativação pode durar mais de 5 anos. Passado o prazo, o registro precisa ser retirado (CDC, art. 43, §1º).</p></article>
+          <article class="cartao revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><h3 data-texto="pg-como.seus-direitos.8">Baixa após o pagamento</h3><p data-texto="pg-como.seus-direitos.9">Quitada ou renegociada a dívida, o credor deve pedir a exclusão do registro em até 5 dias úteis (STJ, Súmula 548).</p></article>
         </div>
       </div>
     </section>
@@ -161,6 +161,7 @@
           <li><a href="servicos.html#cat-juros-abusivos">Revisão de juros</a></li>
           <li><a href="servicos.html#cat-score">Score e crédito</a></li>
           <li><a href="servicos.html#cat-empresas">Empresas (CNPJ)</a></li>
+          <li><a href="servicos.html#cat-orientacao">Diagnóstico e orientação</a></li>
         </ul>
       </div>
       <div>
@@ -169,6 +170,7 @@
           <li><a href="sobre.html">Quem somos</a></li>
           <li><a href="como-funciona.html">Como funciona</a></li>
           <li><a href="index.html#orientacao">Orientação financeira</a></li>
+          <li><a href="direitos.html">Seus direitos</a></li>
           <li><a href="duvidas.html">Dúvidas frequentes</a></li>
           <li><a href="conta.html">Minha conta</a></li>
           <li><a href="privacidade.html">Política de Privacidade</a></li>
@@ -200,11 +202,11 @@
     <a class="barra-whats" data-whats><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2m0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2m4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2s.2-1.1.2-1.2-.2-.2-.4-.3"/></svg><span>WhatsApp</span></a>
   </nav>
 
-  <script src="assets/js/config.js?v=16"></script>
-  <script src="assets/js/padrao.js?v=16"></script>
-  <script src="assets/js/dados.js?v=16"></script>
-  <script src="assets/js/main.js?v=16"></script>
-  <script src="assets/js/destaques.js?v=16"></script>
-  <script src="assets/js/assistente.js?v=16"></script>
+  <script src="assets/js/config.js?v=17"></script>
+  <script src="assets/js/padrao.js?v=17"></script>
+  <script src="assets/js/dados.js?v=17"></script>
+  <script src="assets/js/main.js?v=17"></script>
+  <script src="assets/js/destaques.js?v=17"></script>
+  <script src="assets/js/assistente.js?v=17"></script>
 </body>
 </html>

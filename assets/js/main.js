@@ -67,6 +67,65 @@
   /* =========================================================
      Textos, fotos e dúvidas do painel
      ========================================================= */
+  /* =========================================================
+     Aparência (painel → Aparência): cores, seções, recursos e faixa de aviso
+     ========================================================= */
+  const TEMAS = {
+    rosa: { nome: "Rosa Milena (original)", cores: {} },
+    vinho: { nome: "Vinho elegante", cores: { "--rosa": "#b0566f", "--rosa-forte": "#8a3350", "--rosa-escuro": "#6d2640", "--rosa-claro": "#f8e9ee", "--blush": "#f1d9e1" } },
+    nude: { nome: "Nude e caramelo", cores: { "--rosa": "#b98a76", "--rosa-forte": "#8f5f48", "--rosa-escuro": "#714a37", "--rosa-claro": "#f8efe9", "--blush": "#f1e2d9", "--nude": "#fbf6f2" } },
+    lavanda: { nome: "Lavanda", cores: { "--rosa": "#9a7bb5", "--rosa-forte": "#7a5a99", "--rosa-escuro": "#5f4479", "--rosa-claro": "#f3eefa", "--blush": "#ebe2f4", "--nude": "#f8f5fb" } },
+    salvia: { nome: "Verde sálvia", cores: { "--rosa": "#7f9c8a", "--rosa-forte": "#55745f", "--rosa-escuro": "#425b4a", "--rosa-claro": "#eef4f0", "--blush": "#e1ebe4", "--nude": "#f7faf8" } },
+    azul: { nome: "Azul sereno", cores: { "--rosa": "#6f8fb8", "--rosa-forte": "#4a6a94", "--rosa-escuro": "#3a5476", "--rosa-claro": "#edf2f9", "--blush": "#dfe7f3", "--nude": "#f6f9fc" } }
+  };
+  const VARS_TEMA = ["--rosa", "--rosa-forte", "--rosa-escuro", "--rosa-claro", "--blush", "--nude"];
+  const hexRgb = (h) => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ""); if (!m) return null; const n = parseInt(m[1], 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+  const rgbHex = (c) => "#" + c.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+  const misturar = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+  /** A partir de uma cor (a dos botões), monta a família de tons do site */
+  function coresDe(hex) {
+    const c = hexRgb(hex);
+    if (!c) return {};
+    const branco = [255, 255, 255], preto = [0, 0, 0];
+    return { "--rosa": rgbHex(misturar(c, branco, .22)), "--rosa-forte": rgbHex(c), "--rosa-escuro": rgbHex(misturar(c, preto, .2)), "--rosa-claro": rgbHex(misturar(c, branco, .91)), "--blush": rgbHex(misturar(c, branco, .84)) };
+  }
+  /** Contraste (WCAG) entre a cor e o branco — abaixo de 4,5 o texto dos botões fica difícil de ler */
+  function contrasteBranco(hex) {
+    const c = hexRgb(hex); if (!c) return 21;
+    const l = c.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+    const L = 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2];
+    return 1.05 / (L + 0.05);
+  }
+  function aplicarTema(ap) {
+    const raiz = document.documentElement;
+    VARS_TEMA.forEach((v) => raiz.style.removeProperty(v));
+    const cores = ap && ap.corPrincipal ? coresDe(ap.corPrincipal) : ((TEMAS[(ap && ap.tema) || "rosa"] || TEMAS.rosa).cores);
+    Object.entries(cores).forEach(([k, v]) => raiz.style.setProperty(k, v));
+  }
+  function aplicarAparencia(ap) {
+    ap = ap || {};
+    aplicarTema(ap);
+    if (document.body.classList.contains("pagina-painel")) return;   // o painel só pega as cores
+    const secoes = ap.secoes || {};
+    $$("[data-secao]").forEach((el) => { el.hidden = secoes[el.getAttribute("data-secao")] === false; });
+    document.body.classList.toggle("sem-assistente", ap.assistente === false);
+    document.body.classList.toggle("sem-whats-flutuante", ap.whatsFlutuante === false);
+    // faixa de aviso no topo
+    const aviso = ap.aviso || {};
+    let faixa = $(".aviso-topo");
+    let fechado = false;
+    try { fechado = sessionStorage.getItem("mg_aviso_fechado") === String(aviso.texto || ""); } catch (e) { /* ok */ }
+    if (aviso.ativo && String(aviso.texto || "").trim() && !fechado) {
+      if (!faixa) { faixa = document.createElement("div"); faixa.className = "aviso-topo"; faixa.setAttribute("role", "region"); faixa.setAttribute("aria-label", "Aviso"); document.body.insertBefore(faixa, document.body.firstChild.nextSibling); }
+      const link = /^https:\/\//i.test(aviso.link || "") || /^[a-z0-9-]+\.html(#[\w-]+)?$/i.test(aviso.link || "") || /^#[\w-]+$/.test(aviso.link || "") ? aviso.link : "";
+      faixa.innerHTML = `<div class="container"><span class="aviso-ponto" aria-hidden="true"></span><p>${fmt(aviso.texto)}</p>${link ? `<a href="${esc(link)}"${/^https/i.test(link) ? ' target="_blank" rel="noopener"' : ""}>${esc(aviso.botao || "Saiba mais")} ${icone("seta")}</a>` : ""}<button type="button" class="aviso-fechar" aria-label="Fechar aviso">×</button></div>`;
+      $(".aviso-fechar", faixa).addEventListener("click", () => { faixa.remove(); try { sessionStorage.setItem("mg_aviso_fechado", String(aviso.texto || "")); } catch (e) { /* ok */ } });
+    } else if (faixa) faixa.remove();
+    try { localStorage.setItem("mg_aparencia", JSON.stringify({ tema: ap.tema, corPrincipal: ap.corPrincipal, abertura: ap.abertura })); } catch (e) { /* ok */ }
+  }
+  // cores salvas da última visita: aplica já, antes de carregar o resto (evita "piscar" a cor antiga)
+  try { aplicarTema(JSON.parse(localStorage.getItem("mg_aparencia")) || {}); } catch (e) { /* ok */ }
+
   function aplicarSite(s) {
     $$("[data-texto]").forEach((el) => {
       const v = s.textos[el.getAttribute("data-texto")];
@@ -83,6 +142,14 @@
     $$("[data-faq]").forEach((el) => {
       const lim = +el.getAttribute("data-faq") || s.faq.length;
       el.innerHTML = s.faq.slice(0, lim).map((f) => `<details class="revelar visivel"><summary>${esc(f.p)}</summary><p>${fmt(f.r)}</p></details>`).join("");
+    });
+    $$("[data-direitos]").forEach((el) => {
+      const lim = +el.getAttribute("data-direitos") || s.direitos.length;
+      el.innerHTML = s.direitos.slice(0, lim).map((d, i) => `<article class="direito revelar visivel" style="--i:${i}">
+        <span class="direito-num">${String(i + 1).padStart(2, "0")}</span>
+        <h3>${esc(d.titulo)}</h3><p>${fmt(d.texto)}</p>
+        ${d.fonte ? `<p class="direito-fonte">${icone("doc")}${d.link && /^https:\/\//.test(d.link) ? `<a href="${esc(d.link)}" target="_blank" rel="noopener">${esc(d.fonte)}</a>` : esc(d.fonte)}</p>` : ""}
+      </article>`).join("");
     });
   }
 
@@ -139,6 +206,10 @@
     });
     const raiz = $("[data-catalogo]");
     if (!raiz) return;
+    // filtro "Para quem é" (o mesmo da página inicial)
+    const perfil = Triagem.estado.perfil || "";
+    $$(".catalogo-perfil [data-perfil]").forEach((b) => { const on = b.getAttribute("data-perfil") === perfil; b.classList.toggle("ativo", on); b.setAttribute("aria-pressed", on); });
+    const servicosDa = (id) => CAT.servicos.filter((s) => s.categoria === id && serve(s, "perfis", perfil));
     const cats = CAT.categorias.filter((c) => servicosDa(c.id).length);
     const filtro = $("[data-filtro]");
     if (filtro) {
@@ -227,7 +298,7 @@
     const p = e.target.closest("[data-perfil]"), si = e.target.closest("[data-situacao]");
     if (p || si) {
       Triagem.salvar(p ? { perfil: p.getAttribute("data-perfil") } : { situacao: si.getAttribute("data-situacao") });
-      desenharFrentes();
+      if ($("[data-catalogo]")) desenharCatalogo(); else desenharFrentes();
       return;
     }
     if (e.target.closest("[data-limpar-filtros]")) { Triagem.salvar({ perfil: "", situacao: "" }); desenharFrentes(); return; }
@@ -289,8 +360,9 @@
     document.addEventListener("keydown", function esc1(e) { if (e.key === "Escape") { Triagem.salvar({}); document.removeEventListener("keydown", esc1); } });
   }
 
-  function talvezAbrirTriagem() {
+  async function talvezAbrirTriagem() {
     if (!$("[data-frentes]") || Triagem.estado.visto || location.hash) return;
+    try { const st = await D.site(); if (st.aparencia && (st.aparencia.triagem === false || (st.aparencia.secoes || {}).frentes === false)) return; } catch (e) { /* segue */ }
     const espera = document.body.classList.contains("com-abertura") ? 3600 : 1800;
     setTimeout(() => {
       if (Triagem.estado.visto || $(".modal-fundo") || $(".gaveta:not([hidden])") || document.body.classList.contains("ia-aberta")) return;
@@ -505,7 +577,7 @@
       setTimeout(() => $('[data-r="0"]', fundo).focus(), 30);
     });
   }
-  window.MG = { abrirGaveta, avisar, esc, fmt, brl, icone, modal, confirmar };
+  window.MG = { abrirGaveta, avisar, esc, fmt, brl, icone, modal, confirmar, TEMAS, coresDe, contrasteBranco, aplicarAparencia };
 
   /* =========================================================
      Cabeçalho: conta e solicitação
@@ -528,6 +600,13 @@
   if (btnMenu && menu) {
     btnMenu.addEventListener("click", () => {
       const aberto = menu.classList.toggle("aberto");
+      const cab = btnMenu.closest("header");
+      if (aberto && cab) {   // encosta o menu logo abaixo do cabeçalho (com ou sem faixa de aviso)
+        const alvo = Math.round(cab.getBoundingClientRect().bottom);
+        menu.style.setProperty("--topo-menu", alvo + "px");
+        const dif = Math.round(menu.getBoundingClientRect().top) - alvo;
+        if (dif) menu.style.setProperty("--topo-menu", (alvo - dif) + "px");
+      }
       btnMenu.setAttribute("aria-expanded", aberto ? "true" : "false");
     });
     $$("a", menu).forEach((a) => a.addEventListener("click", () => { menu.classList.remove("aberto"); btnMenu.setAttribute("aria-expanded", "false"); }));
@@ -781,7 +860,7 @@
      ========================================================= */
   aplicarContatos(Object.assign({}, CFG));
   atualizarGaveta();
-  D.site().then((s) => { aplicarContatos(s.contatos); aplicarSite(s); }).catch((e) => console.warn(e));
+  D.site().then((s) => { aplicarContatos(s.contatos); aplicarSite(s); aplicarAparencia(s.aparencia); }).catch((e) => console.warn(e));
   if ($("[data-categorias]") || $("[data-catalogo]") || $("[data-frentes]") || form || Solicitacao.ids().length || $("[data-abrir-solicitacao]")) {
     D.catalogo(true).then((c) => {
       CAT = c;

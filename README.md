@@ -82,9 +82,11 @@ WhatsApp com a mensagem pronta (nada é gravado).
 | Conversas | Todos os chats de pedidos, com as mensagens novas primeiro | Todos da equipe |
 | Clientes | Lista com busca, nº de pedidos e **exportar planilha** (CSV que abre no Excel) | Todos da equipe |
 | Catálogo | Categorias e serviços (criar, editar, ocultar, excluir, foto, preço) | Administrador |
-| Textos | Todos os textos principais do site, por página. `*palavra*` destaca em rosa itálico | Administrador |
+| Textos | **Praticamente todos os textos** do site (~190), separados por página e seção, com **busca**. `*palavra*` destaca em rosa itálico | Administrador |
+| Aparência | **Cores** (6 paletas ou “Minha cor”, com aviso de contraste), **mostrar/ocultar seções** da página inicial, ligar/desligar pergunta inicial, abertura, assistente e botão do WhatsApp, e **faixa de aviso** no topo (promoções, recados) | Administrador |
 | Fotos | Foto principal e foto do rosto da Milena (a foto é reduzida antes de enviar) | Administrador |
 | Dúvidas | Perguntas e respostas: editar, reordenar, adicionar, remover | Administrador |
+| Seus direitos | Cartões da página “Seus direitos” (título, explicação, fonte e link oficial): editar, reordenar, adicionar, remover | Administrador |
 | Contato e links | WhatsApp, telefone, e-mail, CNPJ, horário, endereço e redes sociais | Administrador |
 | Equipe | Adicionar pessoas como **Administrador** ou **Atendente** e o **nome que aparece no chat** | Administrador |
 
@@ -198,3 +200,44 @@ automaticamente outro modelo recomendado; se tudo falhar, a assistente oferece o
 
 **Para melhorar com o tempo:** as regras de conversa estão em `INSTRUCOES`, no começo da função. É só ajustar o texto
 (tom, o que pode ou não dizer) e publicar de novo.
+
+## Seus direitos (`direitos.html`)
+
+Página educativa — boa para compartilhar e para o Google — com duas **calculadoras** que rodam no próprio aparelho:
+
+- **Minha negativação já passou do prazo?** — 5 anos do vencimento (CDC art. 43 §1º; Súmula 323 do STJ).
+- **Paguei e meu nome continua sujo** — 5 dias úteis depois do pagamento (Súmula 548 do STJ), contando feriados nacionais.
+
+E 9 direitos com a fonte oficial (CDC, súmulas 323/359/385/548 do STJ, Lei 14.181/2021 do superendividamento com o
+mínimo existencial de R$ 600 e a decisão do STF de 2026 que manda revisar o valor todo ano, REsp 2.088.100/SP sobre
+dívida prescrita, Registrato do Banco Central e Cadastro Positivo). Os 3 primeiros aparecem também na página inicial.
+A assistente virtual (IA) também recebe esse conteúdo. **Revise de tempos em tempos** (leis e decisões mudam); o texto
+do fim da página diz a data da última atualização (Painel → Textos → Seus direitos).
+
+Observação: programas do governo como o **Novo Desenrola** (2026) tiveram prazo e já foram encerrados (31/08/2026);
+por isso não aparecem como oferta no site.
+
+## O que falta e próximos passos
+
+**Para o site funcionar “de verdade” (depende de vocês):**
+1. Ligar o **Supabase** (banco de dados) — sem isso, pedidos, clientes e mensagens ficam só no navegador de quem usou.
+2. Cadastrar a **chave da IA** (Anthropic) nas Secrets do Supabase para a assistente responder com inteligência.
+3. A Milena mandar a **lista real de serviços** (com preços ou “sob consulta”) e marcar “para quem é” em cada um.
+4. Informar **CNPJ**, **Instagram/redes** e **horário** reais (Painel → Contato e links).
+5. Um **domínio próprio** (ex.: milenagarbim.com.br) e um e-mail com o domínio.
+
+**Conteúdo que deixaria o site mais forte:**
+- **Depoimentos reais** de clientes (com autorização) e números reais (casos atendidos, anos de experiência).
+- Mais **fotos** da Milena (atendendo, no escritório) para as seções e para as redes sociais.
+- **Vídeo curto** de apresentação da Milena no topo ou em “Quem somos”.
+- **Blog / dicas** com artigos curtos (bom para o Google e para postar no Instagram).
+
+**Melhorias técnicas planejadas:**
+- Painel: **editar a faixa rolante e os cartões flutuantes** do topo; trocar ícones de seções; ordem das seções da página inicial.
+- **Avaliações** após o pedido concluído (estrelas + comentário, com aprovação da Milena antes de aparecer).
+- **Notificações** por e-mail/WhatsApp para a Milena quando chega pedido ou mensagem.
+- **Upload de documentos** pelo cliente dentro do pedido (RG, contratos, comprovantes), em área privada.
+- **Agenda** para marcar a conversa inicial.
+- **Pagamento online** (Pix / link de pagamento) depois da proposta aceita.
+- **Google Analytics / Meta Pixel** (com aviso de cookies) para saber de onde vêm os clientes.
+- **Domínio próprio** + robots.txt na raiz + Google Search Console (o `sitemap.xml` já está pronto).

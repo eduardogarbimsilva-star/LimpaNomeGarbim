@@ -290,6 +290,900 @@ window.PADRAO = {
    "rotulo": "Chamada final — texto",
    "valor": "Conte sua situação e receba uma análise inicial, sem compromisso.",
    "longo": true
+  },
+  "direitos.titulo": {
+   "grupo": "Seus direitos",
+   "rotulo": "Título da página",
+   "valor": "Seus *direitos*, em linguagem simples",
+   "longo": false
+  },
+  "direitos.texto": {
+   "grupo": "Seus direitos",
+   "rotulo": "Texto do topo",
+   "valor": "O que a lei garante para quem está com o nome negativado — com a fonte de cada informação, para você conferir.",
+   "longo": true
+  },
+  "direitos.calc.titulo": {
+   "grupo": "Seus direitos",
+   "rotulo": "Título das calculadoras",
+   "valor": "Confira o seu caso em 10 segundos",
+   "longo": false
+  },
+  "direitos.aviso": {
+   "grupo": "Seus direitos",
+   "rotulo": "Aviso no fim da página",
+   "valor": "Conteúdo informativo, atualizado em novembro de 2026. Não substitui a análise do seu caso: cada situação tem detalhes que mudam o caminho.",
+   "longo": true
+  },
+  "inicio.mapa-de-decisao.1": {
+   "grupo": "Página inicial · Mapa de decisão",
+   "rotulo": "Etiqueta (acima do título) — “Mapa de decisão”",
+   "valor": "Mapa de decisão",
+   "longo": false
+  },
+  "inicio.mapa-de-decisao.2": {
+   "grupo": "Página inicial · Mapa de decisão",
+   "rotulo": "Título — “Entender *antes* de avançar.”",
+   "valor": "Entender *antes* de avançar.",
+   "longo": false
+  },
+  "inicio.mapa-de-decisao.3": {
+   "grupo": "Página inicial · Mapa de decisão",
+   "rotulo": "Destaque — “Seu cenário”",
+   "valor": "Seu cenário",
+   "longo": false
+  },
+  "inicio.mapa-de-decisao.4": {
+   "grupo": "Página inicial · Mapa de decisão",
+   "rotulo": "Texto pequeno — “Restrição, nome limpo, CPF ou CNPJ”",
+   "valor": "Restrição, nome limpo, CPF ou CNPJ",
+   "longo": false
+  },
+  "inicio.mapa-de-decisao.5": {
+   "grupo": "Página inicial · Mapa de decisão",
+   "rotulo": "Destaque — “A frente certa”",
+   "valor": "A frente certa",
+   "longo": false
+  },
+  "inicio.mapa-de-decisao.6": {
+   "grupo": "Página inicial · Mapa de decisão",
+   "rotulo": "Texto pequeno — “Só o que faz sentido para o seu caso”",
+   "valor": "Só o que faz sentido para o seu caso",
+   "longo": false
+  },
+  "inicio.mapa-de-decisao.7": {
+   "grupo": "Página inicial · Mapa de decisão",
+   "rotulo": "Destaque — “Conversa com a Milena”",
+   "valor": "Conversa com a Milena",
+   "longo": false
+  },
+  "inicio.mapa-de-decisao.8": {
+   "grupo": "Página inicial · Mapa de decisão",
+   "rotulo": "Texto pequeno — “Proposta clara, por escrito”",
+   "valor": "Proposta clara, por escrito",
+   "longo": false
+  },
+  "inicio.selos-de-confianca.1": {
+   "grupo": "Página inicial · Selos de confiança",
+   "rotulo": "Selo 1 — título",
+   "valor": "Transparência",
+   "longo": false
+  },
+  "inicio.selos-de-confianca.2": {
+   "grupo": "Página inicial · Selos de confiança",
+   "rotulo": "Selo 2 — título",
+   "valor": "Sigilo",
+   "longo": false
+  },
+  "inicio.selos-de-confianca.3": {
+   "grupo": "Página inicial · Selos de confiança",
+   "rotulo": "Selo 3 — título",
+   "valor": "Atendimento humano",
+   "longo": false
+  },
+  "inicio.selos-de-confianca.4": {
+   "grupo": "Página inicial · Selos de confiança",
+   "rotulo": "Selo 4 — título",
+   "valor": "Acompanhamento",
+   "longo": false
+  },
+  "inicio.voce-se-identifica.1": {
+   "grupo": "Página inicial · Você se identifica?",
+   "rotulo": "Etiqueta (acima do título) — “Você se identifica?”",
+   "valor": "Você se identifica?",
+   "longo": false
+  },
+  "inicio.voce-se-identifica.2": {
+   "grupo": "Página inicial · Você se identifica?",
+   "rotulo": "Destaque — “Crédito negado”",
+   "valor": "Crédito negado",
+   "longo": false
+  },
+  "inicio.voce-se-identifica.3": {
+   "grupo": "Página inicial · Você se identifica?",
+   "rotulo": "Texto — “Cartão, empréstimo ou financiamento…”",
+   "valor": "Cartão, empréstimo ou financiamento recusados na hora.",
+   "longo": false
+  },
+  "inicio.voce-se-identifica.4": {
+   "grupo": "Página inicial · Você se identifica?",
+   "rotulo": "Destaque — “Dívida que não é sua”",
+   "valor": "Dívida que não é sua",
+   "longo": false
+  },
+  "inicio.voce-se-identifica.5": {
+   "grupo": "Página inicial · Você se identifica?",
+   "rotulo": "Texto — “Apareceu no Serasa uma conta que voc…”",
+   "valor": "Apareceu no Serasa uma conta que você nunca fez.",
+   "longo": false
+  },
+  "inicio.voce-se-identifica.6": {
+   "grupo": "Página inicial · Você se identifica?",
+   "rotulo": "Destaque — “Prejuízo no Bacen”",
+   "valor": "Prejuízo no Bacen",
+   "longo": false
+  },
+  "inicio.voce-se-identifica.7": {
+   "grupo": "Página inicial · Você se identifica?",
+   "rotulo": "Texto — “Nome limpo no Serasa, mas o banco ai…”",
+   "valor": "Nome limpo no Serasa, mas o banco ainda recusa.",
+   "longo": false
+  },
+  "inicio.voce-se-identifica.8": {
+   "grupo": "Página inicial · Você se identifica?",
+   "rotulo": "Destaque — “Juros que não param”",
+   "valor": "Juros que não param",
+   "longo": false
+  },
+  "inicio.voce-se-identifica.9": {
+   "grupo": "Página inicial · Você se identifica?",
+   "rotulo": "Texto — “Você paga todo mês e a dívida só cre…”",
+   "valor": "Você paga todo mês e a dívida só cresce.",
+   "longo": false
+  },
+  "inicio.voce-se-identifica.10": {
+   "grupo": "Página inicial · Você se identifica?",
+   "rotulo": "Destaque — “Empresa travada”",
+   "valor": "Empresa travada",
+   "longo": false
+  },
+  "inicio.voce-se-identifica.11": {
+   "grupo": "Página inicial · Você se identifica?",
+   "rotulo": "Texto — “Protesto no CNPJ impede compras e li…”",
+   "valor": "Protesto no CNPJ impede compras e licitações.",
+   "longo": false
+  },
+  "inicio.voce-se-identifica.12": {
+   "grupo": "Página inicial · Você se identifica?",
+   "rotulo": "Destaque — “Cobrança sem fim”",
+   "valor": "Cobrança sem fim",
+   "longo": false
+  },
+  "inicio.voce-se-identifica.13": {
+   "grupo": "Página inicial · Você se identifica?",
+   "rotulo": "Texto — “Ligações e mensagens de cobrança tod…”",
+   "valor": "Ligações e mensagens de cobrança todos os dias.",
+   "longo": false
+  },
+  "inicio.frentes-de-atuacao.1": {
+   "grupo": "Página inicial · Frentes de atuação",
+   "rotulo": "Etiqueta (acima do título) — “Frentes de atuação”",
+   "valor": "Frentes de atuação",
+   "longo": false
+  },
+  "inicio.diagnostico-quiz.1": {
+   "grupo": "Página inicial · Diagnóstico (quiz)",
+   "rotulo": "Etiqueta (acima do título) — “Diagnóstico em 30 segundos”",
+   "valor": "Diagnóstico em 30 segundos",
+   "longo": false
+  },
+  "inicio.diagnostico-quiz.2": {
+   "grupo": "Página inicial · Diagnóstico (quiz)",
+   "rotulo": "Texto — “Gratuito e sem compromisso”",
+   "valor": "Gratuito e sem compromisso",
+   "longo": false
+  },
+  "inicio.diagnostico-quiz.3": {
+   "grupo": "Página inicial · Diagnóstico (quiz)",
+   "rotulo": "Texto — “Nada é enviado sem você querer”",
+   "valor": "Nada é enviado sem você querer",
+   "longo": false
+  },
+  "inicio.como-funciona.1": {
+   "grupo": "Página inicial · Como funciona",
+   "rotulo": "Etiqueta (acima do título) — “Como funciona”",
+   "valor": "Como funciona",
+   "longo": false
+  },
+  "inicio.orientacao-financeira.1": {
+   "grupo": "Página inicial · Orientação financeira",
+   "rotulo": "Etiqueta (acima do título) — “Orientação financeira”",
+   "valor": "Orientação financeira",
+   "longo": false
+  },
+  "inicio.orientacao-financeira.2": {
+   "grupo": "Página inicial · Orientação financeira",
+   "rotulo": "Subtítulo — “Leitura do orçamento”",
+   "valor": "Leitura do orçamento",
+   "longo": false
+  },
+  "inicio.orientacao-financeira.3": {
+   "grupo": "Página inicial · Orientação financeira",
+   "rotulo": "Texto — “Quanto entra, quanto sai e quanto ca…”",
+   "valor": "Quanto entra, quanto sai e quanto cabe de verdade numa parcela — sem julgamento.",
+   "longo": false
+  },
+  "inicio.orientacao-financeira.4": {
+   "grupo": "Página inicial · Orientação financeira",
+   "rotulo": "Subtítulo — “Análise de propostas”",
+   "valor": "Análise de propostas",
+   "longo": false
+  },
+  "inicio.orientacao-financeira.5": {
+   "grupo": "Página inicial · Orientação financeira",
+   "rotulo": "Texto — “Recebeu um acordo ou uma oferta de c…”",
+   "valor": "Recebeu um acordo ou uma oferta de crédito? Olhamos juros, prazos e letras miúdas antes de você assinar.",
+   "longo": true
+  },
+  "inicio.orientacao-financeira.6": {
+   "grupo": "Página inicial · Orientação financeira",
+   "rotulo": "Subtítulo — “Plano para seguir em dia”",
+   "valor": "Plano para seguir em dia",
+   "longo": false
+  },
+  "inicio.orientacao-financeira.7": {
+   "grupo": "Página inicial · Orientação financeira",
+   "rotulo": "Texto — “Um passo a passo simples para o nome…”",
+   "valor": "Um passo a passo simples para o nome continuar limpo depois que tudo se resolver.",
+   "longo": false
+  },
+  "inicio.orientacao-financeira.8": {
+   "grupo": "Página inicial · Orientação financeira",
+   "rotulo": "Destaque — “Comunicação responsável”",
+   "valor": "Comunicação responsável",
+   "longo": false
+  },
+  "inicio.quem-esta-a-frente.1": {
+   "grupo": "Página inicial · Quem está à frente",
+   "rotulo": "Etiqueta (acima do título) — “Quem está à frente”",
+   "valor": "Quem está à frente",
+   "longo": false
+  },
+  "inicio.dicas.1": {
+   "grupo": "Página inicial · Dicas",
+   "rotulo": "Etiqueta (acima do título) — “Dicas da Milena”",
+   "valor": "Dicas da Milena",
+   "longo": false
+  },
+  "inicio.dicas.2": {
+   "grupo": "Página inicial · Dicas",
+   "rotulo": "Título — “O que todo mundo devia saber sobre o…”",
+   "valor": "O que todo mundo devia saber sobre o próprio nome",
+   "longo": false
+  },
+  "inicio.dicas.3": {
+   "grupo": "Página inicial · Dicas",
+   "rotulo": "Subtítulo — “Consulte seu CPF de graça”",
+   "valor": "Consulte seu CPF de graça",
+   "longo": false
+  },
+  "inicio.dicas.4": {
+   "grupo": "Página inicial · Dicas",
+   "rotulo": "Texto — “Serasa, SPC, Boa Vista e o Registrat…”",
+   "valor": "Serasa, SPC, Boa Vista e o Registrato (do Banco Central) mostram as pendências no seu nome sem custo. Comece por aí.",
+   "longo": true
+  },
+  "inicio.dicas.5": {
+   "grupo": "Página inicial · Dicas",
+   "rotulo": "Subtítulo — “Negativação tem prazo”",
+   "valor": "Negativação tem prazo",
+   "longo": false
+  },
+  "inicio.dicas.6": {
+   "grupo": "Página inicial · Dicas",
+   "rotulo": "Texto — “Pelo Código de Defesa do Consumidor,…”",
+   "valor": "Pelo Código de Defesa do Consumidor, ninguém pode ficar negativado por mais de 5 anos pela mesma dívida.",
+   "longo": true
+  },
+  "inicio.dicas.7": {
+   "grupo": "Página inicial · Dicas",
+   "rotulo": "Subtítulo — “Pagou? A baixa tem prazo”",
+   "valor": "Pagou? A baixa tem prazo",
+   "longo": false
+  },
+  "inicio.dicas.8": {
+   "grupo": "Página inicial · Dicas",
+   "rotulo": "Texto — “Depois do pagamento ou do acordo, o…”",
+   "valor": "Depois do pagamento ou do acordo, o credor tem até 5 dias úteis para pedir a retirada do seu nome.",
+   "longo": true
+  },
+  "inicio.dicas.9": {
+   "grupo": "Página inicial · Dicas",
+   "rotulo": "Subtítulo — “Você deve ser avisado antes”",
+   "valor": "Você deve ser avisado antes",
+   "longo": false
+  },
+  "inicio.dicas.10": {
+   "grupo": "Página inicial · Dicas",
+   "rotulo": "Texto — “A inclusão nos cadastros de inadimpl…”",
+   "valor": "A inclusão nos cadastros de inadimplentes precisa de aviso prévio por escrito. Sem aviso, dá para contestar.",
+   "longo": true
+  },
+  "inicio.dicas.11": {
+   "grupo": "Página inicial · Dicas",
+   "rotulo": "Subtítulo — “Desconfie de milagres”",
+   "valor": "Desconfie de milagres",
+   "longo": false
+  },
+  "inicio.dicas.12": {
+   "grupo": "Página inicial · Dicas",
+   "rotulo": "Texto — “Ninguém “apaga” dívida. Nunca pague…”",
+   "valor": "Ninguém “apaga” dívida. Nunca pague nada sem contrato e nunca passe senhas de banco ou do Serasa.",
+   "longo": true
+  },
+  "inicio.dicas.13": {
+   "grupo": "Página inicial · Dicas",
+   "rotulo": "Subtítulo — “Pagar em dia sobe o score”",
+   "valor": "Pagar em dia sobe o score",
+   "longo": false
+  },
+  "inicio.dicas.14": {
+   "grupo": "Página inicial · Dicas",
+   "rotulo": "Texto — “Com o Cadastro Positivo, cada conta…”",
+   "valor": "Com o Cadastro Positivo, cada conta paga em dia conta ponto. Depois do nome limpo, é isso que reconstrói o crédito.",
+   "longo": true
+  },
+  "inicio.formulario-de-analise.1": {
+   "grupo": "Página inicial · Formulário de análise",
+   "rotulo": "Etiqueta (acima do título) — “Análise sem compromisso”",
+   "valor": "Análise sem compromisso",
+   "longo": false
+  },
+  "inicio.formulario-de-analise.2": {
+   "grupo": "Página inicial · Formulário de análise",
+   "rotulo": "Texto — “Atendimento pessoal, com quem entend…”",
+   "valor": "Atendimento pessoal, com quem entende do assunto",
+   "longo": false
+  },
+  "inicio.formulario-de-analise.3": {
+   "grupo": "Página inicial · Formulário de análise",
+   "rotulo": "Texto — “Proposta clara e por escrito antes d…”",
+   "valor": "Proposta clara e por escrito antes de qualquer pagamento",
+   "longo": false
+  },
+  "inicio.formulario-de-analise.4": {
+   "grupo": "Página inicial · Formulário de análise",
+   "rotulo": "Texto — “Sigilo total: seus dados usados só p…”",
+   "valor": "Sigilo total: seus dados usados só para o seu caso",
+   "longo": false
+  },
+  "inicio.formulario-de-analise.5": {
+   "grupo": "Página inicial · Formulário de análise",
+   "rotulo": "Texto — “CPF e CNPJ, em qualquer cidade do Br…”",
+   "valor": "CPF e CNPJ, em qualquer cidade do Brasil",
+   "longo": false
+  },
+  "inicio.seus-direitos.1": {
+   "grupo": "Página inicial · Seus direitos",
+   "rotulo": "Etiqueta (acima do título) — “Seus direitos”",
+   "valor": "Seus direitos",
+   "longo": false
+  },
+  "inicio.seus-direitos.2": {
+   "grupo": "Página inicial · Seus direitos",
+   "rotulo": "Título — “O que a lei garante para *você*”",
+   "valor": "O que a lei garante para *você*",
+   "longo": false
+  },
+  "inicio.seus-direitos.3": {
+   "grupo": "Página inicial · Seus direitos",
+   "rotulo": "Texto — “Informação é a primeira ferramenta p…”",
+   "valor": "Informação é a primeira ferramenta para limpar o nome. Veja três direitos que fazem diferença — com a fonte de cada um.",
+   "longo": true
+  },
+  "inicio.duvidas.1": {
+   "grupo": "Página inicial · Dúvidas",
+   "rotulo": "Etiqueta (acima do título) — “Dúvidas”",
+   "valor": "Dúvidas",
+   "longo": false
+  },
+  "inicio.duvidas.2": {
+   "grupo": "Página inicial · Dúvidas",
+   "rotulo": "Título — “Perguntas frequentes”",
+   "valor": "Perguntas frequentes",
+   "longo": false
+  },
+  "pg-servicos.conteudo.1": {
+   "grupo": "Serviços · Conteúdo",
+   "rotulo": "Texto — “Ative o JavaScript para ver o catálo…”",
+   "valor": "Ative o JavaScript para ver o catálogo, ou fale com a gente pelo WhatsApp.",
+   "longo": false
+  },
+  "pg-servicos.como-pedir.1": {
+   "grupo": "Serviços · Como pedir",
+   "rotulo": "Etiqueta (acima do título) — “Como pedir”",
+   "valor": "Como pedir",
+   "longo": false
+  },
+  "pg-servicos.como-pedir.2": {
+   "grupo": "Serviços · Como pedir",
+   "rotulo": "Título — “Simples assim”",
+   "valor": "Simples assim",
+   "longo": false
+  },
+  "pg-servicos.como-pedir.3": {
+   "grupo": "Serviços · Como pedir",
+   "rotulo": "Subtítulo — “1. Escolha”",
+   "valor": "1. Escolha",
+   "longo": false
+  },
+  "pg-servicos.como-pedir.4": {
+   "grupo": "Serviços · Como pedir",
+   "rotulo": "Texto — “Toque em “Solicitar” nos serviços qu…”",
+   "valor": "Toque em “Solicitar” nos serviços que você precisa.",
+   "longo": false
+  },
+  "pg-servicos.como-pedir.5": {
+   "grupo": "Serviços · Como pedir",
+   "rotulo": "Subtítulo — “2. Entre”",
+   "valor": "2. Entre",
+   "longo": false
+  },
+  "pg-servicos.como-pedir.6": {
+   "grupo": "Serviços · Como pedir",
+   "rotulo": "Texto — “Entre com seu e-mail (sem senha) e c…”",
+   "valor": "Entre com seu e-mail (sem senha) e complete seu cadastro.",
+   "longo": false
+  },
+  "pg-servicos.como-pedir.7": {
+   "grupo": "Serviços · Como pedir",
+   "rotulo": "Subtítulo — “3. Envie”",
+   "valor": "3. Envie",
+   "longo": false
+  },
+  "pg-servicos.como-pedir.8": {
+   "grupo": "Serviços · Como pedir",
+   "rotulo": "Texto — “Envie a solicitação. Ela chega para…”",
+   "valor": "Envie a solicitação. Ela chega para a equipe e no WhatsApp.",
+   "longo": false
+  },
+  "pg-servicos.como-pedir.9": {
+   "grupo": "Serviços · Como pedir",
+   "rotulo": "Subtítulo — “4. Converse”",
+   "valor": "4. Converse",
+   "longo": false
+  },
+  "pg-servicos.como-pedir.10": {
+   "grupo": "Serviços · Como pedir",
+   "rotulo": "Texto — “Com o pedido confirmado, o chat com…”",
+   "valor": "Com o pedido confirmado, o chat com a Milena abre em “Minha conta”.",
+   "longo": false
+  },
+  "pg-servicos.como-pedir.11": {
+   "grupo": "Serviços · Como pedir",
+   "rotulo": "Destaque — “Transparência acima de tudo.”",
+   "valor": "Transparência acima de tudo.",
+   "longo": false
+  },
+  "pg-como.para-agilizar.1": {
+   "grupo": "Como funciona · Para agilizar",
+   "rotulo": "Etiqueta (acima do título) — “Para agilizar”",
+   "valor": "Para agilizar",
+   "longo": false
+  },
+  "pg-como.para-agilizar.2": {
+   "grupo": "Como funciona · Para agilizar",
+   "rotulo": "Título — “O que ter em mãos”",
+   "valor": "O que ter em mãos",
+   "longo": false
+  },
+  "pg-como.para-agilizar.3": {
+   "grupo": "Como funciona · Para agilizar",
+   "rotulo": "Texto — “Não tem tudo? Sem problema. Começamo…”",
+   "valor": "Não tem tudo? Sem problema. Começamos com o que você tiver e ajudamos a levantar o resto.",
+   "longo": false
+  },
+  "pg-como.para-agilizar.4": {
+   "grupo": "Como funciona · Para agilizar",
+   "rotulo": "Subtítulo — “Documento com foto”",
+   "valor": "Documento com foto",
+   "longo": false
+  },
+  "pg-como.para-agilizar.5": {
+   "grupo": "Como funciona · Para agilizar",
+   "rotulo": "Texto — “RG ou CNH, para confirmar sua identi…”",
+   "valor": "RG ou CNH, para confirmar sua identidade.",
+   "longo": false
+  },
+  "pg-como.para-agilizar.6": {
+   "grupo": "Como funciona · Para agilizar",
+   "rotulo": "Subtítulo — “Contratos e boletos”",
+   "valor": "Contratos e boletos",
+   "longo": false
+  },
+  "pg-como.para-agilizar.7": {
+   "grupo": "Como funciona · Para agilizar",
+   "rotulo": "Texto — “O que tiver das dívidas: contratos,…”",
+   "valor": "O que tiver das dívidas: contratos, faturas, acordos antigos.",
+   "longo": false
+  },
+  "pg-como.para-agilizar.8": {
+   "grupo": "Como funciona · Para agilizar",
+   "rotulo": "Subtítulo — “Comprovantes”",
+   "valor": "Comprovantes",
+   "longo": false
+  },
+  "pg-como.para-agilizar.9": {
+   "grupo": "Como funciona · Para agilizar",
+   "rotulo": "Texto — “Pagamentos já feitos, para provar dí…”",
+   "valor": "Pagamentos já feitos, para provar dívidas quitadas.",
+   "longo": false
+  },
+  "pg-como.para-agilizar.10": {
+   "grupo": "Como funciona · Para agilizar",
+   "rotulo": "Subtítulo — “Sua história”",
+   "valor": "Sua história",
+   "longo": false
+  },
+  "pg-como.para-agilizar.11": {
+   "grupo": "Como funciona · Para agilizar",
+   "rotulo": "Texto — “Quando começou, o que foi tentado e…”",
+   "valor": "Quando começou, o que foi tentado e o que você consegue pagar.",
+   "longo": false
+  },
+  "pg-como.seus-direitos.1": {
+   "grupo": "Como funciona · Seus direitos",
+   "rotulo": "Etiqueta (acima do título) — “Seus direitos”",
+   "valor": "Seus direitos",
+   "longo": false
+  },
+  "pg-como.seus-direitos.2": {
+   "grupo": "Como funciona · Seus direitos",
+   "rotulo": "Título — “O que a lei garante a você”",
+   "valor": "O que a lei garante a você",
+   "longo": false
+  },
+  "pg-como.seus-direitos.3": {
+   "grupo": "Como funciona · Seus direitos",
+   "rotulo": "Texto — “Conhecer seus direitos é o primeiro…”",
+   "valor": "Conhecer seus direitos é o primeiro passo para não pagar o que não deve.",
+   "longo": false
+  },
+  "pg-como.seus-direitos.4": {
+   "grupo": "Como funciona · Seus direitos",
+   "rotulo": "Subtítulo — “Aviso antes de negativar”",
+   "valor": "Aviso antes de negativar",
+   "longo": false
+  },
+  "pg-como.seus-direitos.5": {
+   "grupo": "Como funciona · Seus direitos",
+   "rotulo": "Texto — “Você deve ser comunicado por escrito…”",
+   "valor": "Você deve ser comunicado por escrito antes de ter o nome incluído em cadastro de inadimplentes (CDC, art. 43, §2º).",
+   "longo": true
+  },
+  "pg-como.seus-direitos.6": {
+   "grupo": "Como funciona · Seus direitos",
+   "rotulo": "Subtítulo — “Prazo máximo de 5 anos”",
+   "valor": "Prazo máximo de 5 anos",
+   "longo": false
+  },
+  "pg-como.seus-direitos.7": {
+   "grupo": "Como funciona · Seus direitos",
+   "rotulo": "Texto — “Nenhuma negativação pode durar mais…”",
+   "valor": "Nenhuma negativação pode durar mais de 5 anos. Passado o prazo, o registro precisa ser retirado (CDC, art. 43, §1º).",
+   "longo": true
+  },
+  "pg-como.seus-direitos.8": {
+   "grupo": "Como funciona · Seus direitos",
+   "rotulo": "Subtítulo — “Baixa após o pagamento”",
+   "valor": "Baixa após o pagamento",
+   "longo": false
+  },
+  "pg-como.seus-direitos.9": {
+   "grupo": "Como funciona · Seus direitos",
+   "rotulo": "Texto — “Quitada ou renegociada a dívida, o c…”",
+   "valor": "Quitada ou renegociada a dívida, o credor deve pedir a exclusão do registro em até 5 dias úteis (STJ, Súmula 548).",
+   "longo": true
+  },
+  "pg-sobre.nossa-fundadora.1": {
+   "grupo": "Quem somos · Nossa fundadora",
+   "rotulo": "Etiqueta (acima do título) — “Nossa fundadora”",
+   "valor": "Nossa fundadora",
+   "longo": false
+  },
+  "pg-sobre.nossa-fundadora.2": {
+   "grupo": "Quem somos · Nossa fundadora",
+   "rotulo": "Título — “Milena Garbim”",
+   "valor": "Milena Garbim",
+   "longo": false
+  },
+  "pg-sobre.proposito.1": {
+   "grupo": "Quem somos · Propósito",
+   "rotulo": "Etiqueta (acima do título) — “Propósito”",
+   "valor": "Propósito",
+   "longo": false
+  },
+  "pg-sobre.proposito.2": {
+   "grupo": "Quem somos · Propósito",
+   "rotulo": "Título — “Missão, visão e valores”",
+   "valor": "Missão, visão e valores",
+   "longo": false
+  },
+  "pg-sobre.proposito.3": {
+   "grupo": "Quem somos · Propósito",
+   "rotulo": "Subtítulo — “Missão”",
+   "valor": "Missão",
+   "longo": false
+  },
+  "pg-sobre.proposito.4": {
+   "grupo": "Quem somos · Propósito",
+   "rotulo": "Subtítulo — “Visão”",
+   "valor": "Visão",
+   "longo": false
+  },
+  "pg-sobre.proposito.5": {
+   "grupo": "Quem somos · Propósito",
+   "rotulo": "Subtítulo — “Valores”",
+   "valor": "Valores",
+   "longo": false
+  },
+  "pg-sobre.nossos-compromissos.1": {
+   "grupo": "Quem somos · Nossos compromissos",
+   "rotulo": "Etiqueta (acima do título) — “Nossos compromissos”",
+   "valor": "Nossos compromissos",
+   "longo": false
+  },
+  "pg-sobre.nossos-compromissos.2": {
+   "grupo": "Quem somos · Nossos compromissos",
+   "rotulo": "Título — “O que você pode esperar de nós”",
+   "valor": "O que você pode esperar de nós",
+   "longo": false
+  },
+  "pg-sobre.nossos-compromissos.3": {
+   "grupo": "Quem somos · Nossos compromissos",
+   "rotulo": "Subtítulo — “Tudo por escrito”",
+   "valor": "Tudo por escrito",
+   "longo": false
+  },
+  "pg-sobre.nossos-compromissos.4": {
+   "grupo": "Quem somos · Nossos compromissos",
+   "rotulo": "Texto — “Diagnóstico, proposta, valores e pra…”",
+   "valor": "Diagnóstico, proposta, valores e prazos formalizados antes de começar.",
+   "longo": false
+  },
+  "pg-sobre.nossos-compromissos.5": {
+   "grupo": "Quem somos · Nossos compromissos",
+   "rotulo": "Subtítulo — “Você sempre informado”",
+   "valor": "Você sempre informado",
+   "longo": false
+  },
+  "pg-sobre.nossos-compromissos.6": {
+   "grupo": "Quem somos · Nossos compromissos",
+   "rotulo": "Texto — “Cada atualização aparece em “Minha c…”",
+   "valor": "Cada atualização aparece em “Minha conta”, e você pode falar com a equipe por lá.",
+   "longo": false
+  },
+  "pg-sobre.nossos-compromissos.7": {
+   "grupo": "Quem somos · Nossos compromissos",
+   "rotulo": "Subtítulo — “Sigilo e LGPD”",
+   "valor": "Sigilo e LGPD",
+   "longo": false
+  },
+  "pg-sobre.nossos-compromissos.8": {
+   "grupo": "Quem somos · Nossos compromissos",
+   "rotulo": "Texto — “Seus dados são usados apenas para o…”",
+   "valor": "Seus dados são usados apenas para o seu caso e nunca vendidos ou compartilhados sem necessidade.",
+   "longo": true
+  },
+  "pg-duvidas.conteudo.1": {
+   "grupo": "Dúvidas · Conteúdo",
+   "rotulo": "Destaque — “Cuidado com golpes.”",
+   "valor": "Cuidado com golpes.",
+   "longo": false
+  },
+  "pg-direitos.calculadoras.1": {
+   "grupo": "Seus direitos · Calculadoras",
+   "rotulo": "Etiqueta (acima do título) — “Ferramentas gratuitas”",
+   "valor": "Ferramentas gratuitas",
+   "longo": false
+  },
+  "pg-direitos.calculadoras.2": {
+   "grupo": "Seus direitos · Calculadoras",
+   "rotulo": "Texto — “Sem cadastro e sem CPF. A conta é fe…”",
+   "valor": "Sem cadastro e sem CPF. A conta é feita aqui no seu aparelho.",
+   "longo": false
+  },
+  "pg-direitos.o-que-a-lei-garante.1": {
+   "grupo": "Seus direitos · O que a lei garante",
+   "rotulo": "Etiqueta (acima do título) — “O que a lei garante”",
+   "valor": "O que a lei garante",
+   "longo": false
+  },
+  "pg-direitos.o-que-a-lei-garante.2": {
+   "grupo": "Seus direitos · O que a lei garante",
+   "rotulo": "Título — “Direitos que muita gente não conhece”",
+   "valor": "Direitos que muita gente não conhece",
+   "longo": false
+  },
+  "pg-privacidade.topo-da-pagina.1": {
+   "grupo": "Privacidade · Topo da página",
+   "rotulo": "Título da página — “Política de Privacidade”",
+   "valor": "Política de Privacidade",
+   "longo": false
+  },
+  "pg-privacidade.topo-da-pagina.2": {
+   "grupo": "Privacidade · Topo da página",
+   "rotulo": "Texto — “Como tratamos seus dados pessoais, c…”",
+   "valor": "Como tratamos seus dados pessoais, conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018).",
+   "longo": true
+  },
+  "pg-privacidade.conteudo.1": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Título — “1. Quem é o controlador dos dados”",
+   "valor": "1. Quem é o controlador dos dados",
+   "longo": false
+  },
+  "pg-privacidade.conteudo.2": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Destaque — “Milena Garbim”",
+   "valor": "Milena Garbim",
+   "longo": false
+  },
+  "pg-privacidade.conteudo.3": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Título — “2. Quais dados coletamos”",
+   "valor": "2. Quais dados coletamos",
+   "longo": false
+  },
+  "pg-privacidade.conteudo.4": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Destaque — “Formulário de análise:”",
+   "valor": "Formulário de análise:",
+   "longo": false
+  },
+  "pg-privacidade.conteudo.5": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Destaque — “Conta no site:”",
+   "valor": "Conta no site:",
+   "longo": false
+  },
+  "pg-privacidade.conteudo.6": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Destaque — “Atendimento:”",
+   "valor": "Atendimento:",
+   "longo": false
+  },
+  "pg-privacidade.conteudo.7": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Título — “3. Para que usamos”",
+   "valor": "3. Para que usamos",
+   "longo": false
+  },
+  "pg-privacidade.conteudo.8": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Item — “Responder ao seu contato, fazer a an…”",
+   "valor": "Responder ao seu contato, fazer a análise e acompanhar as suas solicitações;",
+   "longo": false
+  },
+  "pg-privacidade.conteudo.9": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Item — “Negociar com credores e contestar re…”",
+   "valor": "Negociar com credores e contestar registros em seu nome, quando contratado;",
+   "longo": false
+  },
+  "pg-privacidade.conteudo.10": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Item — “Cumprir obrigações legais e contratu…”",
+   "valor": "Cumprir obrigações legais e contratuais.",
+   "longo": false
+  },
+  "pg-privacidade.conteudo.11": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Título — “4. Compartilhamento”",
+   "valor": "4. Compartilhamento",
+   "longo": false
+  },
+  "pg-privacidade.conteudo.12": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Texto — “Seus dados só são compartilhados com…”",
+   "valor": "Seus dados só são compartilhados com credores, órgãos de proteção ao crédito, instituições financeiras, cartórios e advogados parceiros quando isso for necessário para executar o serviço que você contratou. Os dados da conta ficam em provedor de banco de dados com acesso restrito à nossa equipe. Não vendemos dados.",
+   "longo": true
+  },
+  "pg-privacidade.conteudo.13": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Título — “5. Por quanto tempo guardamos”",
+   "valor": "5. Por quanto tempo guardamos",
+   "longo": false
+  },
+  "pg-privacidade.conteudo.14": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Texto — “Pelo tempo necessário para o atendim…”",
+   "valor": "Pelo tempo necessário para o atendimento e para cumprir obrigações legais. Depois disso, os dados são excluídos ou anonimizados.",
+   "longo": true
+  },
+  "pg-privacidade.conteudo.15": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Título — “6. Seus direitos”",
+   "valor": "6. Seus direitos",
+   "longo": false
+  },
+  "pg-privacidade.conteudo.16": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Texto — “Você pode pedir a qualquer momento:…”",
+   "valor": "Você pode pedir a qualquer momento: confirmação e acesso aos seus dados, correção, exclusão, informação sobre compartilhamento e revogação do consentimento (art. 18 da LGPD). Basta falar conosco pelos canais de atendimento.",
+   "longo": true
+  },
+  "pg-privacidade.conteudo.17": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Título — “7. Segurança”",
+   "valor": "7. Segurança",
+   "longo": false
+  },
+  "pg-privacidade.conteudo.18": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Texto — “Nunca pedimos senhas de banco ou de…”",
+   "valor": "Nunca pedimos senhas de banco ou de aplicativos de crédito. O login no site é feito com código enviado ao seu e-mail, e cada cliente só vê os próprios dados.",
+   "longo": true
+  },
+  "pg-privacidade.conteudo.19": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Título — “8. Atualizações”",
+   "valor": "8. Atualizações",
+   "longo": false
+  },
+  "pg-privacidade.conteudo.20": {
+   "grupo": "Privacidade · Conteúdo",
+   "rotulo": "Texto — “Esta política pode ser atualizada. A…”",
+   "valor": "Esta política pode ser atualizada. A versão válida é sempre a publicada nesta página.",
+   "longo": false
+  },
+  "pg-404.erro-404.1": {
+   "grupo": "Página não encontrada · Erro 404",
+   "rotulo": "Etiqueta (acima do título) — “Erro 404”",
+   "valor": "Erro 404",
+   "longo": false
+  },
+  "inicio.confianca.1": {
+   "grupo": "Página inicial · Topo",
+   "rotulo": "Garantia 1 (abaixo dos botões)",
+   "valor": "Análise sem compromisso",
+   "longo": false
+  },
+  "inicio.confianca.2": {
+   "grupo": "Página inicial · Topo",
+   "rotulo": "Garantia 2 (abaixo dos botões)",
+   "valor": "Proposta por escrito",
+   "longo": false
+  },
+  "inicio.confianca.3": {
+   "grupo": "Página inicial · Topo",
+   "rotulo": "Garantia 3 (abaixo dos botões)",
+   "valor": "Acompanhe pela sua conta",
+   "longo": false
+  },
+  "inicio.selos.1.texto": {
+   "grupo": "Página inicial · Selos de confiança",
+   "rotulo": "Selo 1 — texto",
+   "valor": "tudo explicado por escrito",
+   "longo": false
+  },
+  "inicio.selos.2.texto": {
+   "grupo": "Página inicial · Selos de confiança",
+   "rotulo": "Selo 2 — texto",
+   "valor": "dados protegidos (LGPD)",
+   "longo": false
+  },
+  "inicio.selos.3.texto": {
+   "grupo": "Página inicial · Selos de confiança",
+   "rotulo": "Selo 3 — texto",
+   "valor": "sem robô, sem julgamento",
+   "longo": false
+  },
+  "inicio.selos.4.texto": {
+   "grupo": "Página inicial · Selos de confiança",
+   "rotulo": "Selo 4 — texto",
+   "valor": "cada etapa na sua conta",
+   "longo": false
   }
  },
  "fotos": {
@@ -696,5 +1590,74 @@ window.PADRAO = {
   "coracao",
   "estrela",
   "cadeado"
- ]
+ ],
+ "direitos": [
+  {
+   "titulo": "Aviso antes de negativar",
+   "texto": "Antes de incluir o seu nome no Serasa, SPC ou Boa Vista, você precisa ser avisado por escrito. Sem esse aviso prévio, a negativação pode ser contestada.",
+   "fonte": "CDC, art. 43, §2º · Súmula 359 do STJ",
+   "link": "https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm"
+  },
+  {
+   "titulo": "No máximo 5 anos no cadastro",
+   "texto": "Uma dívida pode ficar registrada nos cadastros de inadimplentes por, no máximo, 5 anos contados do vencimento. Depois disso, o registro tem que sair — mesmo que a dívida não tenha sido paga.",
+   "fonte": "CDC, art. 43, §1º · Súmula 323 do STJ",
+   "link": "https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm"
+  },
+  {
+   "titulo": "Baixa em até 5 dias úteis depois de pagar",
+   "texto": "Pagou a dívida (ou a entrada do acordo)? O credor tem até 5 dias úteis, a partir do pagamento efetivo, para pedir a retirada do seu nome. Passou disso, é possível cobrar a baixa e, em muitos casos, indenização.",
+   "fonte": "Súmula 548 do STJ",
+   "link": "https://scon.stj.jus.br/SCON/sumstj/toc.jsp?livre=548"
+  },
+  {
+   "titulo": "Cobrança sem constrangimento",
+   "texto": "Ninguém pode ser exposto ao ridículo, ameaçado ou constrangido numa cobrança. E quem paga um valor cobrado indevidamente tem direito à devolução em dobro, com correção.",
+   "fonte": "CDC, art. 42",
+   "link": "https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm"
+  },
+  {
+   "titulo": "Superendividamento tem saída",
+   "texto": "Quem não consegue pagar as dívidas sem comprometer o básico pode pedir a repactuação de todas elas num plano de até 5 anos, preservando o mínimo existencial (hoje R$ 600 por mês). Em 2026, o STF determinou que esse valor seja revisto todo ano.",
+   "fonte": "Lei 14.181/2021 · Decreto 11.150/2022 · STF, ADPFs 1.005, 1.006 e 1.097",
+   "link": "https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2021/lei/l14181.htm"
+  },
+  {
+   "titulo": "Dívida prescrita não pode ser cobrada",
+   "texto": "Depois do prazo de prescrição (em geral, 5 anos para dívidas com contrato), a dívida não pode mais ser cobrada na Justiça. O STJ também já decidiu que ela não pode ser cobrada fora da Justiça — o tema ainda aguarda decisão final em recurso repetitivo.",
+   "fonte": "Código Civil, art. 206, §5º, I · STJ, REsp 2.088.100/SP · Tema 1264",
+   "link": "https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm"
+  },
+  {
+   "titulo": "Consulte o Bacen de graça",
+   "texto": "O Registrato, do Banco Central, mostra gratuitamente os empréstimos, financiamentos e atrasos registrados no seu CPF ou CNPJ (o SCR). É o que os bancos olham — e onde aparecem apontamentos que o Serasa não mostra.",
+   "fonte": "Banco Central do Brasil · Registrato (acesso com conta gov.br)",
+   "link": "https://www.bcb.gov.br/cidadaniafinanceira/registrato"
+  },
+  {
+   "titulo": "Cadastro Positivo conta a seu favor",
+   "texto": "Contas pagas em dia entram no Cadastro Positivo e ajudam a recuperar o score. A inclusão é automática, e você pode consultar ou pedir o cancelamento quando quiser.",
+   "fonte": "Lei 12.414/2011 (alterada pela LC 166/2019)",
+   "link": "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2011/lei/l12414.htm"
+  },
+  {
+   "titulo": "Negativação anterior pesa no pedido de indenização",
+   "texto": "Se já existia outra negativação legítima no seu nome, uma nova inscrição indevida deve ser cancelada, mas normalmente não gera indenização por dano moral. Por isso analisamos todo o histórico antes de indicar o caminho.",
+   "fonte": "Súmula 385 do STJ",
+   "link": "https://scon.stj.jus.br/SCON/sumstj/toc.jsp?livre=385"
+  }
+ ],
+ "aparencia": {
+  "tema": "rosa",
+  "corPrincipal": "",
+  "secoes": {},
+  "triagem": true,
+  "abertura": true,
+  "assistente": true,
+  "aviso": {
+   "ativo": false,
+   "texto": "",
+   "link": ""
+  }
+ }
 };

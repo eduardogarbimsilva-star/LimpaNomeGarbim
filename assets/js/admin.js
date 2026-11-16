@@ -426,17 +426,41 @@
     try { salvo = (await A.lerSite()).textos || {}; } catch (e) { avisar(e.message); }
     const grupos = {};
     Object.entries(PADRAO.textos).forEach(([k, t]) => { (grupos[t.grupo] = grupos[t.grupo] || []).push([k, t]); });
-    p.innerHTML = `<p class="adm-dica">Edite e clique em <strong>Salvar textos</strong>. Para destacar uma palavra em rosa itálico, coloque entre asteriscos: <code>*limpo*</code>. Campo vazio volta ao texto original.</p>
+    // ordem: por página (o que vem antes do "·"), mantendo a ordem em que aparecem
+    const paginaDe = (g) => g.split(" · ")[0];
+    const ordemPag = [];
+    Object.keys(grupos).forEach((g) => { if (!ordemPag.includes(paginaDe(g))) ordemPag.push(paginaDe(g)); });
+    const nomesGrupos = Object.keys(grupos).sort((a, b) => ordemPag.indexOf(paginaDe(a)) - ordemPag.indexOf(paginaDe(b)));
+    const editados = (itens) => itens.filter(([k]) => typeof salvo[k] === "string" && salvo[k].trim()).length;
+    p.innerHTML = `<p class="adm-dica">Todos os textos do site estão aqui, separados por página e seção. Edite e clique em <strong>Salvar textos</strong>. Para destacar uma palavra em rosa itálico, coloque entre asteriscos: <code>*limpo*</code>. Campo vazio volta ao texto original.</p>
+      <div class="adm-busca-textos"><input type="search" placeholder="Procurar um texto (ex.: score, WhatsApp, Bacen)..." data-busca-textos aria-label="Procurar texto"><span data-busca-info></span></div>
       <form id="form-textos" class="adm-textos">
-        ${Object.entries(grupos).map(([g, itens]) => `<fieldset class="adm-grupo"><legend>${esc(g)}</legend>${itens.map(([k, t]) => {
+        ${nomesGrupos.map((g, gi) => { const itens = grupos[g], ed = editados(itens); return `<details class="adm-grupo"${gi === 0 ? " open" : ""}><summary><span>${esc(g)}</span><small>${itens.length} ${itens.length === 1 ? "texto" : "textos"}${ed ? ` · <b>${ed} ${ed === 1 ? "editado" : "editados"}</b>` : ""}</small></summary>${itens.map(([k, t]) => {
           const v = typeof salvo[k] === "string" && salvo[k].trim() ? salvo[k] : t.valor;
-          return `<label class="campo"><span>${esc(t.rotulo)} <button type="button" class="btn-texto" data-restaurar="${esc(k)}">restaurar original</button></span>
+          return `<label class="campo" data-campo-texto><span>${esc(t.rotulo)} <button type="button" class="btn-texto" data-restaurar="${esc(k)}">restaurar original</button></span>
             ${t.longo ? `<textarea name="${esc(k)}" rows="3" maxlength="1200">${esc(v)}</textarea>` : `<input name="${esc(k)}" maxlength="200" value="${esc(v)}">`}</label>`;
-        }).join("")}</fieldset>`).join("")}
+        }).join("")}</details>`; }).join("")}
         <div class="barra-salvar"><button type="submit" class="btn btn-primario">Salvar textos</button></div>
       </form>`;
     const f = $("#form-textos");
-    f.addEventListener("click", (e) => { const b = e.target.closest("[data-restaurar]"); if (b) f.elements[b.dataset.restaurar].value = PADRAO.textos[b.dataset.restaurar].valor; });
+    f.addEventListener("click", (e) => { const b = e.target.closest("[data-restaurar]"); if (b) { e.preventDefault(); f.elements[b.dataset.restaurar].value = PADRAO.textos[b.dataset.restaurar].valor; } });
+    const busca = $("[data-busca-textos]", p), info = $("[data-busca-info]", p);
+    const semAcento = (t) => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    busca.addEventListener("input", () => {
+      const q = semAcento(busca.value.trim());
+      let achados = 0;
+      $$("details.adm-grupo", f).forEach((d) => {
+        let algum = false;
+        $$("[data-campo-texto]", d).forEach((c) => {
+          const campo = $("input, textarea", c);
+          const ok = !q || semAcento(c.textContent + " " + campo.value + " " + d.querySelector("summary").textContent).includes(q);
+          c.hidden = !ok; if (ok) { algum = true; achados++; }
+        });
+        d.hidden = !algum;
+        if (q) d.open = algum;
+      });
+      info.textContent = q ? `${achados} ${achados === 1 ? "resultado" : "resultados"}` : "";
+    });
     f.addEventListener("submit", (e) => {
       e.preventDefault();
       comBotao($("button[type=submit]", f), async () => {
@@ -564,6 +588,151 @@
         });
         avisar("Contato e links salvos!");
       });
+    });
+  };
+
+  /* =========================================================
+     APARÊNCIA: cores, seções da página inicial, recursos e faixa de aviso
+     ========================================================= */
+  const SECOES_INICIO = [
+    ["mapa", "Mapa de decisão", "Faixa “Entender antes de avançar” logo abaixo do topo"],
+    ["faixa", "Faixa rolante", "Palavras passando (Limpa Nome, Bacen...)"],
+    ["selos", "Selos de confiança", "Transparência, Sigilo, Atendimento humano..."],
+    ["dores", "Você se identifica?", "As 6 situações (crédito negado, dívida que não é sua...)"],
+    ["manifesto", "Manifesto", "Frase grande com a assinatura"],
+    ["frentes", "Frentes de atuação", "Serviços numerados com filtros (recomendado deixar ligado)"],
+    ["diagnostico", "Diagnóstico em 30 segundos", "Quiz de 3 perguntas"],
+    ["como-funciona", "Como funciona", "Os 4 passos"],
+    ["orientacao", "Orientação financeira", "Com o aviso de comunicação responsável"],
+    ["fundadora", "Quem está à frente", "Foto e texto da Milena"],
+    ["dicas", "Dicas da Milena", "Carrossel de dicas para compartilhar"],
+    ["analise", "Formulário de análise", "Pedido de análise sem conta"],
+    ["indique", "Indique", "Mandar o site para alguém"],
+    ["direitos", "Seus direitos", "3 direitos com link para a página completa"],
+    ["faq", "Perguntas frequentes", "As 5 primeiras dúvidas"],
+    ["cta", "Chamada final", "“Vamos olhar o seu caso juntos?”"]
+  ];
+  CARREGAR.aparencia = async function () {
+    const p = painel("aparencia");
+    const s = await D.site();
+    const ap = JSON.parse(JSON.stringify(s.aparencia || {}));
+    ap.secoes = ap.secoes || {}; ap.aviso = ap.aviso || {};
+    const temaAtual = ap.corPrincipal ? "_cor" : (ap.tema || "rosa");
+    const amostra = (cores) => ["--rosa-forte", "--rosa", "--blush"].map((v) => `<i style="background:${esc(cores[v] || getComputedStyle(document.documentElement).getPropertyValue(v) || "#ccc")}"></i>`).join("");
+    const original = { "--rosa-forte": "#a5536b", "--rosa": "#c46f87", "--blush": "#f6e2e7" };
+    p.innerHTML = `<form id="form-aparencia" class="adm-aparencia" novalidate>
+      <section class="cartao">
+        <h3>Cores do site</h3>
+        <p class="adm-dica">Escolha uma paleta pronta ou a cor dos botões — os outros tons são criados automaticamente.</p>
+        <div class="temas">
+          ${Object.entries(MG.TEMAS).map(([id, t]) => `<label class="tema-op"><input type="radio" name="tema" value="${id}"${temaAtual === id ? " checked" : ""}><span class="tema-amostra">${amostra(id === "rosa" ? original : t.cores)}</span><span>${esc(t.nome)}</span></label>`).join("")}
+          <label class="tema-op"><input type="radio" name="tema" value="_cor"${temaAtual === "_cor" ? " checked" : ""}><span class="tema-amostra"><input type="color" name="cor" value="${esc(ap.corPrincipal || "#a5536b")}" aria-label="Escolher a cor"></span><span>Minha cor</span></label>
+        </div>
+        <p class="adm-alerta" data-contraste hidden></p>
+      </section>
+      <section class="cartao">
+        <h3>Seções da página inicial</h3>
+        <p class="adm-dica">Desmarque para esconder uma seção. Nada é apagado: é só marcar de novo para voltar.</p>
+        <div class="lista-secoes">
+          ${SECOES_INICIO.map(([id, nome, dica]) => `<label class="aceite secao-op"><input type="checkbox" name="secao" value="${id}"${ap.secoes[id] === false ? "" : " checked"}><span><strong>${esc(nome)}</strong><small>${esc(dica)}</small></span></label>`).join("")}
+        </div>
+      </section>
+      <section class="cartao">
+        <h3>Recursos</h3>
+        <div class="lista-secoes">
+          <label class="aceite secao-op"><input type="checkbox" name="triagem"${ap.triagem === false ? "" : " checked"}><span><strong>Pergunta “Como está o seu nome hoje?”</strong><small>Aparece uma vez para quem entra na página inicial</small></span></label>
+          <label class="aceite secao-op"><input type="checkbox" name="abertura"${ap.abertura === false ? "" : " checked"}><span><strong>Abertura com a assinatura</strong><small>Animação rápida na primeira página da visita</small></span></label>
+          <label class="aceite secao-op"><input type="checkbox" name="assistente"${ap.assistente === false ? "" : " checked"}><span><strong>Assistente virtual</strong><small>Botão “Dúvidas? Pergunte à assistente”</small></span></label>
+          <label class="aceite secao-op"><input type="checkbox" name="whatsFlutuante"${ap.whatsFlutuante === false ? "" : " checked"}><span><strong>Botão flutuante do WhatsApp</strong><small>Círculo verde no canto da tela</small></span></label>
+        </div>
+      </section>
+      <section class="cartao">
+        <h3>Faixa de aviso no topo</h3>
+        <p class="adm-dica">Para promoções, horários especiais ou novidades. Aparece no alto de todas as páginas; a pessoa pode fechar.</p>
+        <label class="aceite"><input type="checkbox" name="avisoAtivo"${ap.aviso.ativo ? " checked" : ""}><span>Mostrar a faixa</span></label>
+        <div class="campos">
+          <label class="campo campo-cheio"><span>Texto da faixa</span><input name="avisoTexto" maxlength="160" value="${esc(ap.aviso.texto || "")}" placeholder="Ex.: Análise gratuita até sexta-feira — chame no WhatsApp"></label>
+          <label class="campo"><span>Link do botão <small>(opcional)</small></span><input name="avisoLink" maxlength="300" value="${esc(ap.aviso.link || "")}" placeholder="direitos.html ou https://..."></label>
+          <label class="campo"><span>Texto do botão</span><input name="avisoBotao" maxlength="30" value="${esc(ap.aviso.botao || "")}" placeholder="Saiba mais"></label>
+        </div>
+      </section>
+      <div class="barra-salvar"><button type="button" class="btn-texto" data-aparencia-padrao>Voltar ao original</button><a class="btn btn-contorno-rosa" href="index.html" target="_blank" rel="noopener">Ver o site</a><button type="submit" class="btn btn-primario">Salvar aparência</button></div>
+    </form>`;
+    const f = $("#form-aparencia");
+    const ler = () => {
+      const tema = (f.querySelector("[name=tema]:checked") || {}).value || "rosa";
+      const secoes = {};
+      $$("[name=secao]", f).forEach((c) => { if (!c.checked) secoes[c.value] = false; });
+      return {
+        tema: tema === "_cor" ? "rosa" : tema, corPrincipal: tema === "_cor" ? f.cor.value : "",
+        secoes, triagem: f.triagem.checked, abertura: f.abertura.checked, assistente: f.assistente.checked, whatsFlutuante: f.whatsFlutuante.checked,
+        aviso: { ativo: f.avisoAtivo.checked, texto: f.avisoTexto.value.trim(), link: f.avisoLink.value.trim(), botao: f.avisoBotao.value.trim() }
+      };
+    };
+    const previa = () => {
+      const a = ler();
+      MG.aplicarAparencia({ tema: a.tema, corPrincipal: a.corPrincipal });
+      const c = $("[data-contraste]", f);
+      const r = a.corPrincipal ? MG.contrasteBranco(a.corPrincipal) : 21;
+      c.hidden = r >= 4.5;
+      c.textContent = `Atenção: essa cor é clara demais para botões com letra branca (contraste ${r.toFixed(1).replace(".", ",")} — o ideal é 4,5 ou mais). Escolha um tom mais escuro.`;
+    };
+    f.addEventListener("change", previa);
+    f.cor.addEventListener("input", () => { f.querySelector("[name=tema][value=_cor]").checked = true; previa(); });
+    previa();
+    $("[data-aparencia-padrao]", f).addEventListener("click", async () => {
+      if (!(await MG.confirmar("Voltar cores, seções, recursos e faixa de aviso ao original?", { titulo: "Voltar ao original?", botao: "Sim, voltar" }))) return;
+      try { await A.salvarSite("aparencia", {}); MG.aplicarAparencia({}); carregadas.delete("aparencia"); CARREGAR.aparencia(); avisar("Aparência original restaurada."); } catch (e) { avisar(e.message); }
+    });
+    f.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const a = ler();
+      if (a.aviso.ativo && !a.aviso.texto) return avisar("Escreva o texto da faixa de aviso (ou desmarque “Mostrar a faixa”).");
+      if (a.aviso.link && !/^https:\/\//i.test(a.aviso.link) && !/^[a-z0-9-]+\.html(#[\w-]+)?$/i.test(a.aviso.link) && !/^#[\w-]+$/.test(a.aviso.link)) return avisar("Link da faixa: use uma página do site (ex.: direitos.html) ou um endereço começando com https://");
+      comBotao($("button[type=submit]", f), async () => {
+        await A.salvarSite("aparencia", a);
+        try { localStorage.setItem("mg_aparencia", JSON.stringify({ tema: a.tema, corPrincipal: a.corPrincipal, abertura: a.abertura })); } catch (err) { /* ok */ }
+        avisar("Aparência salva! Já vale para o site.");
+      });
+    });
+  };
+
+  /* =========================================================
+     SEUS DIREITOS (cartões da página direitos.html e da inicial)
+     ========================================================= */
+  CARREGAR.direitos = async function () {
+    const p = painel("direitos");
+    let lista = PADRAO.direitos || [];
+    try { const s = await A.lerSite(); if (Array.isArray(s.direitos) && s.direitos.length) lista = s.direitos; } catch (e) { avisar(e.message); }
+    lista = lista.map((x) => Object.assign({}, x));
+    function desenhar() {
+      p.innerHTML = `<p class="adm-dica">Os 3 primeiros aparecem na página inicial; todos aparecem em <a href="direitos.html" target="_blank" rel="noopener">Seus direitos</a>. Sempre que possível, informe a fonte (lei ou súmula) e o link oficial.</p>
+        <form id="form-direitos"><ol class="adm-faq">${lista.map((d, i) => `<li data-i="${i}">
+          <label class="campo"><span>Título</span><input name="titulo" maxlength="90" value="${esc(d.titulo || "")}"></label>
+          <label class="campo"><span>Explicação</span><textarea name="texto" rows="3" maxlength="700">${esc(d.texto || "")}</textarea></label>
+          <div class="campos"><label class="campo"><span>Fonte <small>(ex.: CDC, art. 43)</small></span><input name="fonte" maxlength="140" value="${esc(d.fonte || "")}"></label>
+          <label class="campo"><span>Link oficial <small>(https://...)</small></span><input name="link" maxlength="300" inputmode="url" value="${esc(d.link || "")}"></label></div>
+          <div class="adm-botoes"><button type="button" class="btn-texto" data-mover="-1"${i ? "" : " disabled"}>↑ Subir</button><button type="button" class="btn-texto" data-mover="1"${i < lista.length - 1 ? "" : " disabled"}>↓ Descer</button><button type="button" class="btn-texto perigo" data-tirar>${icone("lixo")}Remover</button></div>
+        </li>`).join("")}</ol>
+        <div class="barra-salvar"><button type="button" class="btn btn-contorno-rosa" data-novo>${icone("mais")}Novo direito</button><button type="button" class="btn-texto" data-padrao>Voltar aos originais</button><button type="submit" class="btn btn-primario">Salvar direitos</button></div></form>`;
+    }
+    const ler = () => { $$(".adm-faq li", p).forEach((li) => { const g = (n) => li.querySelector(`[name=${n}]`).value; lista[+li.dataset.i] = { titulo: g("titulo"), texto: g("texto"), fonte: g("fonte"), link: g("link") }; }); };
+    desenhar();
+    p.addEventListener("click", (e) => {
+      const li = e.target.closest("li[data-i]"), i = li ? +li.dataset.i : -1;
+      if (e.target.closest("[data-mover]")) { ler(); const j = i + +e.target.closest("[data-mover]").dataset.mover; [lista[i], lista[j]] = [lista[j], lista[i]]; desenhar(); }
+      else if (e.target.closest("[data-tirar]")) { ler(); lista.splice(i, 1); desenhar(); }
+      else if (e.target.closest("[data-novo]")) { ler(); lista.push({ titulo: "", texto: "", fonte: "", link: "" }); desenhar(); const l = $$(".adm-faq [name=titulo]", p).pop(); l && l.focus(); }
+      else if (e.target.closest("[data-padrao]")) { MG.confirmar("Voltar aos direitos originais? As suas alterações serão perdidas.", { titulo: "Voltar ao original?", botao: "Sim, voltar" }).then((ok) => { if (ok) { lista = (PADRAO.direitos || []).map((x) => Object.assign({}, x)); desenhar(); } }); }
+    });
+    p.addEventListener("submit", (e) => {
+      e.preventDefault();
+      ler();
+      const limpa = lista.map((d) => ({ titulo: d.titulo.trim(), texto: d.texto.trim(), fonte: d.fonte.trim(), link: d.link.trim() })).filter((d) => d.titulo && d.texto);
+      if (!limpa.length) return avisar("Deixe pelo menos um direito com título e explicação.");
+      const ruim = limpa.find((d) => d.link && !/^https:\/\//i.test(d.link));
+      if (ruim) return avisar(`O link de “${ruim.titulo}” precisa começar com https://`);
+      comBotao($("button[type=submit]", p), async () => { await A.salvarSite("direitos", limpa); lista = limpa; desenhar(); avisar("Direitos salvos!"); });
     });
   };
 

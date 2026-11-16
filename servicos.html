@@ -21,13 +21,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Great+Vibes&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/style.css?v=16">
+  <link rel="stylesheet" href="assets/css/style.css?v=17">
 </head>
 <body>
   <script>
     /* Abertura com a assinatura: uma vez por visita (pula para quem pede menos movimento) */
     (function () { try {
-      if (sessionStorage.getItem("mg_abertura") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      if (sessionStorage.getItem("mg_abertura") || (JSON.parse(localStorage.getItem("mg_aparencia") || "{}").abertura === false) || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       sessionStorage.setItem("mg_abertura", "1");
       document.body.classList.add("com-abertura");
       document.body.insertAdjacentHTML("afterbegin", '<div class="abertura" aria-hidden="true"><div class="abertura-miolo"><img src="assets/img/milena-garbim-avatar.jpg" alt="" data-foto="avatar"><span class="assinatura">Milena Garbim</span><small>Limpa Nome &amp; Crédito</small></div></div>');
@@ -51,10 +51,10 @@
       <a href="index.html" class="logo" aria-label="Milena Garbim - Limpa Nome - início"><span class="logo-foto"><img src="assets/img/milena-garbim-avatar.jpg" alt="" width="50" height="50" data-foto="avatar"></span><span class="logo-texto"><strong>Milena Garbim</strong><small>Limpa Nome &amp; Crédito</small></span></a>
       <nav aria-label="Menu principal">
         <ul class="menu">
-          <li><a href="index.html">Início</a></li>
           <li><a href="servicos.html" class="ativo">Serviços</a></li>
           <li><a href="como-funciona.html">Como trabalhamos</a></li>
           <li><a href="index.html#orientacao">Orientação</a></li>
+          <li><a href="direitos.html">Seus direitos</a></li>
           <li><a href="sobre.html">Quem somos</a></li>
           <li><a href="duvidas.html">Dúvidas</a></li>
         </ul>
@@ -78,29 +78,36 @@
 
     <section class="secao secao-catalogo">
       <div class="container">
+        <div class="frentes-filtros catalogo-perfil">
+          <div class="seg" role="group" aria-label="Para quem é o atendimento">
+            <button type="button" class="ativo" data-perfil="" aria-pressed="true">Todos</button>
+            <button type="button" data-perfil="pf" aria-pressed="false"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Pessoa física</button>
+            <button type="button" data-perfil="pj" aria-pressed="false"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1"/></svg>Empresa</button>
+          </div>
+        </div>
         <div class="filtro-catalogo" data-filtro role="toolbar" aria-label="Filtrar por categoria"></div>
         <div class="catalogo" data-catalogo>
           <p class="vazio">Carregando serviços...</p>
         </div>
-        <noscript><p class="vazio">Ative o JavaScript para ver o catálogo, ou fale com a gente pelo WhatsApp.</p></noscript>
+        <noscript><p class="vazio" data-texto="pg-servicos.conteudo.1">Ative o JavaScript para ver o catálogo, ou fale com a gente pelo WhatsApp.</p></noscript>
       </div>
     </section>
 
     <section class="secao secao-alt">
       <div class="container">
         <div class="secao-titulo revelar">
-          <span class="rotulo">Como pedir</span>
-          <h2>Simples assim</h2>
+          <span class="rotulo" data-texto="pg-servicos.como-pedir.1">Como pedir</span>
+          <h2 data-texto="pg-servicos.como-pedir.2">Simples assim</h2>
         </div>
         <div class="valores valores-4">
-          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div><h3>1. Escolha</h3><p>Toque em “Solicitar” nos serviços que você precisa.</p></div>
-          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div><h3>2. Entre</h3><p>Entre com seu e-mail (sem senha) e complete seu cadastro.</p></div>
-          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l1 13H5z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg></div><h3>3. Envie</h3><p>Envie a solicitação. Ela chega para a equipe e no WhatsApp.</p></div>
-          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12"/></svg></div><h3>4. Converse</h3><p>Com o pedido confirmado, o chat com a Milena abre em “Minha conta”.</p></div>
+          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div><h3 data-texto="pg-servicos.como-pedir.3">1. Escolha</h3><p data-texto="pg-servicos.como-pedir.4">Toque em “Solicitar” nos serviços que você precisa.</p></div>
+          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div><h3 data-texto="pg-servicos.como-pedir.5">2. Entre</h3><p data-texto="pg-servicos.como-pedir.6">Entre com seu e-mail (sem senha) e complete seu cadastro.</p></div>
+          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l1 13H5z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg></div><h3 data-texto="pg-servicos.como-pedir.7">3. Envie</h3><p data-texto="pg-servicos.como-pedir.8">Envie a solicitação. Ela chega para a equipe e no WhatsApp.</p></div>
+          <div class="valor-item revelar"><div class="ic"><svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.4A8 8 0 1 1 21 12"/></svg></div><h3 data-texto="pg-servicos.como-pedir.9">4. Converse</h3><p data-texto="pg-servicos.como-pedir.10">Com o pedido confirmado, o chat com a Milena abre em “Minha conta”.</p></div>
         </div>
         <div class="transparencia revelar" style="margin-top:32px">
           <svg class="icone-svg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></svg>
-          <p><strong>Transparência acima de tudo.</strong> <span data-texto="servicos.aviso">Não somos banco, nem Serasa, SPC ou Boa Vista, e não prometemos “apagar” dívidas. Trabalhamos com negociação, contestação de registros indevidos e, quando necessário, com advogados parceiros. Resultados e prazos variam conforme cada caso e são explicados na proposta.</span></p>
+          <p><strong data-texto="pg-servicos.como-pedir.11">Transparência acima de tudo.</strong> <span data-texto="servicos.aviso">Não somos banco, nem Serasa, SPC ou Boa Vista, e não prometemos “apagar” dívidas. Trabalhamos com negociação, contestação de registros indevidos e, quando necessário, com advogados parceiros. Resultados e prazos variam conforme cada caso e são explicados na proposta.</span></p>
         </div>
       </div>
     </section>
@@ -144,6 +151,7 @@
           <li><a href="servicos.html#cat-juros-abusivos">Revisão de juros</a></li>
           <li><a href="servicos.html#cat-score">Score e crédito</a></li>
           <li><a href="servicos.html#cat-empresas">Empresas (CNPJ)</a></li>
+          <li><a href="servicos.html#cat-orientacao">Diagnóstico e orientação</a></li>
         </ul>
       </div>
       <div>
@@ -152,6 +160,7 @@
           <li><a href="sobre.html">Quem somos</a></li>
           <li><a href="como-funciona.html">Como funciona</a></li>
           <li><a href="index.html#orientacao">Orientação financeira</a></li>
+          <li><a href="direitos.html">Seus direitos</a></li>
           <li><a href="duvidas.html">Dúvidas frequentes</a></li>
           <li><a href="conta.html">Minha conta</a></li>
           <li><a href="privacidade.html">Política de Privacidade</a></li>
@@ -183,11 +192,11 @@
     <a class="barra-whats" data-whats><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2m0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2m4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2s.2-1.1.2-1.2-.2-.2-.4-.3"/></svg><span>WhatsApp</span></a>
   </nav>
 
-  <script src="assets/js/config.js?v=16"></script>
-  <script src="assets/js/padrao.js?v=16"></script>
-  <script src="assets/js/dados.js?v=16"></script>
-  <script src="assets/js/main.js?v=16"></script>
-  <script src="assets/js/destaques.js?v=16"></script>
-  <script src="assets/js/assistente.js?v=16"></script>
+  <script src="assets/js/config.js?v=17"></script>
+  <script src="assets/js/padrao.js?v=17"></script>
+  <script src="assets/js/dados.js?v=17"></script>
+  <script src="assets/js/main.js?v=17"></script>
+  <script src="assets/js/destaques.js?v=17"></script>
+  <script src="assets/js/assistente.js?v=17"></script>
 </body>
 </html>
