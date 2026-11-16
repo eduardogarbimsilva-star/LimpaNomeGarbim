@@ -240,4 +240,4 @@ por isso não aparecem como oferta no site.
 - **Agenda** para marcar a conversa inicial.
 - **Pagamento online** (Pix / link de pagamento) depois da proposta aceita.
 - **Google Analytics / Meta Pixel** (com aviso de cookies) para saber de onde vêm os clientes.
-- **Domínio próprio** + robots.txt na raiz + Google Search Console (o `sitemap.xml` já está pronto).
+- **Domínio próprio** + Google Search Console (o `sitemap.xml` e o `robots.txt` já estão prontos; com domínio próprio o robots passa a valer).
