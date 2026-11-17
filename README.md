@@ -269,7 +269,8 @@ O site já está conectado ao banco (`assets/js/config.js`). Configurado pelo to
    - Depois, o modelo de e-mail com o código (`supabase/emails/codigo-acesso.html`) pode ser aplicado.
 2. **Chave da IA:** Supabase → Edge Functions → Secrets → `ANTHROPIC_API_KEY`. Sem ela, a assistente manda
    respostas automáticas padrão (boas-vindas e "a Milena foi avisada").
-3. **Aviso no WhatsApp a cada pedido (opcional, CallMeBot):** salve o número +34 644 66 32 62 nos contatos,
-   mande "I allow callmebot to send me messages" pelo WhatsApp da Milena, receba a apikey e crie os Secrets
+3. **Aviso no WhatsApp a cada pedido (opcional, CallMeBot):** siga o passo a passo de www.callmebot.com
+   (WhatsApp → "Free API"): pelo WhatsApp da Milena, mande a mensagem de autorização para o número indicado lá,
+   receba a apikey e crie os Secrets
    `CALLMEBOT_TELEFONE` (ex.: `+5516988381117`) e `CALLMEBOT_APIKEY`. CallMeBot é um serviço gratuito de
    terceiros, sem vínculo com o WhatsApp oficial.
