@@ -286,15 +286,15 @@ begin
 end $$;
 
 -- ---------------------------------------------------------
--- Chat do pedido (cliente <-> vendedora)
--- Abre só depois que a vendedora confirma o pedido; fecha se o pedido for cancelado.
+-- Chat do pedido (cliente <-> vendedora + assistente virtual)
+-- Abre assim que o pedido é feito (a assistente atende até a Milena responder); fecha se o pedido for cancelado.
 -- ---------------------------------------------------------
 drop function if exists public.mensagem_cliente(uuid, text);
 
 create table if not exists public.mensagens (
   id uuid primary key default gen_random_uuid(),
   pedido_id uuid not null references public.pedidos (id) on delete cascade,
-  autor text not null check (autor in ('cliente', 'equipe')),
+  autor text not null check (autor in ('cliente', 'equipe', 'ia', 'sistema')),
   nome text,
   texto text not null default '' check (length(texto) <= 2000),
   anexo text,                 -- foto enviada no chat (caminho na pasta privada "chat")
@@ -306,7 +306,13 @@ alter table public.mensagens add column if not exists anexo text;
 alter table public.mensagens alter column texto set default '';
 alter table public.mensagens drop constraint if exists mensagens_texto_check;
 alter table public.mensagens drop constraint if exists mensagens_conteudo;
-alter table public.mensagens add constraint mensagens_conteudo check (length(texto) <= 2000 and (texto <> '' or anexo is not null));
+-- Assistente virtual ('ia'), avisos automáticos ('sistema') e cobrança PIX (coluna pix)
+alter table public.mensagens add column if not exists pix jsonb;
+alter table public.mensagens drop constraint if exists mensagens_autor_check;
+alter table public.mensagens add constraint mensagens_autor_check check (autor in ('cliente', 'equipe', 'ia', 'sistema'));
+alter table public.mensagens add constraint mensagens_conteudo check (length(texto) <= 4000 and (texto <> '' or anexo is not null or pix is not null));
+-- Assistente ligada por pedido: desliga sozinha quando a equipe responde; a equipe pode religar
+alter table public.pedidos add column if not exists ia_ativa boolean not null default true;
 create index if not exists mensagens_pedido on public.mensagens (pedido_id, criado_em);
 alter table public.mensagens enable row level security;
 drop policy if exists "chat: cliente do pedido e equipe" on public.mensagens;
@@ -330,9 +336,10 @@ begin
   elsif p_como = 'cliente' then
     if v_p.cliente_id is distinct from auth.uid() then raise exception 'Pedido não encontrado.'; end if;
   else raise exception 'Remetente inválido.'; end if;
-  if v_p.confirmado_em is null or v_p.status = 'cancelado' then raise exception 'CHAT_FECHADO'; end if;
+  if v_p.status = 'cancelado' then raise exception 'CHAT_FECHADO'; end if;
   insert into public.mensagens (pedido_id, autor, nome, texto, anexo) values (p_pedido, p_como, v_nome, v_texto, p_anexo) returning * into r;
-  update public.pedidos set atualizado_em = now() where id = p_pedido;
+  -- a equipe respondeu: a assistente virtual sai da conversa (pode ser religada no painel)
+  update public.pedidos set atualizado_em = now(), ia_ativa = case when p_como = 'equipe' then false else ia_ativa end where id = p_pedido;
   return to_jsonb(r);
 end $$;
 
@@ -357,7 +364,7 @@ $$;
 create or replace function public.pode_enviar_foto_chat(p_nome text) returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (select 1 from public.pedidos p where p.id::text = split_part(p_nome, '/', 1)
-    and p.confirmado_em is not null and p.status <> 'cancelado' and (p.cliente_id = auth.uid() or public.eh_equipe()))
+    and p.status <> 'cancelado' and (p.cliente_id = auth.uid() or public.eh_equipe()))
 $$;
 drop policy if exists "fotos do chat: ver" on storage.objects;
 create policy "fotos do chat: ver" on storage.objects for select to authenticated using (bucket_id = 'chat' and public.pode_ver_foto_chat(name));
@@ -402,6 +409,98 @@ grant execute on function public.criar_pedido(jsonb, text), public.atualizar_ped
   public.pode_ver_foto_chat(text), public.pode_enviar_foto_chat(text),
   public.meu_papel(), public.meu_nome_equipe(), public.eh_equipe(), public.eh_admin() to authenticated;
 grant execute on function public.email_ja_cadastrado(text) to anon, authenticated;
+
+-- =========================================================
+-- Assistente virtual, PIX e notificações
+-- =========================================================
+-- Equipe liga/desliga a assistente virtual de um pedido
+create or replace function public.alternar_ia(p_pedido uuid, p_ativa boolean)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not public.eh_equipe() then raise exception 'Sem permissão' using errcode = '42501'; end if;
+  update public.pedidos set ia_ativa = p_ativa where id = p_pedido;
+  if not found then raise exception 'Pedido não encontrado.'; end if;
+  insert into public.mensagens (pedido_id, autor, nome, texto)
+  values (p_pedido, 'sistema', null, case when p_ativa then 'A assistente virtual voltou a acompanhar esta conversa.' else 'A assistente virtual saiu da conversa.' end);
+end $$;
+
+-- Cobrança PIX no chat: o valor é sempre informado pela equipe; o código "copia e cola" é montado no painel
+create or replace function public.enviar_pix(p_pedido uuid, p_valor numeric, p_descricao text, p_codigo text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare v_p public.pedidos; r public.mensagens; v_desc text := left(nullif(trim(p_descricao), ''), 120);
+begin
+  if not public.eh_equipe() then raise exception 'Sem permissão' using errcode = '42501'; end if;
+  select * into v_p from public.pedidos where id = p_pedido;
+  if not found then raise exception 'Pedido não encontrado.'; end if;
+  if v_p.status = 'cancelado' then raise exception 'CHAT_FECHADO'; end if;
+  if p_valor is null or p_valor <= 0 or p_valor > 1000000 then raise exception 'Valor inválido.'; end if;
+  if p_codigo is null or length(p_codigo) > 600 or p_codigo !~ '^000201' then raise exception 'Código PIX inválido.'; end if;
+  insert into public.mensagens (pedido_id, autor, nome, texto, pix)
+  values (p_pedido, 'equipe', public.meu_nome_equipe(),
+          'Pagamento via PIX: R$ ' || translate(to_char(round(p_valor, 2), 'FM999,999,990.00'), ',.', '.,') || coalesce(' — ' || v_desc, ''),
+          jsonb_build_object('valor', round(p_valor, 2), 'descricao', v_desc, 'codigo', p_codigo, 'status', 'pendente'))
+  returning * into r;
+  update public.pedidos set atualizado_em = now(), ia_ativa = false where id = p_pedido;
+  return to_jsonb(r);
+end $$;
+
+create or replace function public.marcar_pix(p_mensagem uuid, p_status text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not public.eh_equipe() then raise exception 'Sem permissão' using errcode = '42501'; end if;
+  if p_status not in ('pendente', 'pago', 'cancelado') then raise exception 'Situação inválida.'; end if;
+  update public.mensagens set pix = pix || jsonb_build_object('status', p_status, 'atualizado_em', now())
+   where id = p_mensagem and pix is not null;
+  if not found then raise exception 'Cobrança não encontrada.'; end if;
+end $$;
+
+-- Aparelhos da equipe que recebem notificação (celular/computador)
+create table if not exists public.push_inscricoes (
+  endpoint text primary key check (length(endpoint) <= 1000),
+  email text not null,
+  inscricao jsonb not null,
+  aparelho text check (length(aparelho) <= 120),
+  criado_em timestamptz not null default now()
+);
+alter table public.push_inscricoes enable row level security;
+drop policy if exists "equipe gerencia os próprios aparelhos" on public.push_inscricoes;
+create policy "equipe gerencia os próprios aparelhos" on public.push_inscricoes for all to authenticated
+  using (public.eh_equipe() and email = public.meu_email()) with check (public.eh_equipe() and email = public.meu_email());
+grant select, insert, update, delete on public.push_inscricoes to authenticated;
+
+-- Avisos automáticos: cada pedido novo e cada mensagem de cliente chamam a função "eventos"
+-- (notificação no celular da equipe, aviso no WhatsApp e resposta da assistente virtual)
+create extension if not exists pg_net with schema extensions;
+create schema if not exists privado;
+revoke all on schema privado from public, anon, authenticated;
+create table if not exists privado.ajustes (chave text primary key, valor text not null);
+insert into privado.ajustes (chave, valor) values ('eventos_segredo', encode(extensions.gen_random_bytes(24), 'hex')) on conflict (chave) do nothing;
+
+create or replace function privado.avisar_evento() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+declare v_url text; v_seg text;
+begin
+  select valor into v_url from privado.ajustes where chave = 'eventos_url';
+  select valor into v_seg from privado.ajustes where chave = 'eventos_segredo';
+  if v_url is null or v_seg is null then return new; end if;
+  perform net.http_post(url := v_url,
+    body := jsonb_build_object('tabela', tg_table_name, 'registro', to_jsonb(new)),
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-evento-segredo', v_seg),
+    timeout_milliseconds := 15000);
+  return new;
+exception when others then
+  return new;   -- aviso falhou: nunca impede o pedido ou a mensagem
+end $$;
+drop trigger if exists pedidos_evento on public.pedidos;
+create trigger pedidos_evento after insert on public.pedidos for each row execute function privado.avisar_evento();
+drop trigger if exists mensagens_evento on public.mensagens;
+create trigger mensagens_evento after insert on public.mensagens for each row when (new.autor = 'cliente') execute function privado.avisar_evento();
+
+grant execute on function public.alternar_ia(uuid, boolean), public.enviar_pix(uuid, numeric, text, text), public.marcar_pix(uuid, text) to authenticated;
+-- Funções do servidor (assistente, notificações) usam a chave de serviço: precisam de acesso às tabelas
+grant usage on schema public to service_role;
+grant select, insert, update, delete on all tables in schema public to service_role;
+grant usage, select on all sequences in schema public to service_role;
 
 -- ---------------------------------------------------------
 -- Catálogo inicial (só entra se ainda não existir; depois edite pelo painel)

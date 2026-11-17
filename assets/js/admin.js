@@ -125,11 +125,10 @@
     </details>`;
   }
   function blocoChatAdmin(p, n) {
-    if (D.Chat.aberto(p)) return `<div class="chat-bloco aberto"><div>${icone("chat")}<div><strong>Chat com o cliente</strong><small>Aberto desde ${esc(dataHora(p.confirmado_em))}. As mensagens ficam na aba Conversas.</small></div></div>
-      <div class="botoes-form"><button type="button" class="btn btn-primario" data-chat-pedido="${esc(p.id)}">${icone("chat")}Abrir conversa<span class="selo-chat" data-selo-botao${n ? "" : " hidden"}>${n}</span></button></div></div>`;
     if (p.status === "cancelado") return `<div class="chat-bloco"><div>${icone("cadeado")}<div><strong>Chat fechado</strong><small>Pedido cancelado.</small></div></div></div>`;
-    return `<div class="chat-bloco confirmar"><div>${icone("check")}<div><strong>Confirme o pedido para abrir o chat</strong><small>Ao confirmar, o cliente é avisado em Minha conta e já pode conversar com você.</small></div></div>
-      <div class="botoes-form"><button type="button" class="btn btn-primario" data-confirmar-pedido="${esc(p.id)}">${icone("check")}Confirmar pedido e abrir o chat</button></div></div>`;
+    const ia = p.ia_ativa === false ? "A assistente virtual está desligada nesta conversa." : "A assistente virtual está atendendo o cliente até você responder.";
+    return `<div class="chat-bloco aberto"><div>${icone("chat")}<div><strong>Chat com o cliente</strong><small>${ia} Pagamento por PIX: botão “Pagamento” dentro da conversa.</small></div></div>
+      <div class="botoes-form"><button type="button" class="btn btn-primario" data-chat-pedido="${esc(p.id)}">${icone("chat")}Abrir conversa<span class="selo-chat" data-selo-botao${n ? "" : " hidden"}>${n}</span></button>${!p.confirmado_em ? `<button type="button" class="btn btn-contorno-rosa" data-confirmar-pedido="${esc(p.id)}">${icone("check")}Confirmar pedido</button>` : ""}</div></div>`;
   }
   function abrirChatPedido(id) {
     abrirAba("conversas");
@@ -184,10 +183,10 @@
     if (caixa) return caixa;
     caixa = window.ChatUI.caixaEntrada(painel("conversas"), {
       como: "equipe",
-      vazio: "Confirme um pedido na aba Pedidos para abrir a conversa com o cliente.",
+      vazio: "As conversas aparecem aqui assim que chegar um pedido.",
       conversas: async () => {
         pedidos = await A.pedidos();
-        return pedidos.filter((p) => p.confirmado_em).map((p) => ({
+        return pedidos.map((p) => ({
           pedido: p, titulo: nomeCliente(p.cliente), nomeCliente: String(nomeCliente(p.cliente)).split(" ")[0],
           subtitulo: `${p.numero} · ${(p.itens || []).map((i) => i.nome).join(", ")}`
         }));
@@ -562,6 +561,12 @@
         ${campo("horario", "Horário de atendimento", c.horario, 'maxlength="80"')}
         ${campo("endereco", "Endereço / área de atendimento", c.endereco, 'maxlength="120"')}
       </div>
+      <h3>PIX para cobranças no chat <small>(o valor é você quem informa em cada cobrança)</small></h3>
+      <div class="campos">
+        ${campo("pixChave", "Chave PIX (CPF, CNPJ, e-mail, celular ou aleatória)", (c.pix || {}).chave, 'maxlength="77" autocomplete="off"')}
+        ${campo("pixNome", "Nome do recebedor (como está no banco)", (c.pix || {}).nome || "Milena Garbim", 'maxlength="25"')}
+        ${campo("pixCidade", "Cidade do recebedor", (c.pix || {}).cidade, 'maxlength="15" placeholder="Ex.: Franca"')}
+      </div>
       <h3>Redes sociais <small>(deixe vazio para esconder)</small></h3>
       <div class="campos">
         ${campo("instagram", "Instagram", r.instagram, 'inputmode="url" placeholder="https://www.instagram.com/..."')}
@@ -579,12 +584,14 @@
       if (zap && !/^55\d{10,11}$/.test(zap)) return avisar("WhatsApp: use 55 + DDD + número. Ex.: 5516999999999");
       if (f.email.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.value.trim())) return avisar("E-mail inválido.");
       if (f.cnpj.value && !BR.cnpjValido(f.cnpj.value)) return avisar("CNPJ inválido.");
+      if (f.pixChave.value.trim() && (!f.pixNome.value.trim() || !f.pixCidade.value.trim())) return avisar("Para o PIX, informe também o nome do recebedor e a cidade.");
       const url = (v) => { v = v.trim(); if (!v) return ""; if (!/^https:\/\//i.test(v)) v = "https://" + v.replace(/^http:\/\//i, ""); return v; };
       comBotao($("button[type=submit]", f), async () => {
         await A.salvarSite("contatos", {
           whatsapp: zap, telefone: f.telefone.value.trim(), email: f.email.value.trim(), cnpj: f.cnpj.value ? BR.mascaras.cnpj(f.cnpj.value) : "",
           horario: f.horario.value.trim(), endereco: f.endereco.value.trim(),
-          redes: { instagram: url(f.instagram.value), facebook: url(f.facebook.value), tiktok: url(f.tiktok.value), youtube: url(f.youtube.value) }
+          redes: { instagram: url(f.instagram.value), facebook: url(f.facebook.value), tiktok: url(f.tiktok.value), youtube: url(f.youtube.value) },
+          pix: { chave: f.pixChave.value.trim(), nome: f.pixNome.value.trim(), cidade: f.pixCidade.value.trim() }
         });
         avisar("Contato e links salvos!");
       });
@@ -845,5 +852,33 @@
     abrirAba(aba);
     atualizarChatNaoLidas();
     D.Chat.ouvir(null, atualizarChatNaoLidas);
+    // link da notificação: admin.html?pedido=<id> abre a conversa do pedido
+    const pedidoUrl = new URLSearchParams(location.search).get("pedido");
+    if (pedidoUrl) setTimeout(() => abrirChatPedido(pedidoUrl), 400);
+    prepararPush();
   });
+
+  /* Notificações no celular/computador (pedido novo e mensagem de cliente) */
+  async function prepararPush() {
+    const b = $("[data-ativar-push]");
+    if (!b || !D.Push) return;
+    const iphone = /iPhone|iPad|iPod/.test(navigator.userAgent), instalado = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+    const marcar = (ativo) => { b.hidden = false; b.classList.toggle("ativo", ativo); $("span", b).textContent = ativo ? "Notificações ativas neste aparelho" : "Ativar notificações neste aparelho"; };
+    if (!D.Push.suportado() && !(iphone && !instalado)) return;
+    try { marcar(!!(await D.Push.inscricaoAtual()) && Notification.permission === "granted"); } catch (e) { marcar(false); }
+    b.addEventListener("click", async () => {
+      if (iphone && !instalado) {
+        MG.modal(`<h2>Notificações no iPhone</h2><ol class="lista-passos"><li>Abra este painel no <strong>Safari</strong>.</li><li>Toque em <strong>Compartilhar</strong> (quadrado com seta) → <strong>Adicionar à Tela de Início</strong>.</li><li>Abra o ícone <strong>Milena Garbim</strong> que apareceu na tela, entre no painel e toque de novo em <strong>Ativar notificações</strong>.</li></ol><p class="adm-dica">É uma exigência da Apple: no iPhone, só sites adicionados à Tela de Início recebem notificações (iOS 16.4 ou mais novo).</p>`);
+        return;
+      }
+      if (b.classList.contains("ativo")) {
+        if (!(await MG.confirmar("Parar de receber notificações neste aparelho?", { titulo: "Desativar notificações?", botao: "Desativar" }))) return;
+        try { await D.Push.desativar(); marcar(false); avisar("Notificações desativadas neste aparelho."); } catch (e) { avisar(e.message); }
+        return;
+      }
+      b.disabled = true;
+      try { await D.Push.ativar(); marcar(true); avisar("Pronto! Você será avisado a cada pedido novo e a cada mensagem de cliente."); }
+      catch (e) { avisar(e.message); } finally { b.disabled = false; }
+    });
+  }
 })();

@@ -21,12 +21,15 @@ window.SITE_CONFIG = {
   // Banco de dados e login com código por e-mail (Supabase). Enquanto estiver vazio, o site roda em
   // "modo demonstração": o código aparece na tela e tudo fica salvo só no navegador. Veja o README.
   supabase: {
-    url: "",       // ex.: "https://SEU-PROJETO.supabase.co"
-    anonKey: ""    // chave pública (anon / publishable). NUNCA coloque aqui a chave secreta (service_role).
+    url: "https://bdsqusebturohiwiaczg.supabase.co",
+    // chave pública (anon): pode ficar no site. NUNCA coloque aqui a chave secreta (service_role).
+    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkc3F1c2VidHVyb2hpd2lhY3pnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ1MDkwOTMsImV4cCI6MjExMDA4NTA5M30.tyPQ_aB9rAoAMn5AiUA7XiIabNNyHM2U1FCPWS7o4x4"
   },
   // Assistente virtual com IA. Vazio = usa a função "assistente" do próprio Supabase (supabase/functions/assistente).
   // Sem Supabase, a assistente funciona em "modo básico" (responde com as dúvidas e serviços do site).
   assistente: { endpoint: "" },
+  // Notificações no celular/computador da equipe (Web Push). Chave PÚBLICA — a privada fica só no Supabase.
+  pushChavePublica: "BME82ZVrhyiLT3_MaCwmXiVjRDg1Ua4Ze6a7bLu3wSB-rIDI9wgaYfOqjWxvtslYCnQzI6zOPIQY5AZxP9SAx2I",
   // Quantos dígitos tem o código do e-mail (Supabase: Authentication → Email → "Email OTP Length").
   tamanhoCodigo: 8
 };

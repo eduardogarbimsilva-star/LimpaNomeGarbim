@@ -67,7 +67,7 @@
     if (/rate limit|security purposes|only request/i.test(msg)) return new Error("Muitas tentativas. Aguarde um minuto antes de pedir outro código.");
     if (/CADASTRO_INCOMPLETO/.test(msg)) return new Error("Complete seu cadastro antes de enviar a solicitação.");
     if (/SEM_ITENS/.test(msg)) return new Error("Sua solicitação está vazia.");
-    if (/CHAT_FECHADO/.test(msg)) return new Error("O chat abre quando a Milena confirmar o pedido.");
+    if (/CHAT_FECHADO/.test(msg)) return new Error("Este pedido foi cancelado: o chat está fechado.");
     if (/SERVICO_INDISPONIVEL/.test(msg)) return new Error("Um dos serviços escolhidos não está mais disponível. Atualize a página.");
     if (/Failed to fetch|NetworkError/i.test(msg)) return new Error("Sem conexão com o servidor. Verifique sua internet.");
     return new Error(msg || "Ocorreu um erro. Tente novamente.");
@@ -81,7 +81,8 @@
   /* ---------- Situações do pedido ---------- */
   /** Situações que contam como pedido aceito pela vendedora (liberam o chat) */
   const CONFIRMADOS = ["confirmado", "aguardando_cliente", "em_andamento", "concluido"];
-  const chatAberto = (p) => !!(p && p.confirmado_em && p.status !== "cancelado");
+  // O chat abre assim que o pedido é feito: a assistente virtual atende até a equipe responder
+  const chatAberto = (p) => !!(p && p.status !== "cancelado");
   const STATUS = {
     recebido: { nome: "Recebido", cor: "rosa" },
     em_analise: { nome: "Em análise", cor: "champanhe" },
@@ -220,13 +221,42 @@
       if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("enviar_mensagem", { p_pedido: pedidoId, p_texto: texto, p_como: como, p_anexo: anexo })); }
       const todos = ler(K.pedidos, []), p = todos.find((x) => x.id === pedidoId);
       if (!p || (como === "cliente" && p.cliente_id !== (usuarioAtual || {}).email)) throw new Error("Pedido não encontrado.");
-      if (!chatAberto(p)) throw new Error("O chat abre quando a Milena confirmar o pedido.");
+      if (!chatAberto(p)) throw new Error("Este pedido foi cancelado: o chat está fechado.");
       let nome = null;
       if (como === "equipe") { const m = ler(K.equipe, []).find((x) => x.email === (usuarioAtual || {}).email); nome = (m && m.nome) || "Equipe Milena Garbim"; }
       const msg = { id: "m" + Date.now() + Math.random().toString(36).slice(2, 6), pedido_id: pedidoId, autor: como, nome, texto, anexo, criado_em: new Date().toISOString(), lida_em: null };
       const lista = ler(K.mensagens, []); lista.push(msg); gravar(K.mensagens, lista);
-      p.atualizado_em = msg.criado_em; gravar(K.pedidos, todos);
+      p.atualizado_em = msg.criado_em;
+      if (como === "equipe") p.ia_ativa = false;   // a equipe respondeu: a assistente sai da conversa
+      gravar(K.pedidos, todos);
+      // demonstração: simula a resposta automática da assistente (no site real quem responde é a IA no servidor)
+      if (como === "cliente" && p.ia_ativa !== false) setTimeout(() => demoMensagem(pedidoId, "ia", "Recebi sua mensagem! A Milena foi avisada e responde por aqui o quanto antes. (Demonstração: com o Supabase ligado, quem responde aqui é a assistente com IA.)"), 1500);
       return msg;
+    },
+    /** Equipe liga/desliga a assistente virtual da conversa */
+    async alternarIA(pedidoId, ativa) {
+      if (ONLINE) { const sb = await supabase(); await rodar(sb.rpc("alternar_ia", { p_pedido: pedidoId, p_ativa: !!ativa })); return; }
+      const todos = ler(K.pedidos, []), p = todos.find((x) => x.id === pedidoId);
+      if (!p) throw new Error("Pedido não encontrado.");
+      p.ia_ativa = !!ativa; gravar(K.pedidos, todos);
+      demoMensagem(pedidoId, "sistema", ativa ? "A assistente virtual voltou a acompanhar esta conversa." : "A assistente virtual saiu da conversa.");
+    },
+    /** Cobrança PIX no chat (valor informado pela equipe) */
+    async enviarPix(pedidoId, valor, descricao, codigo) {
+      if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("enviar_pix", { p_pedido: pedidoId, p_valor: valor, p_descricao: descricao || null, p_codigo: codigo })); }
+      const todos = ler(K.pedidos, []), p = todos.find((x) => x.id === pedidoId);
+      if (!p) throw new Error("Pedido não encontrado.");
+      const m = ler(K.equipe, []).find((x) => x.email === (usuarioAtual || {}).email);
+      const msg = demoMensagem(pedidoId, "equipe", "Pagamento via PIX: " + valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) + (descricao ? " — " + descricao : ""),
+        { nome: (m && m.nome) || "Equipe Milena Garbim", pix: { valor, descricao: descricao || null, codigo, status: "pendente" } });
+      p.ia_ativa = false; gravar(K.pedidos, ler(K.pedidos, []).map((x) => (x.id === pedidoId ? Object.assign(x, { ia_ativa: false }) : x)));
+      return msg;
+    },
+    async marcarPix(mensagemId, status) {
+      if (ONLINE) { const sb = await supabase(); await rodar(sb.rpc("marcar_pix", { p_mensagem: mensagemId, p_status: status })); return; }
+      const lista = ler(K.mensagens, []), m = lista.find((x) => x.id === mensagemId);
+      if (!m || !m.pix) throw new Error("Cobrança não encontrada.");
+      m.pix = Object.assign({}, m.pix, { status, atualizado_em: new Date().toISOString() }); gravar(K.mensagens, lista);
     },
     /** Endereço para mostrar a foto do chat (no banco: link temporário e protegido) */
     async urlFoto(anexo) {
@@ -251,10 +281,13 @@
       let lista;
       if (ONLINE) {
         const sb = await supabase();
-        lista = (await rodar(sb.from("mensagens").select("pedido_id").is("lida_em", null).neq("autor", como).limit(1000))) || [];
+        // equipe: só o que o cliente escreveu conta como "nova"; cliente: tudo o que não é dele
+        let q = sb.from("mensagens").select("pedido_id").is("lida_em", null);
+        q = como === "equipe" ? q.eq("autor", "cliente") : q.neq("autor", "cliente").neq("autor", "sistema");
+        lista = (await rodar(q.limit(1000))) || [];
       } else {
         const meus = como === "cliente" ? new Set(ler(K.pedidos, []).filter((p) => p.cliente_id === (usuarioAtual || {}).email).map((p) => p.id)) : null;
-        lista = ler(K.mensagens, []).filter((m) => !m.lida_em && m.autor !== como && (!meus || meus.has(m.pedido_id)));
+        lista = ler(K.mensagens, []).filter((m) => !m.lida_em && m.autor !== como && m.autor !== "sistema" && (como === "cliente" || m.autor === "cliente") && (!meus || meus.has(m.pedido_id)));
       }
       const r = {};
       lista.forEach((m) => { r[m.pedido_id] = (r[m.pedido_id] || 0) + 1; });
@@ -282,6 +315,46 @@
         window.removeEventListener("storage", aoGuardar);
         if (canal) supabase().then((sb) => sb.removeChannel(canal)).catch(() => {});
       };
+    }
+  };
+
+  function demoMensagem(pedidoId, autor, texto, extra) {
+    const msg = Object.assign({ id: "m" + Date.now() + Math.random().toString(36).slice(2, 6), pedido_id: pedidoId, autor, nome: autor === "ia" ? "Assistente da Milena" : null, texto, anexo: null, criado_em: new Date().toISOString(), lida_em: null }, extra || {});
+    try { const lista = ler(K.mensagens, []); lista.push(msg); gravar(K.mensagens, lista); } catch (e) { /* sem espaço */ }
+    return msg;
+  }
+
+  /* =========================================================
+     Notificações no celular/computador da equipe (Web Push)
+     ========================================================= */
+  const Push = {
+    suportado: () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window,
+    async registro() { return navigator.serviceWorker.register("sw.js"); },
+    async inscricaoAtual() {
+      if (!Push.suportado()) return null;
+      const reg = await navigator.serviceWorker.getRegistration();
+      return reg ? reg.pushManager.getSubscription() : null;
+    },
+    async ativar() {
+      if (!Push.suportado()) throw new Error("Este navegador não recebe notificações. No iPhone: abra o site no Safari, toque em Compartilhar → “Adicionar à Tela de Início” e ative por lá.");
+      if (!CFG.pushChavePublica) throw new Error("Notificações ainda não configuradas.");
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") throw new Error("As notificações foram bloqueadas. Libere nas configurações do navegador para este site.");
+      const reg = await Push.registro();
+      await navigator.serviceWorker.ready;
+      const chave = Uint8Array.from(atob(CFG.pushChavePublica.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((CFG.pushChavePublica.length + 3) % 4)), (c) => c.charCodeAt(0));
+      const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chave }));
+      if (!ONLINE) return sub;
+      const sb = await supabase();
+      const json = sub.toJSON();
+      await rodar(sb.from("push_inscricoes").upsert({ endpoint: json.endpoint, email: (usuarioAtual || {}).email, inscricao: json, aparelho: navigator.userAgent.slice(0, 120) }));
+      return sub;
+    },
+    async desativar() {
+      const sub = await Push.inscricaoAtual();
+      if (!sub) return;
+      if (ONLINE) { const sb = await supabase(); await sb.from("push_inscricoes").delete().eq("endpoint", sub.endpoint); }
+      await sub.unsubscribe();
     }
   };
 
@@ -436,9 +509,12 @@
         status: "recebido", andamento: [{ data: agora, autor: "sistema", status: "recebido", texto: "Solicitação recebida pelo site." }],
         criado_em: agora, atualizado_em: agora
       };
+      pedido.ia_ativa = true;
       const todos = ler(K.pedidos, []);
       todos.unshift(pedido);
       gravar(K.pedidos, todos);
+      // demonstração: boas-vindas automáticas da assistente no chat do pedido
+      demoMensagem(pedido.id, "ia", "Olá! Recebemos o seu pedido " + pedido.numero + ". 💕 A Milena já foi avisada e vai responder por aqui. Enquanto isso, conte um pouco: o que aparece hoje no seu nome (SPC, Serasa, Boa Vista, protesto ou Bacen)?");
       return { id: pedido.id, numero: pedido.numero, total: pedido.total };
     },
 
@@ -626,6 +702,6 @@
     }
   };
 
-  window.Dados = { online: ONLINE, STATUS, CONFIRMADOS, site, catalogo, Conta, Painel, Chat, slug };
+  window.Dados = { online: ONLINE, STATUS, CONFIRMADOS, site, catalogo, Conta, Painel, Chat, Push, slug };
   window.ContaPronta = Conta.iniciar();
 })();

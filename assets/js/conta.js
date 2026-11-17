@@ -223,14 +223,14 @@
       $$("#conta-pedidos [data-whats]").forEach((a) => { if (n) { a.href = "https://wa.me/" + n + "?text=" + encodeURIComponent(a.dataset.whats); a.target = "_blank"; a.rel = "noopener"; } else a.hidden = true; });
     });
   }
-  /* ---------- Chat com a Milena (abre depois que ela confirma o pedido) ---------- */
+  /* ---------- Chat do pedido (abre na hora: a assistente atende até a Milena responder) ---------- */
   let pedidosAtuais = [], naoLidas = {}, fotoMilena = "assets/img/milena-garbim-avatar.jpg";
   D.site().then((s) => { fotoMilena = s.fotos.avatar || fotoMilena; });
   function blocoChat(p) {
     const whats = `<a class="btn btn-contorno-rosa" data-whats="Olá! Quero falar sobre a minha solicitação ${esc(p.numero)}.">WhatsApp</a>`;
     if (D.Chat.aberto(p)) {
       const n = naoLidas[p.id] || 0;
-      return `<div class="chat-bloco aberto"><div>${icone("chat")}<div><strong>Chat com a Milena</strong><small>Seu pedido foi confirmado. As mensagens ficam na aba Mensagens.</small></div></div>
+      return `<div class="chat-bloco aberto"><div>${icone("chat")}<div><strong>Chat com a Milena</strong><small>Converse por aqui: a assistente virtual responde na hora e a Milena acompanha. As mensagens ficam na aba Mensagens.</small></div></div>
         <div class="botoes-form"><button type="button" class="btn btn-primario" data-abrir-chat="${esc(p.id)}">${icone("chat")}Abrir conversa${n ? `<span class="selo-chat" data-selo-chat="${esc(p.id)}">${n}</span>` : ""}</button>${whats}</div></div>`;
     }
     if (p.status === "cancelado") return `<div class="chat-bloco"><div>${icone("cadeado")}<div><strong>Chat encerrado</strong><small>Este pedido foi cancelado. Se precisar, fale com a gente pelo WhatsApp.</small></div></div><div class="botoes-form">${whats}</div></div>`;
@@ -254,8 +254,8 @@
     if (caixa) return caixa;
     caixa = window.ChatUI.caixaEntrada($("#conta-mensagens"), {
       como: "cliente",
-      vazio: "Suas conversas com a Milena aparecem aqui depois que ela confirmar um pedido.",
-      conversas: async () => (await C.listarPedidos()).filter((p) => p.confirmado_em).map((p) => ({
+      vazio: "Suas conversas aparecem aqui assim que você fizer um pedido.",
+      conversas: async () => (await C.listarPedidos()).map((p) => ({
         pedido: p, titulo: "Milena Garbim", foto: fotoMilena, nomeCliente: "Você",
         subtitulo: `Pedido ${p.numero} · ${(p.itens || []).map((i) => i.nome).join(", ")}`
       })),

@@ -242,3 +242,34 @@ por isso não aparecem como oferta no site.
 - **Pagamento online** (Pix / link de pagamento) depois da proposta aceita.
 - **Google Analytics / Meta Pixel** (com aviso de cookies) para saber de onde vêm os clientes.
 - **Domínio próprio** + Google Search Console (o `sitemap.xml` e o `robots.txt` já estão prontos; com domínio próprio o robots passa a valer).
+
+## Modo real ligado (Supabase `limpa-nome-garbim`, São Paulo)
+
+O site já está conectado ao banco (`assets/js/config.js`). Configurado pelo token de acesso:
+
+- Banco completo (`supabase/setup.sql`), com proteção por linha (RLS) em todas as tabelas.
+- **Chat abre assim que o pedido é feito.** A **assistente virtual** dá as boas-vindas, conversa com o cliente,
+  entende o caso e indica serviços. Ela **sai sozinha quando alguém da equipe responde**; no painel, o botão
+  **🤖 IA ligada/desligada** dentro da conversa religa ou desliga.
+- **Pagamento PIX no chat:** botão **Pagamento** na conversa → valor (sempre informado pela equipe) → o cliente
+  recebe QR Code + "copia e cola". Chave, nome e cidade do recebedor em **Painel → Contato e links**.
+  Depois de conferir no banco, marque **Pago**. (Confirmação automática exige um gateway, ex.: Mercado Pago/Asaas.)
+- **Notificações no celular:** no painel, **🔔 Ativar notificações neste aparelho**. Avisa a cada pedido novo e a
+  cada mensagem de cliente. Android/computador: direto no Chrome. iPhone: Safari → Compartilhar →
+  **Adicionar à Tela de Início**, abrir pelo ícone e ativar (iOS 16.4+).
+- Funções no servidor: `eventos` (chamada pelo próprio banco a cada pedido/mensagem) e `assistente` (chat do site).
+
+**Falta fazer no painel do Supabase (dados secretos — nunca mande no chat):**
+1. **Gmail para enviar o código de acesso** — sem isso o Supabase só envia e-mail para a própria equipe:
+   - No Gmail da Milena: ative a **verificação em duas etapas** e crie uma **senha de app** em
+     myaccount.google.com/apppasswords.
+   - Supabase → Authentication → Emails → **SMTP Settings** → Enable custom SMTP:
+     host `smtp.gmail.com`, porta `465`, usuário `millenagarbim@gmail.com`, senha = senha de app,
+     remetente `millenagarbim@gmail.com`, nome `Milena Garbim`.
+   - Depois, o modelo de e-mail com o código (`supabase/emails/codigo-acesso.html`) pode ser aplicado.
+2. **Chave da IA:** Supabase → Edge Functions → Secrets → `ANTHROPIC_API_KEY`. Sem ela, a assistente manda
+   respostas automáticas padrão (boas-vindas e "a Milena foi avisada").
+3. **Aviso no WhatsApp a cada pedido (opcional, CallMeBot):** salve o número +34 644 66 32 62 nos contatos,
+   mande "I allow callmebot to send me messages" pelo WhatsApp da Milena, receba a apikey e crie os Secrets
+   `CALLMEBOT_TELEFONE` (ex.: `+5516988381117`) e `CALLMEBOT_APIKEY`. CallMeBot é um serviço gratuito de
+   terceiros, sem vínculo com o WhatsApp oficial.

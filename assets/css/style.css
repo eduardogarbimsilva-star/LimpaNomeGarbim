@@ -1566,3 +1566,49 @@ details.adm-grupo > .campo { margin: 0 22px 14px; }
 .depo-inicial { display: grid; place-items: center; background: var(--rosa-claro); color: var(--rosa-forte); font-family: var(--serifada); font-weight: 600; font-size: 1.1rem; }
 .depoimento figcaption strong { display: block; color: var(--ameixa); font-size: .92rem; }
 .depoimento figcaption small { display: block; color: var(--texto-suave); font-size: .8rem; }
+
+/* =========================================================
+   Chat: assistente virtual, avisos do sistema, PIX e notificações
+   ========================================================= */
+.chat-ferramentas { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+.chat-ferramentas + .modal-fechar { margin-left: 4px; }
+.chat-ia-botao, .chat-pix-botao { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--borda); background: #fff; color: var(--texto-suave); border-radius: 999px; padding: 7px 12px; font-size: .78rem; font-weight: 600; cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
+.chat-ia-botao.ligada { background: #eef7f2; border-color: #bfe0cd; color: #2f6e53; }
+.chat-pix-botao { color: var(--rosa-forte); border-color: #e8c3ce; }
+.chat-pix-botao:hover, .chat-ia-botao:hover { border-color: var(--rosa); }
+.chat-pix-botao .icone-svg { width: 16px; height: 16px; }
+.chat-sistema { text-align: center; margin: 10px 0; }
+.chat-sistema span { display: inline-block; font-size: .74rem; color: var(--texto-suave); background: rgba(255, 255, 255, .8); border: 1px dashed var(--borda); padding: 4px 12px; border-radius: 999px; }
+.chat-msg.da-ia { background: linear-gradient(135deg, #fff, #f6f1fb); border: 1px solid #e6dcf2; }
+.chat-msg.da-ia .chat-quem { color: #7a5a99; }
+.chat-msg.com-pix { padding: 8px; max-width: min(340px, 92%); }
+.chat-pix { background: #fff; border: 1px solid var(--borda); border-radius: 16px; padding: 14px; display: grid; gap: 10px; text-align: left; color: var(--texto); }
+.pix-cab { display: flex; align-items: center; gap: 10px; }
+.pix-logo { font-weight: 800; font-size: .78rem; letter-spacing: .06em; color: #fff; background: #32bcad; border-radius: 8px; padding: 6px 8px; }
+.pix-cab strong { display: block; font-size: 1.15rem; color: var(--ameixa); }
+.pix-cab small { display: block; color: var(--texto-suave); font-size: .78rem; }
+.pix-status { margin-left: auto; font-size: .7rem; font-weight: 700; padding: 4px 9px; border-radius: 999px; background: #fff6e5; color: #9a6a00; white-space: nowrap; }
+.pix-pago .pix-status { background: #eef7f2; color: #2f6e53; }
+.pix-cancelado .pix-status { background: #f3f0f1; color: var(--texto-suave); }
+.pix-cancelado .pix-cab strong { text-decoration: line-through; opacity: .6; }
+.pix-qr { background: #fff; border-radius: 12px; display: grid; place-items: center; min-height: 120px; }
+.pix-qr svg { width: 100%; max-width: 220px; height: auto; display: block; }
+.pix-copiar { width: 100%; padding: 11px 14px; font-size: .88rem; }
+.pix-ajuda { color: var(--texto-suave); font-size: .74rem; line-height: 1.45; }
+.pix-acoes { display: flex; flex-wrap: wrap; gap: 4px 12px; border-top: 1px dashed var(--borda); padding-top: 8px; }
+.pix-previa { display: grid; justify-items: center; gap: 6px; margin: 6px 0 14px; color: var(--texto-suave); font-size: .82rem; }
+.pix-previa .pix-qr { width: 200px; }
+.btn-notificar { display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid var(--rosa); background: var(--rosa-claro); color: var(--rosa-forte); border-radius: 999px; padding: 8px 14px; font-weight: 600; font-size: .84rem; cursor: pointer; }
+.btn-notificar.ativo { background: #eef7f2; border-color: #bfe0cd; color: #2f6e53; }
+.lista-passos { padding-left: 20px; display: grid; gap: 8px; margin: 10px 0 14px; }
+@media (max-width: 640px) {
+  .chat-ferramentas span { display: none; }
+  .chat-ia-botao, .chat-pix-botao { padding: 7px 9px; }
+  .btn-notificar span { font-size: .78rem; }
+}
+.chat-msg.com-pix { width: min(320px, 92%); max-width: none; padding: 0; background: transparent !important; border: 0 !important; box-shadow: none !important; }
+.chat-msg.com-pix .chat-quem, .chat-msg.com-pix .chat-hora { padding: 0 6px; }
+.chat-pix { box-shadow: var(--sombra); }
+.pix-cab { flex-wrap: wrap; }
+.pix-cab > div { flex: 1; min-width: 0; }
+.pix-logo, .pix-cab strong { white-space: nowrap; }
