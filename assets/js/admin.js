@@ -557,7 +557,7 @@
         ${campo("whatsapp", "WhatsApp (55 + DDD + número, só números)", c.whatsapp, 'inputmode="numeric" placeholder="5516999999999" maxlength="13"')}
         ${campo("telefone", "Telefone mostrado no site", c.telefone, 'placeholder="(16) 99999-9999" maxlength="20"')}
         ${campo("email", "E-mail de contato", c.email, 'type="email" maxlength="120"')}
-        ${campo("cnpj", "CNPJ (rodapé)", c.cnpj, 'maxlength="18"')}
+        ${campo("cnpj", "CPF ou CNPJ (rodapé)", c.cnpj, 'inputmode="numeric" autocomplete="off" maxlength="18" placeholder="Digite CPF ou CNPJ"')}
         ${campo("horario", "Horário de atendimento", c.horario, 'maxlength="80"')}
         ${campo("endereco", "Endereço / área de atendimento", c.endereco, 'maxlength="120"')}
       </div>
