@@ -100,5 +100,21 @@
     return null;
   }
 
-  window.BR = { so, mascaras, cpfValido, cnpjValido, telefoneValido, cepValido, nomeValido, ieValida, limpar, sugerirEmail, UFS: "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" "), buscarCep, buscarCnpj };
+function documentoValido(valor) {
+  const n = so(valor);
+
+  if (n.length === 11) return cpfValido(n);
+  if (n.length === 14) return cnpjValido(n);
+
+  return false;
+}
+
+mascaras.documento = function(valor) {
+  const n = so(valor);
+
+  if (n.length <= 11) return mascaras.cpf(n);
+  return mascaras.cnpj(n);
+};
+   
+  window.BR = { so, mascaras, cpfValido, cnpjValido, documentoValido, telefoneValido, cepValido, nomeValido, ieValida, limpar, sugerirEmail, UFS: "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PI RJ RN RS RS RO RR SC SE TO".split(" "), buscarCep, buscarCnpj };
 })();
