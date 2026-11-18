@@ -17,6 +17,7 @@
 // =========================================================
 import Anthropic from "npm:@anthropic-ai/sdk";
 import webpush from "npm:web-push@3.6.7";
+import { responderSemIA, boasVindasSemIA, type Servico } from "./atendente.ts";
 
 const MODELO = "claude-opus-5-5";
 const NOME_IA = "Assistente da Milena";
@@ -174,8 +175,16 @@ async function responderComIA(pedido: any, historico: any[], boasVindas: boolean
   }
 }
 
-const PADRAO_BOAS_VINDAS = (p: any) => `Olá! Recebemos o seu pedido ${p.numero}. 💕 A Milena já foi avisada e vai analisar o seu caso e responder por aqui. Enquanto isso, conte um pouco: o que aparece hoje no seu nome (SPC, Serasa, Boa Vista, protesto ou Bacen)?`;
-const PADRAO_RESPOSTA = "Recebi sua mensagem! A Milena foi avisada e responde por aqui o quanto antes. Se quiser, já pode ir contando mais detalhes do seu caso.";
+// Catálogo e horário para a assistente própria (sem chave de IA)
+let catCache: { servicos: Servico[]; horario: string; ate: number } | null = null;
+async function catalogoSimples() {
+  if (catCache && catCache.ate > Date.now()) return catCache;
+  const [servs, cfg] = await Promise.all([db("servicos?select=id,categoria,dados&ativo=eq.true&order=ordem"), db("configuracoes?id=eq.1&select=dados")]);
+  const servicos = (servs ?? []).map((s: any) => ({ id: s.id, categoria: s.categoria, nome: s.dados?.nome ?? s.id, resumo: s.dados?.resumo ?? "", perfis: s.dados?.perfis }));
+  const horario = cfg?.[0]?.dados?.contatos?.horario ?? "Seg a Sex, 9h às 18h · Sáb, 9h às 12h";
+  catCache = { servicos, horario, ate: Date.now() + 5 * 60 * 1000 };
+  return catCache;
+}
 
 // ---------- Eventos ----------
 async function pedidoNovo(p: any) {
@@ -188,7 +197,7 @@ async function pedidoNovo(p: any) {
     (async () => {
       const atual = await umPedido(p.id);
       if (!atual?.ia_ativa) return;
-      const texto = (await responderComIA(atual, [], true)) ?? PADRAO_BOAS_VINDAS(atual);
+      const texto = (await responderComIA(atual, [], true)) ?? boasVindasSemIA(atual);
       await escrever(p.id, "ia", texto);
     })(),
   ]);
@@ -208,14 +217,13 @@ async function mensagemDoCliente(m: any) {
   if (!ultima || ultima.autor !== "cliente" || ultima.criado_em !== m.criado_em) return;
   const atual = await umPedido(p.id);
   if (!atual?.ia_ativa) return;   // a equipe assumiu enquanto isso
+  // com chave de IA (opcional) usa o modelo; sem chave, a assistente própria responde (sem custo)
   let texto = await responderComIA(atual, historico, false);
   if (!texto) {
-    // sem IA configurada: resposta automática, no máximo uma a cada 30 minutos
-    const ultIa = [...historico].reverse().find((x: any) => x.autor === "ia");
-    if (ultIa && Date.now() - new Date(ultIa.criado_em).getTime() < 30 * 60 * 1000) return;
-    texto = PADRAO_RESPOSTA;
+    const { servicos, horario } = await catalogoSimples();
+    texto = responderSemIA(atual, historico, servicos, horario);
   }
-  await escrever(p.id, "ia", texto);
+  if (texto) await escrever(p.id, "ia", texto);
 }
 
 Deno.serve(async (req) => {

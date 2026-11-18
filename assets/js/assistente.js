@@ -18,7 +18,8 @@
   let conversa = [];
   try { conversa = JSON.parse(sessionStorage.getItem(CHAVE)) || []; } catch (e) { conversa = []; }
   const guardar = () => { try { sessionStorage.setItem(CHAVE, JSON.stringify(conversa.slice(-30))); } catch (e) { /* ok */ } };
-  let modoBasico = !ENDPOINT, respondendo = false;
+  // usarIA: false = assistente própria, sem custo (responde com o conteúdo do site, sem chamar IA paga)
+  let modoBasico = !ENDPOINT || (CFG.assistente && CFG.assistente.usarIA === false), respondendo = false;
 
   /* ---------- Texto da resposta: negrito, listas, quebras e botões ---------- */
   function separarMarcas(texto) {
@@ -79,10 +80,10 @@
   function bolha(m) {
     if (m.role === "user") return `<div class="chat-msg minha"><p>${esc(m.content).replace(/\n/g, "<br>")}</p></div>`;
     const { limpo, acoes } = separarMarcas(m.content);
-    return `<div class="chat-msg dele ia-msg"><span class="chat-quem">Assistente${m.basico ? " · modo básico" : ""}</span>${formatar(limpo)}${botoes(acoes)}</div>`;
+    return `<div class="chat-msg dele ia-msg"><span class="chat-quem">Assistente da Milena</span>${formatar(limpo)}${botoes(acoes)}</div>`;
   }
   function desenhar() {
-    $(".ia-status", janela).textContent = modoBasico ? "Modo básico · respostas do site" : "Inteligência artificial · responde na hora";
+    $(".ia-status", janela).textContent = modoBasico ? "Assistente virtual · responde na hora" : "Inteligência artificial · responde na hora";
     caixa.innerHTML = bolha({ role: "assistant", content: BOAS_VINDAS }) + conversa.map(bolha).join("");
     $(".ia-sugestoes", janela).hidden = conversa.length > 0;
     caixa.scrollTop = caixa.scrollHeight;

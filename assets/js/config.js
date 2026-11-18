@@ -27,7 +27,8 @@ window.SITE_CONFIG = {
   },
   // Assistente virtual com IA. Vazio = usa a função "assistente" do próprio Supabase (supabase/functions/assistente).
   // Sem Supabase, a assistente funciona em "modo básico" (responde com as dúvidas e serviços do site).
-  assistente: { endpoint: "" },
+  // usarIA: false = assistente própria (sem custo). Para usar IA paga no futuro: true + ANTHROPIC_API_KEY no Supabase.
+  assistente: { endpoint: "", usarIA: false },
   // Notificações no celular/computador da equipe (Web Push). Chave PÚBLICA — a privada fica só no Supabase.
   pushChavePublica: "BME82ZVrhyiLT3_MaCwmXiVjRDg1Ua4Ze6a7bLu3wSB-rIDI9wgaYfOqjWxvtslYCnQzI6zOPIQY5AZxP9SAx2I",
   // Quantos dígitos tem o código do e-mail (Supabase: Authentication → Email → "Email OTP Length").
