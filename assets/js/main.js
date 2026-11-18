@@ -41,6 +41,10 @@
       if (v) { el.textContent = v; if (bloco) bloco.hidden = false; }
       else if (el.hasAttribute("data-cfg-ocultar") && bloco) bloco.hidden = true;
     });
+         const documento = String(CFG.cnpj || "").replace(/\D/g, "");
+    $$("[data-cfg-documento-label]").forEach((el) => {
+      el.textContent = documento.length === 11 ? "CPF" : documento.length === 14 ? "CNPJ" : "Documento";
+    });
     $$("[data-email]").forEach((a) => {
       const bloco = a.closest("[data-cfg-bloco]") || a;
       if (CFG.email) { a.href = "mailto:" + CFG.email; bloco.hidden = false; } else bloco.hidden = true;
