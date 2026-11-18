@@ -1636,3 +1636,15 @@ body.sem-whats-flutuante .insta-flutuante { bottom: 24px; }
   .topo-insta span { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .insta-flutuante, .insta-flutuante::before, .insta-flutuante::after, .whats-flutuante { animation: none !important; } }
+
+/* Dupla verificação do painel */
+.caixa-2fa { max-width: 520px; margin: 0 auto; text-align: center; display: grid; gap: 12px; justify-items: center; }
+.caixa-2fa .lista-passos { text-align: left; }
+.ic-2fa { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--rosa-claro); color: var(--rosa-forte); }
+.ic-2fa .icone-svg { width: 26px; height: 26px; }
+.qr-2fa { background: #fff; border: 1px solid var(--borda); border-radius: 16px; padding: 10px; }
+.qr-2fa img { display: block; width: 200px; height: 200px; }
+.segredo-2fa { font-size: .84rem; color: var(--texto-suave); }
+.segredo-2fa code { display: block; margin-top: 6px; word-break: break-all; background: var(--fundo-alt); padding: 8px 10px; border-radius: 10px; font-size: .9rem; letter-spacing: .08em; }
+.form-2fa { display: grid; gap: 10px; width: 100%; max-width: 300px; }
+.form-2fa input { text-align: center; font-size: 1.6rem; letter-spacing: .4em; padding: 12px; }

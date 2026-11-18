@@ -69,13 +69,16 @@ create or replace function public.meu_nome_equipe() returns text
 language sql stable security definer set search_path = public as $$
   select coalesce(nullif(trim(nome), ''), 'Equipe Milena Garbim') from public.equipe where email = public.meu_email()
 $$;
+-- Dupla verificação (aplicativo autenticador): a equipe só acessa dados com a sessão confirmada pelo código do app (aal2)
+create or replace function public.mfa_ok() returns boolean
+language sql stable as $$ select coalesce(auth.jwt() ->> 'aal', '') = 'aal2' $$;
 create or replace function public.eh_equipe() returns boolean
 language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.equipe where email = public.meu_email())
+  select public.mfa_ok() and exists (select 1 from public.equipe where email = public.meu_email())
 $$;
 create or replace function public.eh_admin() returns boolean
 language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.equipe where email = public.meu_email() and papel = 'admin')
+  select public.mfa_ok() and exists (select 1 from public.equipe where email = public.meu_email() and papel = 'admin')
 $$;
 
 alter table public.equipe enable row level security;
@@ -497,6 +500,17 @@ drop trigger if exists mensagens_evento on public.mensagens;
 create trigger mensagens_evento after insert on public.mensagens for each row when (new.autor = 'cliente') execute function privado.avisar_evento();
 
 grant execute on function public.alternar_ia(uuid, boolean), public.enviar_pix(uuid, numeric, text, text), public.marcar_pix(uuid, text) to authenticated;
+-- Administrador zera a dupla verificação de alguém da equipe que perdeu o celular (a pessoa cadastra de novo no próximo acesso)
+create or replace function public.resetar_2fa(p_email text)
+returns void language plpgsql security definer set search_path = public, auth as $$
+begin
+  if not public.eh_admin() then raise exception 'Sem permissão' using errcode = '42501'; end if;
+  if lower(p_email) = public.meu_email() then raise exception 'Para trocar o seu próprio aparelho, peça para outro administrador.'; end if;
+  if not exists (select 1 from public.equipe where email = lower(p_email)) then raise exception 'Essa pessoa não é da equipe.'; end if;
+  delete from auth.mfa_factors where user_id in (select id from auth.users where lower(email) = lower(p_email));
+end $$;
+revoke all on function public.resetar_2fa(text) from public, anon;
+grant execute on function public.resetar_2fa(text) to authenticated;
 -- Funções do servidor (assistente, notificações) usam a chave de serviço: precisam de acesso às tabelas
 grant usage on schema public to service_role;
 grant select, insert, update, delete on all tables in schema public to service_role;

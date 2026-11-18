@@ -11,7 +11,7 @@
   const PADRAO = window.PADRAO;
   const dataHora = (d) => new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
   const semAcento = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-  const mostrar = (id) => ["adm-carregando", "adm-entrar", "adm-negado", "adm-painel"].forEach((x) => { $("#" + x).hidden = x !== id; });
+  const mostrar = (id) => ["adm-carregando", "adm-entrar", "adm-negado", "adm-2fa", "adm-painel"].forEach((x) => { $("#" + x).hidden = x !== id; });
   const painel = (aba) => $(`[data-painel="${aba}"]`);
   async function comBotao(b, fn) {
     const t = b.innerHTML; b.disabled = true;
@@ -810,7 +810,7 @@
         ${lista.map((m) => { const eu = m.email === C.usuario.email; return `<tr data-email="${esc(m.email)}"><td>${esc(m.email)}${eu ? " <small>(você)</small>" : ""}</td>
           <td>${eu ? esc(m.nome || "Equipe Milena Garbim") : `<input data-nome value="${esc(m.nome || "")}" maxlength="60" placeholder="Ex.: Ana" aria-label="Nome no chat">`}</td>
           <td>${eu ? (m.papel === "admin" ? "Administrador" : "Atendente") : `<select data-papel aria-label="Cargo"><option value="admin"${m.papel === "admin" ? " selected" : ""}>Administrador</option><option value="atendente"${m.papel === "atendente" ? " selected" : ""}>Atendente</option></select>`}</td>
-          <td>${eu ? "" : `<button type="button" class="btn-texto perigo" data-remover-membro>${icone("lixo")}Remover</button>`}</td></tr>`; }).join("")}
+          <td>${eu ? "" : `${D.online ? `<button type="button" class="btn-texto" data-resetar-2fa title="Use se a pessoa trocou ou perdeu o celular">${icone("cadeado")}Zerar dupla verificação</button>` : ""}<button type="button" class="btn-texto perigo" data-remover-membro>${icone("lixo")}Remover</button>`}</td></tr>`; }).join("")}
         </tbody></table></div>
         <form id="form-membro" class="adm-barra">
           <input type="email" name="email" placeholder="e-mail da pessoa" required aria-label="E-mail">
@@ -826,6 +826,13 @@
       try { await A.salvarMembro(tr.dataset.email, papelNovo, nome); m.papel = papelNovo; m.nome = nome; avisar("Equipe atualizada."); } catch (err) { avisar(err.message); }
     });
     p.addEventListener("click", async (e) => {
+      const r2 = e.target.closest("[data-resetar-2fa]");
+      if (r2) {
+        const email = r2.closest("tr").dataset.email;
+        if (!(await MG.confirmar(`Zerar a dupla verificação de ${email}? No próximo acesso a pessoa cadastra o aplicativo de novo.`, { titulo: "Zerar dupla verificação?", botao: "Sim, zerar" }))) return;
+        try { await A.resetar2fa(email); avisar("Pronto. A pessoa vai cadastrar o app de novo no próximo acesso."); } catch (err) { avisar(err.message); }
+        return;
+      }
       const b = e.target.closest("[data-remover-membro]");
       if (!b) return;
       const email = b.closest("tr").dataset.email;
@@ -848,6 +855,10 @@
     if (!C.usuario) return mostrar("adm-entrar");
     papel = await A.meuPapel();
     if (!papel) { $("#adm-email").textContent = C.usuario.email; return mostrar("adm-negado"); }
+    // dupla verificação: sem o código do app autenticador, o banco não libera nenhum dado da equipe
+    let mfa = { precisa: false };
+    try { mfa = await A.mfaSituacao(); } catch (e) { avisar(e.message); }
+    if (mfa.precisa) { await telaDupla(mfa); return; }
     ehAdmin = papel === "admin";
     $("#adm-papel").textContent = ehAdmin ? "Administrador" : "Atendente";
     $("#adm-usuario").textContent = C.usuario.email;
@@ -863,6 +874,50 @@
     if (pedidoUrl) setTimeout(() => abrirChatPedido(pedidoUrl), 400);
     prepararPush();
   });
+
+  /* Dupla verificação: cadastro no app autenticador (1ª vez) ou código de 6 dígitos */
+  async function telaDupla(mfa) {
+    const caixa = $("#adm-2fa");
+    mostrar("adm-2fa");
+    const campoCodigo = `<form class="form-2fa" novalidate>
+        <label class="campo"><span>Código de 6 dígitos do aplicativo</span><input name="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required></label>
+        <button type="submit" class="btn btn-primario">Confirmar e entrar</button>
+      </form>`;
+    let fatorId = mfa.fatorId;
+    if (mfa.cadastrado) {
+      caixa.innerHTML = `<span class="ic-2fa">${icone("cadeado")}</span><h2>Dupla verificação</h2>
+        <p>Abra o aplicativo autenticador no seu celular e digite o código de <strong>Milena Garbim</strong>.</p>${campoCodigo}
+        <p class="adm-dica">Perdeu o celular? Peça para outro administrador zerar a sua dupla verificação na aba Equipe.</p>`;
+    } else {
+      caixa.innerHTML = `<p class="vazio">Preparando a dupla verificação...</p>`;
+      let novo;
+      try { novo = await A.mfaCadastrar(); } catch (e) { caixa.innerHTML = `<p class="vazio">${esc(e.message)}</p>`; return; }
+      fatorId = novo.fatorId;
+      caixa.innerHTML = `<span class="ic-2fa">${icone("cadeado")}</span><h2>Ative a dupla verificação</h2>
+        <p>Para proteger o painel e os dados dos clientes, a equipe entra com o código do e-mail <strong>e</strong> um código do celular. É só fazer uma vez:</p>
+        <ol class="lista-passos">
+          <li>Instale no celular um aplicativo autenticador: <strong>Google Authenticator</strong> ou <strong>Microsoft Authenticator</strong> (grátis).</li>
+          <li>No app, toque em <strong>+</strong> → <strong>Ler código QR</strong> e aponte para o código abaixo.</li>
+          <li>Digite aqui o código de 6 dígitos que aparecer no app.</li>
+        </ol>
+        <div class="qr-2fa"><img src="${esc(novo.qr)}" alt="Código QR para o aplicativo autenticador" width="200" height="200"></div>
+        <details class="segredo-2fa"><summary>Não consegue ler o QR? Digite a chave no app</summary><code>${esc(novo.segredo)}</code></details>
+        ${campoCodigo}`;
+    }
+    const f = $(".form-2fa", caixa);
+    f.codigo.focus();
+    f.codigo.addEventListener("input", () => { f.codigo.value = f.codigo.value.replace(/\D/g, "").slice(0, 6); if (f.codigo.value.length === 6) f.requestSubmit(); });
+    f.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!/^\d{6}$/.test(f.codigo.value)) return avisar("Digite os 6 números do aplicativo.");
+      comBotao($("button[type=submit]", f), async () => {
+        try { await A.mfaConfirmar(fatorId, f.codigo.value); }
+        catch (err) { f.codigo.value = ""; f.codigo.focus(); throw err; }
+        avisar("Dupla verificação confirmada!");
+        location.reload();
+      });
+    });
+  }
 
   /* Notificações no celular/computador (pedido novo e mensagem de cliente) */
   async function prepararPush() {

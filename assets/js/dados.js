@@ -567,6 +567,38 @@
       return error ? null : data || null;
     },
 
+    /* ---- Dupla verificação (app autenticador) ---- */
+    /** { precisa: false } quando a sessão já está confirmada (ou no modo demonstração) */
+    async mfaSituacao() {
+      if (!ONLINE) return { precisa: false };
+      const sb = await supabase();
+      const [{ data: nivel, error: e1 }, { data: fatores, error: e2 }] = await Promise.all([sb.auth.mfa.getAuthenticatorAssuranceLevel(), sb.auth.mfa.listFactors()]);
+      if (e1 || e2) throw traduzirErro(e1 || e2);
+      const verificados = ((fatores && fatores.totp) || []).filter((f) => f.status === "verified");
+      return { precisa: nivel.currentLevel !== "aal2", cadastrado: verificados.length > 0, fatorId: verificados[0] && verificados[0].id };
+    },
+    /** Novo cadastro no app: devolve { fatorId, qr (imagem), segredo } */
+    async mfaCadastrar() {
+      const sb = await supabase();
+      const { data: fatores } = await sb.auth.mfa.listFactors();
+      for (const f of ((fatores && fatores.all) || []).filter((x) => x.status !== "verified")) await sb.auth.mfa.unenroll({ factorId: f.id });
+      const { data, error } = await sb.auth.mfa.enroll({ factorType: "totp", issuer: "Milena Garbim", friendlyName: "Painel " + new Date().toISOString().slice(0, 16) });
+      if (error) throw traduzirErro(error);
+      return { fatorId: data.id, qr: data.totp.qr_code, segredo: data.totp.secret };
+    },
+    async mfaConfirmar(fatorId, codigo) {
+      const sb = await supabase();
+      let error = null;
+      // a internet do celular às vezes troca de endereço entre o pedido e a confirmação: tenta de novo sozinho
+      for (let i = 0; i < 3; i++) { ({ error } = await sb.auth.mfa.challengeAndVerify({ factorId: fatorId, code: String(codigo).replace(/\D/g, "") })); if (!error || !/IP address/i.test(error.message)) break; }
+      if (error && /IP address/i.test(error.message)) throw new Error("Sua internet mudou de endereço no meio da confirmação. Tente de novo (de preferência no Wi-Fi).");
+      if (error) throw new Error(/invalid|expired/i.test(error.message) ? "Código incorreto ou vencido. Confira o app e digite o código atual." : error.message);
+    },
+    async resetar2fa(email) {
+      const sb = await supabase();
+      await rodar(sb.rpc("resetar_2fa", { p_email: email }));
+    },
+
     /* ---- Pedidos ---- */
     async pedidos() {
       if (!ONLINE) return ler(K.pedidos, []);
