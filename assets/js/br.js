@@ -118,4 +118,4 @@ mascaras.documento = function(valor) {
     return n.length <= 11 ? mascaras.cpf(n) : mascaras.cnpj(n);
   };
    
-window.BR = { so, mascaras, cpfValido, cnpjValido, documentoValido, telefoneValido, cepValido, nomeValido, ieValida, limpar, sugerirEmail, UFS: "AC AL AP AM BA CE DF ES GO MA MT MS PA PB PR PE PI RJ RN RS RO RR SC SE TO".split(" "), buscarCep, buscarCnpj };
+  window.BR = { so, mascaras, cpfValido, cnpjValido, documentoValido, telefoneValido, cepValido, nomeValido, ieValida, limpar, sugerirEmail, UFS: "AC AL AP AM BA CE DF ES GO MA MT MS PA PB PR PE PI RJ RN RS RO RR SC SE TO".split(" "), buscarCep, buscarCnpj };
