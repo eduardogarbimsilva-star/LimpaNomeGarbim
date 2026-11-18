@@ -66,11 +66,16 @@ async function notificarEquipe(titulo: string, corpo: string, link: string, tag:
     }
   }));
 }
-async function avisarWhatsApp(texto: string) {
+async function avisarWhatsApp(texto: string): Promise<string> {
   const tel = Deno.env.get("CALLMEBOT_TELEFONE"), chave = Deno.env.get("CALLMEBOT_APIKEY");
-  if (!tel || !chave) return;
+  if (!tel || !chave) return "CallMeBot não configurado";
   const url = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(tel)}&apikey=${encodeURIComponent(chave)}&text=${encodeURIComponent(texto)}`;
-  try { const r = await fetch(url); if (!r.ok) console.error("whatsapp:", r.status); } catch (e) { console.error("whatsapp:", e); }
+  try {
+    const r = await fetch(url);
+    const corpo = (await r.text()).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 200);
+    if (!r.ok) console.error("whatsapp:", r.status, corpo);
+    return `${r.status} ${corpo}`;
+  } catch (e) { console.error("whatsapp:", e); return `erro ${e}`; }
 }
 
 // ---------- Conhecimento (catálogo, dúvidas e direitos que a Milena edita no painel) ----------
@@ -220,6 +225,7 @@ Deno.serve(async (req) => {
   let ev: { tabela?: string; registro?: any };
   try { ev = await req.json(); } catch { return new Response("inválido", { status: 400 }); }
   // diagnóstico: manda uma notificação de teste para os aparelhos cadastrados e devolve o resultado
+  if (ev.tabela === "teste_whatsapp") return Response.json({ whatsapp: await avisarWhatsApp("✅ Teste do site Milena Garbim: os avisos de pedido novo vão chegar aqui.") });
   if (ev.tabela === "teste_push") return Response.json(await notificarEquipe("Teste de notificação", "Se você está vendo isto, as notificações funcionam! 🎉", `${SITE}/admin.html`, "teste"));
   const trabalho = (async () => {
     try {
