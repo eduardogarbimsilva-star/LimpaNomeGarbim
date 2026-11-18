@@ -111,11 +111,9 @@
 }
 
 mascaras.documento = function(valor) {
-  const n = so(valor);
+  const n = so(valor).slice(0, 14);
 
-  if (n.length <= 11) {
-    return mascaras.cpf(n);
-  }
+  if (n.length <= 11) return mascaras.cpf(n);
 
   return mascaras.cnpj(n);
 };
