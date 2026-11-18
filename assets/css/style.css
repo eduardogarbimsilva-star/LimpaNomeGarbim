@@ -1648,3 +1648,13 @@ body.sem-whats-flutuante .insta-flutuante { bottom: 24px; }
 .segredo-2fa code { display: block; margin-top: 6px; word-break: break-all; background: var(--fundo-alt); padding: 8px 10px; border-radius: 10px; font-size: .9rem; letter-spacing: .08em; }
 .form-2fa { display: grid; gap: 10px; width: 100%; max-width: 300px; }
 .form-2fa input { text-align: center; font-size: 1.6rem; letter-spacing: .4em; padding: 12px; }
+
+/* Pedir notificações e cancelar pedido */
+.pedir-push { text-align: center; display: grid; gap: 10px; justify-items: center; }
+.pedir-push .ic-2fa { font-size: 1.6rem; }
+.pedir-push .lista-passos { text-align: left; }
+.pedido-cancelar { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--borda); text-align: right; }
+.motivos { display: grid; gap: 2px; margin: 4px 0 8px; }
+.motivos .aceite { margin: 4px 0; }
+.btn.perigo-btn { background: #b4415e; }
+.btn.perigo-btn:hover { background: #93324b; }

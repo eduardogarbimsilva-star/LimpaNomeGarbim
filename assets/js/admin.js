@@ -926,7 +926,27 @@
     const iphone = /iPhone|iPad|iPod/.test(navigator.userAgent), instalado = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
     const marcar = (ativo) => { b.hidden = false; b.classList.toggle("ativo", ativo); $("span", b).textContent = ativo ? "Notificações ativas neste aparelho" : "Ativar notificações neste aparelho"; };
     if (!D.Push.suportado() && !(iphone && !instalado)) return;
-    try { marcar(!!(await D.Push.inscricaoAtual()) && Notification.permission === "granted"); } catch (e) { marcar(false); }
+    let ativo = false;
+    try { ativo = await D.Push.sincronizar(false); } catch (e) { ativo = false; }
+    marcar(ativo);
+    // importante: enquanto não estiver ativo neste aparelho, pede a cada visita ao painel
+    if (!ativo) setTimeout(() => pedirAtivacao(), 900);
+    async function pedirAtivacao() {
+      if ($(".modal-fundo")) return;
+      const bloqueado = D.Push.suportado() && Notification.permission === "denied";
+      const m = MG.modal(`<div class="pedir-push"><span class="ic-2fa">🔔</span><h2>Ative as notificações</h2>
+        <p>Assim você fica sabendo <strong>na hora</strong> de cada pedido novo e de cada mensagem de cliente, mesmo com o painel minimizado.</p>
+        ${bloqueado ? `<ol class="lista-passos"><li>Clique no ícone à esquerda do endereço do site (cadeado ou ajustes).</li><li>Em <strong>Notificações</strong>, escolha <strong>Permitir</strong>.</li><li>Recarregue a página.</li></ol><p class="adm-dica">No Windows, confira também: Configurações → Sistema → Notificações → Google Chrome ligado, e o “Não perturbe” desligado.</p>`
+          : iphone && !instalado ? `<p class="adm-dica">No iPhone: Safari → Compartilhar → <strong>Adicionar à Tela de Início</strong>, abra pelo ícone e ative por lá.</p>`
+          : `<div class="botoes-form"><button type="button" class="btn btn-primario" data-sim-push>Ativar agora</button><button type="button" class="btn-texto" data-fechar>Agora não</button></div>`}
+      </div>`);
+      const sim = m.querySelector("[data-sim-push]");
+      if (sim) sim.addEventListener("click", async () => {
+        sim.disabled = true;
+        try { await D.Push.ativar(false); marcar(true); m.closest(".modal-fundo").remove(); avisar("Pronto! Você será avisado a cada pedido novo e a cada mensagem."); }
+        catch (e) { avisar(e.message); sim.disabled = false; }
+      });
+    }
     b.addEventListener("click", async () => {
       if (iphone && !instalado) {
         MG.modal(`<h2>Notificações no iPhone</h2><ol class="lista-passos"><li>Abra este painel no <strong>Safari</strong>.</li><li>Toque em <strong>Compartilhar</strong> (quadrado com seta) → <strong>Adicionar à Tela de Início</strong>.</li><li>Abra o ícone <strong>Milena Garbim</strong> que apareceu na tela, entre no painel e toque de novo em <strong>Ativar notificações</strong>.</li></ol><p class="adm-dica">É uma exigência da Apple: no iPhone, só sites adicionados à Tela de Início recebem notificações (iOS 16.4 ou mais novo).</p>`);
@@ -938,7 +958,7 @@
         return;
       }
       b.disabled = true;
-      try { await D.Push.ativar(); marcar(true); avisar("Pronto! Você será avisado a cada pedido novo e a cada mensagem de cliente."); }
+      try { await D.Push.ativar(false); marcar(true); avisar("Pronto! Você será avisado a cada pedido novo e a cada mensagem de cliente."); }
       catch (e) { avisar(e.message); } finally { b.disabled = false; }
     });
   }

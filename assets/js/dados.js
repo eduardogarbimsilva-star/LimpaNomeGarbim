@@ -335,7 +335,8 @@
       const reg = await navigator.serviceWorker.getRegistration();
       return reg ? reg.pushManager.getSubscription() : null;
     },
-    async ativar() {
+    /** paraCliente: true = avisos do cliente (respostas e situação do pedido); false = equipe */
+    async ativar(paraCliente) {
       if (!Push.suportado()) throw new Error("Este navegador não recebe notificações. No iPhone: abra o site no Safari, toque em Compartilhar → “Adicionar à Tela de Início” e ative por lá.");
       if (!CFG.pushChavePublica) throw new Error("Notificações ainda não configuradas.");
       const perm = await Notification.requestPermission();
@@ -344,11 +345,21 @@
       await navigator.serviceWorker.ready;
       const chave = Uint8Array.from(atob(CFG.pushChavePublica.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((CFG.pushChavePublica.length + 3) % 4)), (c) => c.charCodeAt(0));
       const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chave }));
-      if (!ONLINE) return sub;
+      await Push.gravar(sub, paraCliente);
+      return sub;
+    },
+    async gravar(sub, paraCliente) {
+      if (!ONLINE || !sub || !usuarioAtual) return;
       const sb = await supabase();
       const json = sub.toJSON();
-      await rodar(sb.from("push_inscricoes").upsert({ endpoint: json.endpoint, email: (usuarioAtual || {}).email, inscricao: json, aparelho: navigator.userAgent.slice(0, 120) }));
-      return sub;
+      await rodar(sb.from("push_inscricoes").upsert({ endpoint: json.endpoint, email: (usuarioAtual.email || "").toLowerCase(), inscricao: json, aparelho: navigator.userAgent.slice(0, 120), cliente_id: paraCliente ? usuarioAtual.id : null }));
+    },
+    /** Já tem permissão e inscrição no navegador: garante que está gravada no banco. Devolve true se está ativa. */
+    async sincronizar(paraCliente) {
+      if (!Push.suportado() || Notification.permission !== "granted") return false;
+      const sub = await Push.inscricaoAtual();
+      if (!sub) return false;
+      try { await Push.gravar(sub, paraCliente); return true; } catch (e) { return false; }
     },
     async desativar() {
       const sub = await Push.inscricaoAtual();
@@ -516,6 +527,20 @@
       // demonstração: boas-vindas automáticas da assistente no chat do pedido
       demoMensagem(pedido.id, "ia", "Olá! Recebemos o seu pedido " + pedido.numero + ". 💕 A Milena já foi avisada e vai responder por aqui. Enquanto isso, conte um pouco: o que aparece hoje no seu nome (SPC, Serasa, Boa Vista, protesto ou Bacen)?");
       return { id: pedido.id, numero: pedido.numero, total: pedido.total };
+    },
+
+    /** Cliente cancela o próprio pedido (motivo obrigatório) */
+    async cancelarPedido(id, motivo) {
+      motivo = String(motivo || "").trim();
+      if (motivo.length < 10) throw new Error("Explique o motivo do cancelamento (pelo menos 10 letras).");
+      if (ONLINE) { const sb = await supabase(); await rodar(sb.rpc("cancelar_pedido", { p_id: id, p_motivo: motivo })); return; }
+      const todos = ler(K.pedidos, []), p = todos.find((x) => x.id === id && x.cliente_id === (usuarioAtual || {}).email);
+      if (!p) throw new Error("Pedido não encontrado.");
+      if (["em_andamento", "concluido", "cancelado"].includes(p.status)) throw new Error("Este pedido não pode mais ser cancelado por aqui. Fale com a Milena pelo chat.");
+      p.status = "cancelado"; p.ia_ativa = false; p.atualizado_em = new Date().toISOString();
+      p.andamento.push({ data: p.atualizado_em, autor: "cliente", status: "cancelado", texto: "Cancelado pelo cliente. Motivo: " + motivo });
+      gravar(K.pedidos, todos);
+      demoMensagem(id, "sistema", "Pedido cancelado pelo cliente. Motivo: " + motivo);
     },
 
     async listarPedidos() {

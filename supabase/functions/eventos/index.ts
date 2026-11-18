@@ -52,8 +52,15 @@ function prepararVapid(): boolean {
   return true;
 }
 async function notificarEquipe(titulo: string, corpo: string, link: string, tag: string): Promise<string[]> {
+  return enviarPush("cliente_id=is.null", titulo, corpo, link, tag);
+}
+async function notificarCliente(clienteId: string, titulo: string, corpo: string, link: string, tag: string): Promise<string[]> {
+  if (!clienteId) return [];
+  return enviarPush(`cliente_id=eq.${clienteId}`, titulo, corpo, link, tag);
+}
+async function enviarPush(filtro: string, titulo: string, corpo: string, link: string, tag: string): Promise<string[]> {
   if (!prepararVapid()) return ["vapid ausente"];
-  const inscricoes = (await db("push_inscricoes?select=endpoint,inscricao")) ?? [];
+  const inscricoes = (await db(`push_inscricoes?select=endpoint,inscricao&${filtro}`)) ?? [];
   const carga = JSON.stringify({ titulo, corpo, link, tag });
   return await Promise.all(inscricoes.map(async (i: { endpoint: string; inscricao: webpush.PushSubscription }) => {
     try {
@@ -203,6 +210,33 @@ async function pedidoNovo(p: any) {
   ]);
 }
 
+const SITUACOES_TXT: Record<string, string> = { recebido: "Recebido", em_analise: "Em análise", confirmado: "Confirmado", aguardando_cliente: "Aguardando você", em_andamento: "Em andamento", concluido: "Concluído", cancelado: "Cancelado" };
+
+// A equipe respondeu: avisa o cliente no celular/computador dele
+async function mensagemDaEquipe(m: any) {
+  const p = await umPedido(m.pedido_id);
+  if (!p?.cliente_id) return;
+  const corpo = m.pix ? `Chegou a cobrança PIX do pedido ${p.numero}.` : `${m.nome || "Milena"}: ${(m.texto || "📷 Foto").slice(0, 120)}`;
+  await notificarCliente(p.cliente_id, `Nova mensagem — pedido ${p.numero}`, corpo, `${SITE}/conta?chat=${p.id}`, `chat-${p.id}`);
+}
+
+// Situação do pedido mudou: cliente cancelou -> avisa a equipe; equipe mudou -> avisa o cliente
+async function situacaoMudou(p: any, anterior: string) {
+  const ultimo = (p.andamento ?? [])[(p.andamento ?? []).length - 1] ?? {};
+  if (p.status === "cancelado" && ultimo.autor === "cliente") {
+    const cli = p.cliente ?? {};
+    const nome = (cli.tipo === "pj" ? cli.razao_social : cli.nome) || "Cliente";
+    const motivo = String(ultimo.texto ?? "").replace(/^Cancelado pelo cliente\. /, "");
+    await Promise.all([
+      notificarEquipe(`Pedido ${p.numero} cancelado pelo cliente`, `${nome} — ${motivo}`.slice(0, 160), `${SITE}/admin?pedido=${p.id}`, `pedido-${p.id}`),
+      avisarWhatsApp(`❌ Pedido ${p.numero} cancelado pelo cliente (${nome}).\n${motivo}`),
+    ]);
+    return;
+  }
+  if (anterior === p.status) return;
+  await notificarCliente(p.cliente_id, `Pedido ${p.numero}: ${SITUACOES_TXT[p.status] ?? p.status}`, ultimo.texto ? String(ultimo.texto).slice(0, 140) : "Toque para ver os detalhes do seu pedido.", `${SITE}/conta`, `situacao-${p.id}`);
+}
+
 async function mensagemDoCliente(m: any) {
   const p = await umPedido(m.pedido_id);
   if (!p) return;
@@ -239,6 +273,8 @@ Deno.serve(async (req) => {
     try {
       if (ev.tabela === "pedidos") await pedidoNovo(ev.registro);
       else if (ev.tabela === "mensagens" && ev.registro?.autor === "cliente") await mensagemDoCliente(ev.registro);
+      else if (ev.tabela === "mensagens" && ev.registro?.autor === "equipe") await mensagemDaEquipe(ev.registro);
+      else if (ev.tabela === "pedidos_situacao") await situacaoMudou(ev.registro, (ev as any).anterior);
     } catch (e) { console.error("eventos:", e); }
   })();
   // responde logo para o banco e continua o trabalho em segundo plano

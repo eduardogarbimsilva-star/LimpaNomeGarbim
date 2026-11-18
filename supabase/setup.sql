@@ -517,6 +517,51 @@ grant select, insert, update, delete on all tables in schema public to service_r
 grant usage, select on all sequences in schema public to service_role;
 
 -- ---------------------------------------------------------
+-- Cliente cancela o próprio pedido (com motivo obrigatório), enquanto o serviço não começou
+-- ---------------------------------------------------------
+create or replace function public.cancelar_pedido(p_id uuid, p_motivo text)
+returns void language plpgsql security definer set search_path = public as $$
+declare v_p public.pedidos; v_motivo text := left(nullif(trim(p_motivo), ''), 500);
+begin
+  if auth.uid() is null then raise exception 'NAO_AUTENTICADO'; end if;
+  select * into v_p from public.pedidos where id = p_id and cliente_id = auth.uid();
+  if not found then raise exception 'Pedido não encontrado.'; end if;
+  if v_p.status = 'cancelado' then raise exception 'Este pedido já está cancelado.'; end if;
+  if v_p.status in ('em_andamento', 'concluido') then raise exception 'O serviço já começou. Para cancelar, fale com a Milena pelo chat.'; end if;
+  if v_motivo is null or length(v_motivo) < 10 then raise exception 'Explique o motivo do cancelamento (pelo menos 10 letras).'; end if;
+  update public.pedidos set status = 'cancelado', ia_ativa = false, atualizado_em = now(),
+    andamento = andamento || jsonb_build_object('data', now(), 'autor', 'cliente', 'status', 'cancelado', 'texto', 'Cancelado pelo cliente. Motivo: ' || v_motivo)
+  where id = p_id;
+  insert into public.mensagens (pedido_id, autor, texto) values (p_id, 'sistema', 'Pedido cancelado pelo cliente. Motivo: ' || v_motivo);
+end $$;
+revoke all on function public.cancelar_pedido(uuid, text) from public, anon;
+grant execute on function public.cancelar_pedido(uuid, text) to authenticated;
+
+-- Notificações também para o cliente (resposta da equipe e mudança de situação do pedido)
+alter table public.push_inscricoes add column if not exists cliente_id uuid references auth.users (id) on delete cascade;
+drop policy if exists "cliente gerencia os próprios aparelhos" on public.push_inscricoes;
+create policy "cliente gerencia os próprios aparelhos" on public.push_inscricoes for all to authenticated
+  using (cliente_id = auth.uid()) with check (cliente_id = auth.uid() and email = public.meu_email());
+drop trigger if exists mensagens_evento on public.mensagens;
+create trigger mensagens_evento after insert on public.mensagens for each row when (new.autor in ('cliente', 'equipe')) execute function privado.avisar_evento();
+-- mudança de situação: o gatilho manda o registro novo com a situação anterior
+create or replace function privado.avisar_situacao() returns trigger
+language plpgsql security definer set search_path = public, extensions as $$
+declare v_url text; v_seg text;
+begin
+  select valor into v_url from privado.ajustes where chave = 'eventos_url';
+  select valor into v_seg from privado.ajustes where chave = 'eventos_segredo';
+  if v_url is null or v_seg is null then return new; end if;
+  perform net.http_post(url := v_url,
+    body := jsonb_build_object('tabela', 'pedidos_situacao', 'registro', to_jsonb(new), 'anterior', old.status),
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-evento-segredo', v_seg), timeout_milliseconds := 15000);
+  return new;
+exception when others then return new;
+end $$;
+drop trigger if exists pedidos_situacao on public.pedidos;
+create trigger pedidos_situacao after update of status on public.pedidos for each row when (old.status is distinct from new.status) execute function privado.avisar_situacao();
+
+-- ---------------------------------------------------------
 -- Catálogo inicial (só entra se ainda não existir; depois edite pelo painel)
 -- ---------------------------------------------------------
 insert into public.categorias (id, ordem, ativo, dados) values ('limpa-nome', 1, true, '{"nome": "Limpa Nome", "descricao": "Medida judicial de urgência para retirar seu CPF ou CNPJ do SPC, Serasa, Boa Vista e Cenprot.", "icone": "aperto"}'::jsonb) on conflict (id) do nothing;

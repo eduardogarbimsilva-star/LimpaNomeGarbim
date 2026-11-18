@@ -215,6 +215,7 @@
           <h4>Andamento</h4>
           ${linhaTempo(p)}
           ${blocoChat(p)}
+          ${["recebido", "em_analise", "confirmado", "aguardando_cliente"].includes(p.status) ? `<p class="pedido-cancelar"><button type="button" class="btn-texto perigo" data-cancelar-pedido="${esc(p.id)}">${icone("x")}Cancelar este pedido</button></p>` : ""}
         </div>
       </details>`;
     }).join("");
@@ -270,7 +271,53 @@
   $("#conta-pedidos").addEventListener("click", (e) => {
     const b = e.target.closest("[data-abrir-chat]");
     if (b) abrirChat(b.dataset.abrirChat);
+    const c = e.target.closest("[data-cancelar-pedido]");
+    if (c) cancelarPedido(c.dataset.cancelarPedido);
   });
+
+  /* Cancelar o próprio pedido: o motivo é obrigatório */
+  function cancelarPedido(id) {
+    const p = pedidosAtuais.find((x) => x.id === id);
+    if (!p) return;
+    const MOTIVOS = ["Pedi o serviço errado", "Desisti / não preciso mais", "Vou resolver de outra forma", "Achei que era outra coisa", "Outro motivo"];
+    const m = MG.modal(`<h2>Cancelar o pedido ${esc(p.numero)}?</h2>
+      <p>Conte para a Milena o motivo. Isso ajuda a melhorar o atendimento.</p>
+      <form class="form-modal" novalidate>
+        <div class="motivos">${MOTIVOS.map((t, i) => `<label class="aceite"><input type="radio" name="motivo" value="${esc(t)}"${i === 0 ? " checked" : ""}><span>${esc(t)}</span></label>`).join("")}</div>
+        <label class="campo"><span>Explique com suas palavras <small>(obrigatório)</small></span><textarea name="detalhe" rows="3" maxlength="400" placeholder="Ex.: escolhi Limpa Nome, mas o meu problema é no Bacen."></textarea></label>
+        <div class="botoes-form"><button type="submit" class="btn btn-primario perigo-btn">Cancelar pedido</button><button type="button" class="btn-texto" data-fechar>Voltar</button></div>
+      </form>`);
+    const f = m.querySelector("form");
+    f.detalhe.focus();
+    f.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const detalhe = f.detalhe.value.trim();
+      if (detalhe.length < 10) { avisar("Explique o motivo com pelo menos 10 letras."); f.detalhe.focus(); return; }
+      const motivo = (f.motivo.value || "Outro motivo") + " — " + detalhe;
+      const b = f.querySelector("button[type=submit]"); b.disabled = true;
+      try { await C.cancelarPedido(id, motivo); m.closest(".modal-fundo").remove(); avisar("Pedido cancelado. A Milena foi avisada."); await desenharPedidos(); }
+      catch (err) { avisar(err.message); b.disabled = false; }
+    });
+  }
+
+  /* Avisos no celular/computador do cliente: pede a cada visita enquanto não estiver ativo */
+  async function oferecerAvisos() {
+    if (!D.online || !D.Push || !D.Push.suportado() || !pedidosAtuais.length) return;
+    if (await D.Push.sincronizar(true)) return;
+    if (Notification.permission === "denied") return;
+    try { if (sessionStorage.getItem("mg_push_depois")) return; } catch (e) { /* ok */ }
+    if ($(".modal-fundo")) return;
+    const m = MG.modal(`<div class="pedir-push"><span class="ic-2fa">🔔</span><h2>Quer ser avisado na hora?</h2>
+      <p>Ative as notificações para saber assim que a Milena responder ou o seu pedido mudar de situação.</p>
+      <div class="botoes-form"><button type="button" class="btn btn-primario" data-sim-push>Ativar notificações</button><button type="button" class="btn-texto" data-fechar data-depois>Agora não</button></div></div>`);
+    m.querySelector("[data-depois]").addEventListener("click", () => { try { sessionStorage.setItem("mg_push_depois", "1"); } catch (e) { /* ok */ } });
+    const sim = m.querySelector("[data-sim-push]");
+    sim.addEventListener("click", async () => {
+      sim.disabled = true;
+      try { await D.Push.ativar(true); m.closest(".modal-fundo").remove(); avisar("Pronto! Você será avisado quando houver novidade no seu pedido."); }
+      catch (err) { avisar(err.message); sim.disabled = false; }
+    });
+  }
 
   function desenharDados() {
     const p = C.perfil || {};
@@ -309,7 +356,7 @@
     if (!ouvindo) ouvindo = D.Chat.ouvir(null, atualizarNaoLidas);
     const pedirChat = params.get("chat");
     if (pedirChat) abrirChat(pedirChat);
-    D.Painel.meuPapel().then((papel) => { $("#link-painel").hidden = !papel; }).catch(() => {});
+    D.Painel.meuPapel().then((papel) => { $("#link-painel").hidden = !papel; if (!papel) setTimeout(oferecerAvisos, 1200); }).catch(() => {});
   }
 
   window.ContaPronta.then(() => decidir(false)).catch(() => mostrar("conta-entrar"));
