@@ -584,7 +584,7 @@
       const zap = BR.so(f.whatsapp.value);
       if (zap && !/^55\d{10,11}$/.test(zap)) return avisar("WhatsApp: use 55 + DDD + número. Ex.: 5516999999999");
       if (f.email.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.value.trim())) return avisar("E-mail inválido.");
-      if (f.cnpj.value && !BR.cnpjValido(f.cnpj.value)) return avisar("CNPJ inválido.");
+      if (f.cnpj.value && !BR.documentoValido(f.cnpj.value)) return avisar("CPF ou CNPJ inválido.");
       if (f.pixChave.value.trim() && (!f.pixNome.value.trim() || !f.pixCidade.value.trim())) return avisar("Para o PIX, informe também o nome do recebedor e a cidade.");
       const url = (v) => { v = v.trim(); if (!v) return ""; if (!/^https:\/\//i.test(v)) v = "https://" + v.replace(/^http:\/\//i, ""); return v; };
       let insta = f.instagram.value.trim();
@@ -593,7 +593,7 @@
       f.instagram.value = insta;
       comBotao($("button[type=submit]", f), async () => {
         await A.salvarSite("contatos", {
-          whatsapp: zap, telefone: f.telefone.value.trim(), email: f.email.value.trim(), cnpj: f.cnpj.value ? BR.mascaras.cnpj(f.cnpj.value) : "",
+          whatsapp: zap, telefone: f.telefone.value.trim(), email: f.email.value.trim(), cnpj: f.cnpj.value ? BR.mascaras.documento(f.cnpj.value) : "",
           horario: f.horario.value.trim(), endereco: f.endereco.value.trim(),
           redes: { instagram: url(f.instagram.value), facebook: url(f.facebook.value), tiktok: url(f.tiktok.value), youtube: url(f.youtube.value) },
           pix: { chave: f.pixChave.value.trim(), tipo: f.pixTipo.value, nome: f.pixNome.value.trim(), cidade: f.pixCidade.value.trim() }
