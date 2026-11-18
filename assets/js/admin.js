@@ -563,13 +563,14 @@
       </div>
       <h3>PIX para cobranças no chat <small>(o valor é você quem informa em cada cobrança)</small></h3>
       <div class="campos">
+        <label class="campo"><span>Tipo da chave PIX</span><select name="pixTipo">${[["auto", "Descobrir automaticamente"], ["celular", "Celular"], ["cpf", "CPF"], ["cnpj", "CNPJ"], ["email", "E-mail"], ["aleatoria", "Chave aleatória"]].map(([v, t]) => `<option value="${v}"${((c.pix || {}).tipo || "auto") === v ? " selected" : ""}>${t}</option>`).join("")}</select></label>
         ${campo("pixChave", "Chave PIX (CPF, CNPJ, e-mail, celular ou aleatória)", (c.pix || {}).chave, 'maxlength="77" autocomplete="off"')}
         ${campo("pixNome", "Nome do recebedor (como está no banco)", (c.pix || {}).nome || "Milena Garbim", 'maxlength="25"')}
         ${campo("pixCidade", "Cidade do recebedor", (c.pix || {}).cidade, 'maxlength="15" placeholder="Ex.: Franca"')}
       </div>
       <h3>Redes sociais <small>(deixe vazio para esconder)</small></h3>
       <div class="campos">
-        ${campo("instagram", "Instagram", r.instagram, 'inputmode="url" placeholder="https://www.instagram.com/..."')}
+        ${campo("instagram", "Instagram (endereço do perfil ou @usuario)", r.instagram, 'inputmode="url" placeholder="@milenagarbim ou https://www.instagram.com/milenagarbim"')}
         ${campo("facebook", "Facebook", r.facebook, 'inputmode="url"')}
         ${campo("tiktok", "TikTok", r.tiktok, 'inputmode="url"')}
         ${campo("youtube", "YouTube", r.youtube, 'inputmode="url"')}
@@ -586,12 +587,16 @@
       if (f.cnpj.value && !BR.cnpjValido(f.cnpj.value)) return avisar("CNPJ inválido.");
       if (f.pixChave.value.trim() && (!f.pixNome.value.trim() || !f.pixCidade.value.trim())) return avisar("Para o PIX, informe também o nome do recebedor e a cidade.");
       const url = (v) => { v = v.trim(); if (!v) return ""; if (!/^https:\/\//i.test(v)) v = "https://" + v.replace(/^http:\/\//i, ""); return v; };
+      let insta = f.instagram.value.trim();
+      if (/^@?[A-Za-z0-9._]{2,30}$/.test(insta)) insta = "https://www.instagram.com/" + insta.replace(/^@/, "");
+      if (insta && !/instagram\.com\/[A-Za-z0-9._]+/i.test(insta)) return avisar("Instagram: coloque o endereço do perfil (ex.: https://www.instagram.com/milenagarbim) ou só o @usuario.");
+      f.instagram.value = insta;
       comBotao($("button[type=submit]", f), async () => {
         await A.salvarSite("contatos", {
           whatsapp: zap, telefone: f.telefone.value.trim(), email: f.email.value.trim(), cnpj: f.cnpj.value ? BR.mascaras.cnpj(f.cnpj.value) : "",
           horario: f.horario.value.trim(), endereco: f.endereco.value.trim(),
           redes: { instagram: url(f.instagram.value), facebook: url(f.facebook.value), tiktok: url(f.tiktok.value), youtube: url(f.youtube.value) },
-          pix: { chave: f.pixChave.value.trim(), nome: f.pixNome.value.trim(), cidade: f.pixCidade.value.trim() }
+          pix: { chave: f.pixChave.value.trim(), tipo: f.pixTipo.value, nome: f.pixNome.value.trim(), cidade: f.pixCidade.value.trim() }
         });
         avisar("Contato e links salvos!");
       });
@@ -652,6 +657,7 @@
           <label class="aceite secao-op"><input type="checkbox" name="abertura"${ap.abertura === false ? "" : " checked"}><span><strong>Abertura com a assinatura</strong><small>Animação rápida na primeira página da visita</small></span></label>
           <label class="aceite secao-op"><input type="checkbox" name="assistente"${ap.assistente === false ? "" : " checked"}><span><strong>Assistente virtual</strong><small>Botão “Dúvidas? Pergunte à assistente”</small></span></label>
           <label class="aceite secao-op"><input type="checkbox" name="whatsFlutuante"${ap.whatsFlutuante === false ? "" : " checked"}><span><strong>Botão flutuante do WhatsApp</strong><small>Círculo verde no canto da tela</small></span></label>
+          <label class="aceite secao-op"><input type="checkbox" name="instaFlutuante"${ap.instaFlutuante === false ? "" : " checked"}><span><strong>Botão flutuante do Instagram</strong><small>Acima do WhatsApp (aparece quando o Instagram está preenchido em Contato e links)</small></span></label>
         </div>
       </section>
       <section class="cartao">
@@ -673,7 +679,7 @@
       $$("[name=secao]", f).forEach((c) => { if (!c.checked) secoes[c.value] = false; });
       return {
         tema: tema === "_cor" ? "rosa" : tema, corPrincipal: tema === "_cor" ? f.cor.value : "",
-        secoes, triagem: f.triagem.checked, abertura: f.abertura.checked, assistente: f.assistente.checked, whatsFlutuante: f.whatsFlutuante.checked,
+        secoes, triagem: f.triagem.checked, abertura: f.abertura.checked, assistente: f.assistente.checked, whatsFlutuante: f.whatsFlutuante.checked, instaFlutuante: f.instaFlutuante.checked,
         aviso: { ativo: f.avisoAtivo.checked, texto: f.avisoTexto.value.trim(), link: f.avisoLink.value.trim(), botao: f.avisoBotao.value.trim() }
       };
     };

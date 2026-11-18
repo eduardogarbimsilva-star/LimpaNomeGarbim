@@ -60,6 +60,8 @@
     $$("[data-rede]").forEach((a) => {
       const url = (CFG.redes || {})[a.getAttribute("data-rede")];
       a.hidden = !url; if (url) { a.href = url; temRede = true; }
+      // barra do topo: mostra o @ do perfil (ex.: instagram.com/milenagarbim -> @milenagarbim)
+      if (url && a.hasAttribute("data-rede-texto")) { const m = /instagram\.com\/([A-Za-z0-9._]+)/i.exec(String(url)); const t = a.querySelector("span"); if (t) t.textContent = m ? "@" + m[1] : "Instagram"; }
     });
     $$("[data-canais]").forEach((el) => { el.hidden = !temRede; });
   }
@@ -110,6 +112,7 @@
     $$("[data-secao]").forEach((el) => { el.hidden = secoes[el.getAttribute("data-secao")] === false || el.dataset.vazio === "1"; });
     document.body.classList.toggle("sem-assistente", ap.assistente === false);
     document.body.classList.toggle("sem-whats-flutuante", ap.whatsFlutuante === false);
+    document.body.classList.toggle("sem-insta-flutuante", ap.instaFlutuante === false);
     // faixa de aviso no topo
     const aviso = ap.aviso || {};
     let faixa = $(".aviso-topo");

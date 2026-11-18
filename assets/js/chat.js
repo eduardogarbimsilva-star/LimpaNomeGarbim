@@ -44,8 +44,13 @@
   }
   const campo = (id, v) => id + String(v.length).padStart(2, "0") + v;
   /** chave: CPF/CNPJ (só números), e-mail, telefone (+55...) ou chave aleatória */
-  function normalizarChave(chave) {
+  function normalizarChave(chave, tipo) {
     const c = String(chave || "").trim();
+    const so = c.replace(/\D/g, "");
+    if (tipo === "email") return c.toLowerCase();
+    if (tipo === "aleatoria") return c.toLowerCase();
+    if (tipo === "cpf" || tipo === "cnpj") return so;
+    if (tipo === "celular") return "+" + (so.startsWith("55") && so.length >= 12 ? so : "55" + so);
     if (/@/.test(c)) return c.toLowerCase();
     const dig = c.replace(/\D/g, "");
     if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(c)) return c.toLowerCase();
@@ -54,8 +59,8 @@
     if (dig.length === 10 || dig.length === 11) return "+55" + dig;   // celular com DDD
     return dig.length === 14 ? dig : c;
   }
-  function pixCodigo({ chave, nome, cidade, valor, descricao, txid }) {
-    const k = normalizarChave(chave);
+  function pixCodigo({ chave, tipo, nome, cidade, valor, descricao, txid }) {
+    const k = normalizarChave(chave, tipo);
     const desc = semAcento(descricao || "").replace(/[^\w .,-]/g, "").slice(0, Math.max(0, 72 - k.length));
     const conta = campo("00", "br.gov.bcb.pix") + campo("01", k) + (desc ? campo("02", desc) : "");
     const ref = (semAcento(txid || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 25)) || "***";
@@ -109,7 +114,7 @@
         <div class="botoes-form"><button type="submit" class="btn btn-primario">Enviar cobrança no chat</button><button type="button" class="btn-texto" data-fechar>Cancelar</button></div>
       </form>`);
     const f = m.querySelector("form"), previa = m.querySelector(".pix-previa");
-    const codigoAtual = () => pixCodigo({ chave: pix.chave, nome: pix.nome, cidade: pix.cidade, valor: +f.valor.value, descricao: f.descricao.value, txid: p.numero });
+    const codigoAtual = () => pixCodigo({ chave: pix.chave, tipo: pix.tipo, nome: pix.nome, cidade: pix.cidade, valor: +f.valor.value, descricao: f.descricao.value, txid: p.numero });
     f.valor.addEventListener("input", async () => {
       if (!(+f.valor.value > 0)) { previa.hidden = true; return; }
       previa.hidden = false;
