@@ -101,21 +101,21 @@
     return null;
   }
    
-   function documentoValido(valor) {
-  const n = so(valor);
+    function documentoValido(valor) {
+    const n = so(valor);
+    if (n.length === 11) return cpfValido(n);
+    if (n.length === 14) return cnpjValido(n);
+    return false;
+  }
 
-  if (n.length === 11) return cpfValido(n);
-  if (n.length === 14) return cnpjValido(n);
-
-  return false;
-}
+  mascaras.documento = function(valor) {
+    const n = so(valor).slice(0, 14);
+    return n.length <= 11 ? mascaras.cpf(n) : mascaras.cnpj(n);
+  };
 
 mascaras.documento = function(valor) {
-  const n = so(valor).slice(0, 14);
-
-  if (n.length <= 11) return mascaras.cpf(n);
-
-  return mascaras.cnpj(n);
-};
+    const n = so(valor).slice(0, 14);
+    return n.length <= 11 ? mascaras.cpf(n) : mascaras.cnpj(n);
+  };
    
 window.BR = { so, mascaras, cpfValido, cnpjValido, documentoValido, telefoneValido, cepValido, nomeValido, ieValida, limpar, sugerirEmail, UFS: "AC AL AP AM BA CE DF ES GO MA MT MS PA PB PR PE PI RJ RN RS RO RR SC SE TO".split(" "), buscarCep, buscarCnpj };
