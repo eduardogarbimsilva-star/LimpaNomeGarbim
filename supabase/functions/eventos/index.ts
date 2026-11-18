@@ -50,17 +50,19 @@ function prepararVapid(): boolean {
   vapidPronto = true;
   return true;
 }
-async function notificarEquipe(titulo: string, corpo: string, link: string, tag: string) {
-  if (!prepararVapid()) return;
+async function notificarEquipe(titulo: string, corpo: string, link: string, tag: string): Promise<string[]> {
+  if (!prepararVapid()) return ["vapid ausente"];
   const inscricoes = (await db("push_inscricoes?select=endpoint,inscricao")) ?? [];
   const carga = JSON.stringify({ titulo, corpo, link, tag });
-  await Promise.all(inscricoes.map(async (i: { endpoint: string; inscricao: webpush.PushSubscription }) => {
+  return await Promise.all(inscricoes.map(async (i: { endpoint: string; inscricao: webpush.PushSubscription }) => {
     try {
-      await webpush.sendNotification(i.inscricao, carga, { TTL: 60 * 60 * 24, urgency: "high" });
+      const r = await webpush.sendNotification(i.inscricao, carga, { TTL: 60 * 60 * 24, urgency: "high" });
+      return `ok ${r?.statusCode ?? ""}`;
     } catch (e: any) {
       // aparelho desinstalou ou bloqueou: remove a inscrição
       if (e?.statusCode === 404 || e?.statusCode === 410) await db(`push_inscricoes?endpoint=eq.${encodeURIComponent(i.endpoint)}`, { method: "DELETE" }).catch(() => {});
-      else console.error("push:", e?.statusCode ?? e);
+      console.error("push:", e?.statusCode ?? e);
+      return `erro ${e?.statusCode ?? ""} ${String(e?.body ?? e?.message ?? e).slice(0, 200)}`;
     }
   }));
 }
@@ -217,6 +219,8 @@ Deno.serve(async (req) => {
   if (!segredo || req.headers.get("x-evento-segredo") !== segredo) return new Response("proibido", { status: 403 });
   let ev: { tabela?: string; registro?: any };
   try { ev = await req.json(); } catch { return new Response("inválido", { status: 400 }); }
+  // diagnóstico: manda uma notificação de teste para os aparelhos cadastrados e devolve o resultado
+  if (ev.tabela === "teste_push") return Response.json(await notificarEquipe("Teste de notificação", "Se você está vendo isto, as notificações funcionam! 🎉", `${SITE}/admin.html`, "teste"));
   const trabalho = (async () => {
     try {
       if (ev.tabela === "pedidos") await pedidoNovo(ev.registro);
