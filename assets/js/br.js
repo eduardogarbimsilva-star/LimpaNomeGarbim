@@ -93,13 +93,14 @@
     "hotmail.com": ["hotmial.com", "hotmai.com", "hotmal.com", "hotmail.con", "hotmail.co", "homail.com", "hotnail.com", "hotmaill.com"],
     "outlook.com": ["outlok.com", "outloo.com", "outlook.con", "outlook.co", "otlook.com"],
     "yahoo.com.br": ["yaho.com.br", "yahoo.com.b", "yahoo.combr"], "icloud.com": ["iclod.com", "icloud.con", "icoud.com"] };
+   
   function sugerirEmail(email) {
     const [u, dom] = String(email || "").toLowerCase().split("@");
     if (!u || !dom) return null;
     for (const [certo, erros] of Object.entries(DOMINIOS)) if (erros.includes(dom)) return u + "@" + certo;
     return null;
   }
-
+   
    function documentoValido(valor) {
   const n = so(valor);
 
@@ -119,4 +120,4 @@ mascaras.documento = function(valor) {
   return mascaras.cnpj(n);
 };
    
-window.BR = { so, mascaras, cpfValido, cnpjValido, documentoValido, telefoneValido, cepValido, nomeValido, ieValida, limpar, sugerirEmail, UFS: "AC AL AP AM BA CE DF GO MA MT MS MG PA PB PR PE PI PR PE PI RJ RN RO RR SC SE TO".split(" "), buscarCep, buscarCnpj }; buscarCep, buscarCnpj };
+window.BR = { so, mascaras, cpfValido, cnpjValido, documentoValido, telefoneValido, cepValido, nomeValido, ieValida, limpar, sugerirEmail, UFS: "AC AL AP AM BA CE DF ES GO MA MT MS PA PB PR PE PI RJ RN RS RO RR SC SE TO".split(" "), buscarCep, buscarCnpj };
