@@ -666,11 +666,11 @@
         <label class="aceite"><input type="checkbox" name="avisoAtivo"${ap.aviso.ativo ? " checked" : ""}><span>Mostrar a faixa</span></label>
         <div class="campos">
           <label class="campo campo-cheio"><span>Texto da faixa</span><input name="avisoTexto" maxlength="160" value="${esc(ap.aviso.texto || "")}" placeholder="Ex.: Análise gratuita até sexta-feira — chame no WhatsApp"></label>
-          <label class="campo"><span>Link do botão <small>(opcional)</small></span><input name="avisoLink" maxlength="300" value="${esc(ap.aviso.link || "")}" placeholder="direitos.html ou https://..."></label>
+          <label class="campo"><span>Link do botão <small>(opcional)</small></span><input name="avisoLink" maxlength="300" value="${esc(ap.aviso.link || "")}" placeholder="/direitos ou https://..."></label>
           <label class="campo"><span>Texto do botão</span><input name="avisoBotao" maxlength="30" value="${esc(ap.aviso.botao || "")}" placeholder="Saiba mais"></label>
         </div>
       </section>
-      <div class="barra-salvar"><button type="button" class="btn-texto" data-aparencia-padrao>Voltar ao original</button><a class="btn btn-contorno-rosa" href="index.html" target="_blank" rel="noopener">Ver o site</a><button type="submit" class="btn btn-primario">Salvar aparência</button></div>
+      <div class="barra-salvar"><button type="button" class="btn-texto" data-aparencia-padrao>Voltar ao original</button><a class="btn btn-contorno-rosa" href="/" target="_blank" rel="noopener">Ver o site</a><button type="submit" class="btn btn-primario">Salvar aparência</button></div>
     </form>`;
     const f = $("#form-aparencia");
     const ler = () => {
@@ -702,7 +702,7 @@
       e.preventDefault();
       const a = ler();
       if (a.aviso.ativo && !a.aviso.texto) return avisar("Escreva o texto da faixa de aviso (ou desmarque “Mostrar a faixa”).");
-      if (a.aviso.link && !/^https:\/\//i.test(a.aviso.link) && !/^[a-z0-9-]+\.html(#[\w-]+)?$/i.test(a.aviso.link) && !/^#[\w-]+$/.test(a.aviso.link)) return avisar("Link da faixa: use uma página do site (ex.: direitos.html) ou um endereço começando com https://");
+      if (a.aviso.link && !/^https:\/\//i.test(a.aviso.link) && !/^\/?[a-z0-9-]*(\.html)?(#[\w-]+)?$/i.test(a.aviso.link) && !/^#[\w-]+$/.test(a.aviso.link)) return avisar("Link da faixa: use uma página do site (ex.: /direitos) ou um endereço começando com https://");
       comBotao($("button[type=submit]", f), async () => {
         await A.salvarSite("aparencia", a);
         try { localStorage.setItem("mg_aparencia", JSON.stringify({ tema: a.tema, corPrincipal: a.corPrincipal, abertura: a.abertura })); } catch (err) { /* ok */ }
@@ -712,7 +712,7 @@
   };
 
   /* =========================================================
-     SEUS DIREITOS (cartões da página direitos.html e da inicial)
+     SEUS DIREITOS (cartões da página /direitos e da inicial)
      ========================================================= */
   CARREGAR.direitos = async function () {
     const p = painel("direitos");
@@ -720,7 +720,7 @@
     try { const s = await A.lerSite(); if (Array.isArray(s.direitos) && s.direitos.length) lista = s.direitos; } catch (e) { avisar(e.message); }
     lista = lista.map((x) => Object.assign({}, x));
     function desenhar() {
-      p.innerHTML = `<p class="adm-dica">Os 3 primeiros aparecem na página inicial; todos aparecem em <a href="direitos.html" target="_blank" rel="noopener">Seus direitos</a>. Sempre que possível, informe a fonte (lei ou súmula) e o link oficial.</p>
+      p.innerHTML = `<p class="adm-dica">Os 3 primeiros aparecem na página inicial; todos aparecem em <a href="/direitos" target="_blank" rel="noopener">Seus direitos</a>. Sempre que possível, informe a fonte (lei ou súmula) e o link oficial.</p>
         <form id="form-direitos"><ol class="adm-faq">${lista.map((d, i) => `<li data-i="${i}">
           <label class="campo"><span>Título</span><input name="titulo" maxlength="90" value="${esc(d.titulo || "")}"></label>
           <label class="campo"><span>Explicação</span><textarea name="texto" rows="3" maxlength="700">${esc(d.texto || "")}</textarea></label>
@@ -858,7 +858,7 @@
     abrirAba(aba);
     atualizarChatNaoLidas();
     D.Chat.ouvir(null, atualizarChatNaoLidas);
-    // link da notificação: admin.html?pedido=<id> abre a conversa do pedido
+    // link da notificação: /admin?pedido=<id> abre a conversa do pedido
     const pedidoUrl = new URLSearchParams(location.search).get("pedido");
     if (pedidoUrl) setTimeout(() => abrirChatPedido(pedidoUrl), 400);
     prepararPush();

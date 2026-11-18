@@ -1,6 +1,6 @@
 User-agent: *
 Allow: /
-Disallow: /conta.html
-Disallow: /admin.html
+Disallow: /conta
+Disallow: /admin
 
 Sitemap: https://milenagarbim.com.br/sitemap.xml

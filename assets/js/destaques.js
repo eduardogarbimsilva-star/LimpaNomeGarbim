@@ -114,7 +114,7 @@
       if (tentou === "negociando") notas.push("Antes de fechar um acordo, vale uma segunda opinião sobre valores e juros.");
       const nomeCat = (cat.categorias.find((c) => c.id === o) || {}).nome || respostas[0].texto;
       const resumo = `Olá, Milena! Fiz o diagnóstico no site:\n• ${respostas[0].texto}\n• Há quanto tempo: ${respostas[1].texto}\n• Já tentou resolver: ${respostas[2].texto}`;
-      const linkZap = zap() ? "https://wa.me/" + zap() + "?text=" + encodeURIComponent(resumo) : "index.html#analise";
+      const linkZap = zap() ? "https://wa.me/" + zap() + "?text=" + encodeURIComponent(resumo) : "/#analise";
       resultado.innerHTML = `<span class="quiz-num">Seu resultado</span>
         <h3>Caminho indicado: <em>${esc(nomeCat)}</em></h3>
         ${notas.map((n) => `<p class="quiz-nota">${icone("alerta")}${esc(n)}</p>`).join("")}
@@ -146,7 +146,7 @@
   /* ---------- Barra fixa no celular: aparece depois do topo ---------- */
   const barraCel = $(".barra-celular");
   if (barraCel) {
-    const aqui = location.pathname.split("/").pop() || "index.html";
+    const aqui = location.pathname.split("/").pop() || "/";
     $$("a[href]", barraCel).forEach((a) => { if (a.getAttribute("href").split("#")[0] === aqui && !a.getAttribute("href").includes("#")) a.classList.add("ativo"); });
     const ver = () => barraCel.classList.toggle("mostrar", scrollY > 280 || !$(".hero"));
     addEventListener("scroll", ver, { passive: true });

@@ -1,7 +1,7 @@
 /*
  * CONFIGURAÇÃO GERAL DO SITE
  *
- * Contatos, textos, fotos, serviços e dúvidas são editados pelo PAINEL (admin.html).
+ * Contatos, textos, fotos, serviços e dúvidas são editados pelo PAINEL (/admin).
  * O que estiver aqui vale só enquanto o painel não tiver outro valor salvo.
  *
  * WhatsApp: formato internacional, só dígitos -> 55 (Brasil) + DDD + número. Ex.: "5516999999999"

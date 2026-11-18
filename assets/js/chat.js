@@ -100,7 +100,7 @@
     let pix = {};
     try { pix = ((await D.site()).contatos || {}).pix || {}; } catch (e) { /* segue */ }
     if (!pix.chave) {
-      MG.modal(`<h2>Cadastre sua chave PIX</h2><p>Para gerar cobranças no chat, informe a chave PIX, o nome do recebedor e a cidade em <strong>Painel → Contato e links</strong>.</p><div class="botoes-form"><a class="btn btn-primario" href="admin.html#contato" data-fechar data-ir-contato>Ir para Contato e links</a></div>`);
+      MG.modal(`<h2>Cadastre sua chave PIX</h2><p>Para gerar cobranças no chat, informe a chave PIX, o nome do recebedor e a cidade em <strong>Painel → Contato e links</strong>.</p><div class="botoes-form"><a class="btn btn-primario" href="/admin#contato" data-fechar data-ir-contato>Ir para Contato e links</a></div>`);
       return;
     }
     const m = MG.modal(`<h2>Cobrança PIX</h2>

@@ -9,7 +9,7 @@
   const D = window.Dados, C = D.Conta, BR = window.BR, MG = window.MG;
   const { esc, fmt, brl, icone, avisar } = MG;
   const params = new URLSearchParams(location.search);
-  const voltar = /^[a-z-]+\.html$/.test(params.get("voltar") || "") ? params.get("voltar") : "";
+  const voltar = /^\/?[a-z-]+(\.html)?$/.test(params.get("voltar") || "") ? "/" + params.get("voltar").replace(/^\//, "").replace(/\.html$/, "") : "";
   const querEnviar = params.get("enviar") === "1";
   const dataHora = (d) => new Date(d).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   const data = (d) => new Date(d).toLocaleDateString("pt-BR");
@@ -152,7 +152,7 @@
       await C.salvarPerfil(d);
       avisar("Cadastro salvo!");
       editando = false;
-      if (querEnviar && window.Solicitacao && window.Solicitacao.ids().length) { location.href = "servicos.html?solicitacao=1"; return; }
+      if (querEnviar && window.Solicitacao && window.Solicitacao.ids().length) { location.href = "/servicos?solicitacao=1"; return; }
       await decidir();
     } catch (err) { avisar(err.message); }
     finally { b.disabled = false; }
@@ -168,7 +168,7 @@
     $$(".abas [data-aba]").forEach((x) => { x.classList.toggle("ativo", x.dataset.aba === aba); x.setAttribute("aria-selected", x.dataset.aba === aba); });
     $$("[data-painel]").forEach((p) => { p.hidden = p.dataset.painel !== aba; });
   }
-  $("#conta-sair").addEventListener("click", async () => { await C.sair(); location.href = "index.html"; });
+  $("#conta-sair").addEventListener("click", async () => { await C.sair(); location.href = "/"; });
 
   function seloStatus(s) {
     const st = D.STATUS[s] || { nome: s, cor: "cinza" };
@@ -197,7 +197,7 @@
     catch (e) { alvo.innerHTML = `<p class="vazio">${esc(e.message)}</p>`; return; }
     pedidosAtuais = lista;
     if (!lista.length) {
-      alvo.innerHTML = `<div class="cartao centro caixa-aviso">${icone("sacola", "icone-svg grande")}<h3>Nenhuma solicitação ainda</h3><p>Escolha os serviços no catálogo e envie a sua solicitação. Você acompanha tudo por aqui.</p><a href="servicos.html" class="btn btn-primario">Ver serviços</a></div>`;
+      alvo.innerHTML = `<div class="cartao centro caixa-aviso">${icone("sacola", "icone-svg grande")}<h3>Nenhuma solicitação ainda</h3><p>Escolha os serviços no catálogo e envie a sua solicitação. Você acompanha tudo por aqui.</p><a href="/servicos" class="btn btn-primario">Ver serviços</a></div>`;
       return;
     }
     alvo.innerHTML = lista.map((p, i) => {
@@ -295,11 +295,11 @@
       $("#k-cancelar").hidden = !editando;
       mostrar("conta-cadastro");
       if (!editando) D.Painel.meuPapel().then((papel) => {
-        if (papel && !$("#aviso-equipe")) form.insertAdjacentHTML("afterbegin", `<p id="aviso-equipe" class="aviso-cliente">${icone("painel")}Você é da equipe. <a href="admin.html">Ir para o painel</a> — o cadastro abaixo é só para quem também é cliente.</p>`);
+        if (papel && !$("#aviso-equipe")) form.insertAdjacentHTML("afterbegin", `<p id="aviso-equipe" class="aviso-cliente">${icone("painel")}Você é da equipe. <a href="/admin">Ir para o painel</a> — o cadastro abaixo é só para quem também é cliente.</p>`);
       });
       return;
     }
-    if (acabouDeEntrar && querEnviar && window.Solicitacao && window.Solicitacao.ids().length) { location.href = "servicos.html?solicitacao=1"; return; }
+    if (acabouDeEntrar && querEnviar && window.Solicitacao && window.Solicitacao.ids().length) { location.href = "/servicos?solicitacao=1"; return; }
     $("#conta-nome").textContent = C.nomeExibicao();
     $("#conta-email").textContent = C.usuario.email;
     mostrar("conta-painel");

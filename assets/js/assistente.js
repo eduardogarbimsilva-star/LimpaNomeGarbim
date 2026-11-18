@@ -11,7 +11,7 @@
   const esc = MG.esc || ((t) => String(t));
   const ENDPOINT = (CFG.assistente && CFG.assistente.endpoint) || (SB.url ? SB.url.replace(/\/$/, "") + "/functions/v1/assistente" : "");
   const CHAVE = "mg_assistente";
-  const MARCAS = { DIAGNOSTICO: ["Fazer o diagnóstico", "index.html#diagnostico"], SERVICOS: ["Ver serviços", "servicos.html"], WHATSAPP: ["Falar com a Milena", "whatsapp"], CONTA: ["Minha conta", "conta.html"] };
+  const MARCAS = { DIAGNOSTICO: ["Fazer o diagnóstico", "/#diagnostico"], SERVICOS: ["Ver serviços", "/servicos"], WHATSAPP: ["Falar com a Milena", "whatsapp"], CONTA: ["Minha conta", "/conta"] };
   const SUGESTOES = ["O que é limpar o nome?", "Como funciona o Bacen?", "Quanto custa?", "Quais documentos preciso?", "Quanto tempo demora?"];
   const BOAS_VINDAS = "Oi! Sou a assistente virtual da Milena Garbim ✨ Posso tirar suas dúvidas sobre nome sujo, Bacen, score e os nossos serviços. Como posso ajudar?";
 
@@ -44,7 +44,7 @@
     const n = String(CFG.whatsapp || "").replace(/\D/g, "");
     const ultima = [...conversa].reverse().find((m) => m.role === "user");
     const texto = "Olá, Milena! Vim pela assistente do site" + (ultima ? ` e minha dúvida é: ${ultima.content}` : ".");
-    return n ? "https://wa.me/" + n + "?text=" + encodeURIComponent(texto) : "index.html#analise";
+    return n ? "https://wa.me/" + n + "?text=" + encodeURIComponent(texto) : "/#analise";
   }
   function botoes(acoes) {
     return acoes.length ? `<div class="ia-acoes">${acoes.map((a) => {

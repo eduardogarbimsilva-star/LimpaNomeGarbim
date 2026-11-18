@@ -394,7 +394,7 @@
         const sb = await supabase();
         let jaTinhaConta = false;
         if (criar) { const r = await sb.rpc("email_ja_cadastrado", { e: email }); jaTinhaConta = !r.error && r.data === true; }
-        const voltarPara = location.origin + location.pathname.replace(/[^/]*$/, "") + "conta.html";
+        const voltarPara = location.origin + "/conta";
         const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: voltarPara } });
         if (error) throw traduzirErro(error);
         return { jaTinhaConta };

@@ -11,17 +11,17 @@ self.addEventListener("push", (e) => {
     badge: "assets/img/icone-192.png",
     tag: d.tag || undefined,
     renotify: !!d.tag,
-    data: { link: d.link || "admin.html" }
+    data: { link: d.link || "/admin" }
   }));
 });
 
 self.addEventListener("notificationclick", (e) => {
   e.notification.close();
-  const link = (e.notification.data && e.notification.data.link) || "admin.html";
+  const link = (e.notification.data && e.notification.data.link) || "/admin";
   e.waitUntil((async () => {
     const abertas = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     for (const c of abertas) {
-      if (c.url.includes("admin.html") && "focus" in c) { await c.navigate(link).catch(() => {}); return c.focus(); }
+      if (c.url.includes("/admin") && "focus" in c) { await c.navigate(link).catch(() => {}); return c.focus(); }
     }
     return self.clients.openWindow(link);
   })());

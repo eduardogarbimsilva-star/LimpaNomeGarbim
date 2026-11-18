@@ -50,7 +50,7 @@
       const link = linkWhats(a.getAttribute("data-whats") || textoPadrao);
       if (link) { a.href = link; a.target = "_blank"; a.rel = "noopener"; }
       else {
-        a.href = (document.getElementById("analise") ? "" : "index.html") + "#analise";
+        a.href = (document.getElementById("analise") ? "" : "/") + "#analise";
         a.removeAttribute("target");
         if (!a.dataset.semWhats) { a.dataset.semWhats = "1"; a.addEventListener("click", () => { if (!numeroWhats) avisar("Preencha o formulário de análise que entramos em contato."); }); }
       }
@@ -120,7 +120,7 @@
     try { fechado = sessionStorage.getItem("mg_aviso_fechado") === String(aviso.texto || ""); } catch (e) { /* ok */ }
     if (aviso.ativo && String(aviso.texto || "").trim() && !fechado) {
       if (!faixa) { faixa = document.createElement("div"); faixa.className = "aviso-topo"; faixa.setAttribute("role", "region"); faixa.setAttribute("aria-label", "Aviso"); document.body.insertBefore(faixa, document.body.firstChild.nextSibling); }
-      const link = /^https:\/\//i.test(aviso.link || "") || /^[a-z0-9-]+\.html(#[\w-]+)?$/i.test(aviso.link || "") || /^#[\w-]+$/.test(aviso.link || "") ? aviso.link : "";
+      const link = /^https:\/\//i.test(aviso.link || "") || /^\/[a-z0-9-]*(\.html)?(#[\w-]+)?$/i.test(aviso.link || "") || /^[a-z0-9-]+\.html(#[\w-]+)?$/i.test(aviso.link || "") || /^#[\w-]+$/.test(aviso.link || "") ? aviso.link : "";
       faixa.innerHTML = `<div class="container"><span class="aviso-ponto" aria-hidden="true"></span><p>${fmt(aviso.texto)}</p>${link ? `<a href="${esc(link)}"${/^https/i.test(link) ? ' target="_blank" rel="noopener"' : ""}>${esc(aviso.botao || "Saiba mais")} ${icone("seta")}</a>` : ""}<button type="button" class="aviso-fechar" aria-label="Fechar aviso">×</button></div>`;
       $(".aviso-fechar", faixa).addEventListener("click", () => { faixa.remove(); try { sessionStorage.setItem("mg_aviso_fechado", String(aviso.texto || "")); } catch (e) { /* ok */ } });
     } else if (faixa) faixa.remove();
@@ -198,7 +198,7 @@
       <h3>${esc(c.nome)}</h3>
       <p>${esc(c.descricao || "")}</p>
       <ul>${itens}</ul>
-      <a class="link" href="servicos.html#cat-${esc(c.id)}">${n > 1 ? "Ver opções" : "Ver serviço"} ${icone("seta")}</a>
+      <a class="link" href="/servicos#cat-${esc(c.id)}">${n > 1 ? "Ver opções" : "Ver serviço"} ${icone("seta")}</a>
     </article>`;
   }
 
@@ -525,14 +525,14 @@
     const corpo = $(".gaveta-corpo", g), rodape = $(".gaveta-rodape", g);
     if (concluido) {
       corpo.innerHTML = `<div class="gaveta-ok">${icone("check", "icone-svg grande")}<h3>Solicitação enviada!</h3>
-        <p>Número <strong>${esc(concluido.numero)}</strong>. Você acompanha cada etapa em <a href="conta.html">Minha conta</a>.</p>
+        <p>Número <strong>${esc(concluido.numero)}</strong>. Você acompanha cada etapa em <a href="/conta">Minha conta</a>.</p>
         ${concluido.whats ? `<p>Se o WhatsApp não abriu, <a href="${esc(concluido.whats)}" target="_blank" rel="noopener">toque aqui</a>.</p>` : ""}</div>`;
-      rodape.innerHTML = `<a class="btn btn-primario btn-bloco" href="conta.html">Acompanhar minha solicitação</a>`;
+      rodape.innerHTML = `<a class="btn btn-primario btn-bloco" href="/conta">Acompanhar minha solicitação</a>`;
       return;
     }
     const itens = ids.map((id) => CAT.servicos.find((s) => s.id === id)).filter(Boolean);
     if (!itens.length) {
-      corpo.innerHTML = `<div class="gaveta-vazia">${icone("doc", "icone-svg grande")}<p>Nenhum serviço escolhido ainda.</p><a class="btn btn-contorno-rosa" href="servicos.html">Ver serviços</a></div>`;
+      corpo.innerHTML = `<div class="gaveta-vazia">${icone("doc", "icone-svg grande")}<p>Nenhum serviço escolhido ainda.</p><a class="btn btn-contorno-rosa" href="/servicos">Ver serviços</a></div>`;
       rodape.innerHTML = "";
       return;
     }
@@ -557,7 +557,7 @@
     const C = D.Conta;
     if (!C.usuario || !C.perfilCompleto()) {
       avisar(C.usuario ? "Complete seu cadastro para enviar." : "Entre ou crie sua conta para enviar a solicitação.");
-      setTimeout(() => { location.href = "conta.html?enviar=1"; }, 900);
+      setTimeout(() => { location.href = "/conta?enviar=1"; }, 900);
       return;
     }
     btn.disabled = true; btn.textContent = "Enviando...";

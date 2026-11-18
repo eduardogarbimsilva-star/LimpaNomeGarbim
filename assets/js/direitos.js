@@ -37,7 +37,7 @@
   }
 
   const zap = () => String((window.SITE_CONFIG || {}).whatsapp || "").replace(/\D/g, "");
-  const botaoZap = (texto) => zap() ? `<a class="btn btn-whats" target="_blank" rel="noopener" href="https://wa.me/${zap()}?text=${encodeURIComponent(texto)}">Falar com a Milena</a>` : `<a class="btn btn-primario" href="index.html#analise">Pedir análise</a>`;
+  const botaoZap = (texto) => zap() ? `<a class="btn btn-whats" target="_blank" rel="noopener" href="https://wa.me/${zap()}?text=${encodeURIComponent(texto)}">Falar com a Milena</a>` : `<a class="btn btn-primario" href="/#analise">Pedir análise</a>`;
 
   function calcular(form) {
     const tipo = form.getAttribute("data-calc");
