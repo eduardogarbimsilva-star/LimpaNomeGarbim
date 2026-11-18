@@ -22,7 +22,7 @@ const MODELO = "claude-opus-5-5";
 const NOME_IA = "Assistente da Milena";
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_CHAVE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const SITE = (Deno.env.get("SITE_URL") ?? "https://eduardogarbimsilva-star.github.io/LimpaNomeGarbim").replace(/\/$/, "");
+const SITE = (Deno.env.get("SITE_URL") ?? "https://milenagarbim.com.br").replace(/\/$/, "");
 
 // ---------- Banco (REST com a chave de serviço; só roda no servidor) ----------
 async function db(caminho: string, init: RequestInit = {}): Promise<any> {

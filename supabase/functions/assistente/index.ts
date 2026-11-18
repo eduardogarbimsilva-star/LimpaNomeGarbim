@@ -16,6 +16,8 @@ import Anthropic from "npm:@anthropic-ai/sdk";
 
 const MODELO = "claude-opus-5-5";
 const ORIGENS_PADRAO = [
+  "https://milenagarbim.com.br",
+  "https://www.milenagarbim.com.br",
   "https://eduardogarbimsilva-star.github.io",
   "http://localhost:8765",
   "http://localhost:8000",

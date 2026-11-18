@@ -3,4 +3,4 @@ Allow: /
 Disallow: /conta.html
 Disallow: /admin.html
 
-Sitemap: https://eduardogarbimsilva-star.github.io/LimpaNomeGarbim/sitemap.xml
+Sitemap: https://milenagarbim.com.br/sitemap.xml
