@@ -93,29 +93,12 @@
     "hotmail.com": ["hotmial.com", "hotmai.com", "hotmal.com", "hotmail.con", "hotmail.co", "homail.com", "hotnail.com", "hotmaill.com"],
     "outlook.com": ["outlok.com", "outloo.com", "outlook.con", "outlook.co", "otlook.com"],
     "yahoo.com.br": ["yaho.com.br", "yahoo.com.b", "yahoo.combr"], "icloud.com": ["iclod.com", "icloud.con", "icoud.com"] };
-   
   function sugerirEmail(email) {
     const [u, dom] = String(email || "").toLowerCase().split("@");
     if (!u || !dom) return null;
     for (const [certo, erros] of Object.entries(DOMINIOS)) if (erros.includes(dom)) return u + "@" + certo;
     return null;
   }
-   
-    function documentoValido(valor) {
-    const n = so(valor);
-    if (n.length === 11) return cpfValido(n);
-    if (n.length === 14) return cnpjValido(n);
-    return false;
-  }
 
-  mascaras.documento = function(valor) {
-    const n = so(valor).slice(0, 14);
-    return n.length <= 11 ? mascaras.cpf(n) : mascaras.cnpj(n);
-  };
-
-mascaras.documento = function(valor) {
-    const n = so(valor).slice(0, 14);
-    return n.length <= 11 ? mascaras.cpf(n) : mascaras.cnpj(n);
-  };
-   
-  window.BR = { so, mascaras, cpfValido, cnpjValido, documentoValido, telefoneValido, cepValido, nomeValido, ieValida, limpar, sugerirEmail, UFS: "AC AL AP AM BA CE DF ES GO MA MT MS PA PB PR PE PI RJ RN RS RO RR SC SE TO".split(" "), buscarCep, buscarCnpj };
+  window.BR = { so, mascaras, cpfValido, cnpjValido, telefoneValido, cepValido, nomeValido, ieValida, limpar, sugerirEmail, UFS: "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" "), buscarCep, buscarCnpj };
+})();
