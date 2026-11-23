@@ -604,3 +604,8 @@ notify pgrst, 'reload schema';
 insert into public.equipe (email, papel, nome) values ('millenagarbim@gmail.com', 'admin', 'Milena Garbim')
 on conflict (email) do update set papel = 'admin', nome = coalesce(public.equipe.nome, 'Milena Garbim');
 -- =========================================================
+
+-- =========================================================
+-- E03: módulos liga/desliga e histórico de alterações -> rode também supabase/e03_modulos.sql
+-- (desfazer: supabase/desfazer/e03.sql)
+-- =========================================================

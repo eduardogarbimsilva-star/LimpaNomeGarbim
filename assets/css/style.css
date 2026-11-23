@@ -1658,3 +1658,39 @@ body.sem-whats-flutuante .insta-flutuante { bottom: 24px; }
 .motivos .aceite { margin: 4px 0; }
 .btn.perigo-btn { background: #b4415e; }
 .btn.perigo-btn:hover { background: #93324b; }
+
+/* =========================================================
+   Módulos desligados no painel (E03)
+   ========================================================= */
+body.mod-off-pedidos [data-adicionar], body.mod-off-pedidos [data-abrir-solicitacao], body.mod-off-pedidos .gaveta { display: none !important; }
+body.mod-off-cancelamento_cliente [data-cancelar-pedido] { display: none !important; }
+body.mod-off-pix [data-abrir-pix] { display: none !important; }
+body.mod-off-assistente [data-alternar-ia] { display: none !important; }
+body.mod-off-busca_cnpj #k-buscar-cnpj { display: none !important; }
+body.mod-off-chat:not(.pagina-painel) .chat-envio { display: none !important; }
+body.mod-off-chat:not(.pagina-painel) .chat-mensagens::after { content: "O chat está pausado no momento. Fale com a gente pelo WhatsApp."; display: block; margin: 12px auto 4px; padding: 8px 12px; border-radius: 10px; background: var(--rosa-claro, #f6e2e7); font-size: .9rem; text-align: center; max-width: 34em; }
+
+/* Aba Módulos do painel */
+.modulos-grupo { margin: 0 0 28px; }
+.modulos-grupo h3 { margin: 0 0 4px; }
+.modulos-grupo > p { margin: 0 0 12px; color: var(--texto-suave, #6b5b60); font-size: .92rem; }
+.modulo-item { display: flex; gap: 14px; align-items: flex-start; justify-content: space-between; padding: 14px 16px; border: 1px solid var(--borda, #eadde1); border-radius: 14px; background: var(--fundo-cartao, #fff); margin-bottom: 10px; }
+.modulo-item strong { display: block; }
+.modulo-item small { display: block; color: var(--texto-suave, #6b5b60); margin-top: 2px; line-height: 1.4; }
+.modulo-item .modulo-meta { font-size: .78rem; margin-top: 6px; opacity: .8; }
+.modulo-selo { display: inline-block; font-size: .75rem; padding: 2px 8px; border-radius: 99px; background: var(--rosa-claro, #f6e2e7); margin-left: 6px; vertical-align: middle; }
+.chave { position: relative; flex: 0 0 auto; width: 48px; height: 28px; border-radius: 99px; border: 0; background: #cbbfc3; cursor: pointer; transition: background .2s; }
+.chave::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
+.chave[aria-checked="true"] { background: var(--rosa, #a5536b); }
+.chave[aria-checked="true"]::after { transform: translateX(20px); }
+.chave:disabled { opacity: .55; cursor: not-allowed; }
+.chave:focus-visible { outline: 3px solid var(--rosa, #a5536b); outline-offset: 2px; }
+.historico-lista { list-style: none; margin: 0; padding: 0; }
+.historico-lista li { padding: 12px 0; border-bottom: 1px solid var(--borda, #eadde1); }
+.historico-lista .hist-cab { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: .88rem; }
+.historico-lista .hist-cab time { color: var(--texto-suave, #6b5b60); }
+.historico-lista details { margin-top: 6px; font-size: .85rem; }
+.historico-lista pre { white-space: pre-wrap; word-break: break-word; background: var(--fundo-alt, #faf5f6); padding: 8px 10px; border-radius: 8px; max-height: 260px; overflow: auto; }
+@media (prefers-reduced-motion: reduce) { .chave, .chave::after { transition: none; } }
+.modulo-selo { white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+.modulo-selo .icone-svg { width: 12px; height: 12px; display: inline-block; margin: 0; }

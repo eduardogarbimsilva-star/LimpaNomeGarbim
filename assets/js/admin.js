@@ -848,6 +848,72 @@
   };
 
   /* =========================================================
+     MÓDULOS (E03): o administrador liga e desliga recursos.
+     Proteções de segurança ficam sempre ligadas; recursos novos
+     só podem ser ligados quando a etapa deles estiver pronta.
+     ========================================================= */
+  const GRUPOS_MOD = {
+    atendimento: ["Atendimento", "Recursos usados no dia a dia com os clientes. Desligar esconde o botão no site e o banco também bloqueia."],
+    site: ["Site", "Ajudas automáticas nas páginas e no cadastro."],
+    novos: ["Novos recursos (pacote V3.1)", "Chegam desligados. Cada um só pode ser ligado depois que a etapa dele for entregue e você aprovar."],
+    seguranca: ["Segurança (sempre ligada)", "Proteções que não têm botão de desligar, para proteger você e os clientes."]
+  };
+  CARREGAR.modulos = async function () {
+    const p = painel("modulos");
+    async function desenhar() {
+      let lista = [];
+      try { lista = await A.modulos(); } catch (e) { avisar(e.message); }
+      p.innerHTML = `<p class="adm-dica">Desligar um módulo vale na hora para todo o site. Tudo fica registrado na aba <strong>Histórico</strong>.</p>` +
+        Object.entries(GRUPOS_MOD).map(([g, [titulo, dica]]) => {
+          const itens = lista.filter((m) => m.grupo === g);
+          if (!itens.length) return "";
+          return `<section class="modulos-grupo"><h3>${esc(titulo)}</h3><p>${esc(dica)}</p>${itens.map((m) => {
+            const travado = m.fixo || !m.disponivel;
+            const selo = m.fixo ? `<span class="modulo-selo">${icone("cadeado")} fixo</span>` : !m.disponivel ? `<span class="modulo-selo">chega na etapa ${esc(m.etapa || "")}</span>` : "";
+            const meta = m.atualizado_por && m.atualizado_em && !m.fixo ? `<span class="modulo-meta">Última mudança: ${esc(dataHora(m.atualizado_em))} · ${esc(m.atualizado_por)}</span>` : "";
+            return `<div class="modulo-item"><div><strong>${esc(m.nome)}${selo}</strong><small>${esc(m.descricao || "")}</small>${meta}</div>
+              <button type="button" class="chave" role="switch" aria-checked="${m.ativo !== false}" aria-label="${esc(m.nome)}" data-modulo="${esc(m.id)}"${travado ? " disabled" : ""}></button></div>`;
+          }).join("")}</section>`;
+        }).join("");
+    }
+    p.addEventListener("click", async (e) => {
+      const b = e.target.closest("[data-modulo]");
+      if (!b || b.disabled) return;
+      const ligar = b.getAttribute("aria-checked") !== "true";
+      const nome = b.getAttribute("aria-label");
+      if (!ligar && !(await MG.confirmar(`Desligar “${nome}” para todo o site? Dá para ligar de novo a qualquer momento.`, { titulo: "Desligar módulo?", botao: "Desligar" }))) return;
+      b.disabled = true;
+      try { await A.alternarModulo(b.dataset.modulo, ligar); avisar(ligar ? "Módulo ligado." : "Módulo desligado."); document.body.classList.toggle("mod-off-" + b.dataset.modulo, !ligar); carregadas.delete("historico"); }
+      catch (err) { avisar(err.message); }
+      await desenhar();
+    });
+    await desenhar();
+  };
+
+  /* HISTÓRICO: quem mudou o quê no painel (somente leitura) */
+  const TABELAS_HIST = { configuracoes: "Textos, aparência e contato", categorias: "Categoria do catálogo", servicos: "Serviço do catálogo", equipe: "Equipe", modulos: "Módulo", pedidos: "Situação do pedido" };
+  const ACOES_HIST = { insert: "criou", update: "alterou", delete: "excluiu" };
+  CARREGAR.historico = async function () {
+    const p = painel("historico");
+    p.innerHTML = `<p class="vazio">Carregando...</p>`;
+    let lista = [];
+    try { lista = await A.historico(200); } catch (e) { p.innerHTML = `<p class="vazio">${esc(e.message)}</p>`; return; }
+    const resumo = (h) => {
+      const m = h.mudancas || {};
+      if (h.tabela === "modulos" && m.ativo) return m.ativo.depois ? "ligou" : "desligou";
+      if (h.tabela === "pedidos" && m.status) return `${(D.STATUS[m.status.antes] || {}).nome || m.status.antes} → ${(D.STATUS[m.status.depois] || {}).nome || m.status.depois}`;
+      const chaves = Object.keys(m);
+      return chaves.length ? "campos: " + chaves.slice(0, 6).join(", ") + (chaves.length > 6 ? "…" : "") : "";
+    };
+    p.innerHTML = `<p class="adm-dica">Últimas 200 alterações feitas no painel e nos pedidos. Este registro não pode ser editado nem apagado pelo site. Dados pessoais dos clientes não são guardados aqui.</p>
+      <div class="botoes-form"><button type="button" class="btn btn-contorno-rosa" data-recarregar-hist>Atualizar</button></div>` +
+      (lista.length ? `<ul class="historico-lista">${lista.map((h) => `<li><div class="hist-cab"><time>${esc(dataHora(h.quando))}</time><strong>${esc(h.quem || "sistema")}</strong><span>${esc(ACOES_HIST[h.acao] || h.acao)} · ${esc(TABELAS_HIST[h.tabela] || h.tabela)}${h.alvo ? ` <em>${esc(h.alvo)}</em>` : ""}</span><span>${esc(resumo(h))}</span></div>
+        ${h.mudancas && Object.keys(h.mudancas).length ? `<details><summary>Ver detalhes</summary><pre>${esc(JSON.stringify(h.mudancas, null, 2))}</pre></details>` : ""}</li>`).join("")}</ul>`
+        : `<p class="vazio">Nenhuma alteração registrada ainda.</p>`);
+    $("[data-recarregar-hist]", p).addEventListener("click", () => CARREGAR.historico());
+  };
+
+  /* =========================================================
      Início
      ========================================================= */
   window.ContaPronta.then(async () => {
@@ -923,6 +989,8 @@
   async function prepararPush() {
     const b = $("[data-ativar-push]");
     if (!b || !D.Push) return;
+    try { await D.modulos(); } catch (e) { /* segue */ }
+    if (!D.moduloLigado("notificacoes")) return;   // desligado na aba Módulos
     const iphone = /iPhone|iPad|iPod/.test(navigator.userAgent), instalado = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
     const marcar = (ativo) => { b.hidden = false; b.classList.toggle("ativo", ativo); $("span", b).textContent = ativo ? "Notificações ativas neste aparelho" : "Ativar notificações neste aparelho"; };
     if (!D.Push.suportado() && !(iphone && !instalado)) return;

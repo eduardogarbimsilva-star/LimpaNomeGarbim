@@ -22,7 +22,7 @@
   const K = {
     sessao: "mg_demo_sessao", perfis: "mg_demo_perfis", pedidos: "mg_demo_pedidos", codigo: "mg_demo_codigo",
     categorias: "mg_demo_categorias", servicos: "mg_demo_servicos", site: "mg_demo_site", equipe: "mg_demo_equipe",
-    mensagens: "mg_demo_mensagens"
+    mensagens: "mg_demo_mensagens", modulos: "mg_demo_modulos", auditoria: "mg_demo_auditoria"
   };
 
   const ler = (k, p) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? p; } catch (e) { return p; } };
@@ -136,6 +136,55 @@
     return sitePromise;
   }
 
+  /* ---------- Módulos (E03): liga/desliga por recurso, controlado pelo administrador ---------- */
+  const MODULOS_PADRAO = [
+    ["pedidos", "atendimento", "Pedidos pelo site", "Clientes escolhem serviços e enviam o pedido pela área do cliente.", true],
+    ["chat", "atendimento", "Chat do pedido", "Conversa entre cliente e equipe dentro de cada pedido.", true],
+    ["assistente", "atendimento", "Assistente automática", "Responde o cliente no chat (grátis, por regras) até alguém da equipe assumir.", true],
+    ["pix", "atendimento", "Cobrança PIX no chat", "A equipe envia QR Code e copia-e-cola com o valor definido.", true],
+    ["cancelamento_cliente", "atendimento", "Cliente cancela o próprio pedido", "Botão de cancelar (com motivo obrigatório) enquanto o serviço não começou.", true],
+    ["notificacoes", "atendimento", "Notificações no celular/computador", "Avisos de pedido novo, mensagens e mudança de situação.", true],
+    ["busca_cep", "site", "Endereço automático pelo CEP", "Preenche rua, bairro, cidade e estado pelo CEP (ViaCEP, gratuito).", true],
+    ["busca_cnpj", "site", "Dados da empresa pelo CNPJ", "Preenche razão social e endereço pelo CNPJ (BrasilAPI, gratuito).", true],
+    ["triagem", "site", "Pergunta inicial \"Como está o seu nome?\"", "Janela que ajuda o visitante a filtrar os serviços.", true],
+    ["catalogo_ditto", "novos", "Produtos de crédito (Ditto)", "20 produtos do portfólio Ditto, todos como rascunho até você confirmar parceria e regras.", false, "E04"],
+    ["diagnostico", "novos", "Diagnóstico inteligente", "Perguntas condicionais que indicam o caminho, com explicação de cada resultado.", false, "E05"],
+    ["consultas", "novos", "Central de consultas", "Consultas a birôs só por fornecedor contratado e com autorização do cliente.", false, "E06"],
+    ["relatorios", "novos", "Relatórios em PDF", "Relatórios protegidos, com fonte e data, só com dados reais.", false, "E07"],
+    ["pagamentos", "novos", "Pagamento online", "Cartão/boleto/PIX automático por um gateway, com estorno e conciliação.", false, "E08"],
+    ["crm", "novos", "CRM e métricas", "Funil de atendimento, indicadores reais e exportação segura.", false, "E10"],
+    ["dupla_verificacao", "seguranca", "Dupla verificação da equipe", "Código do aplicativo autenticador para entrar no painel.", true, null, true],
+    ["regras_banco", "seguranca", "Regras de acesso do banco (RLS)", "Cada cliente só vê os próprios dados; só a equipe vê os pedidos.", true, null, true],
+    ["validacao_servidor", "seguranca", "Validação no servidor", "CPF, CNPJ, estado e limites conferidos pelo banco, não só pelo navegador.", true, null, true],
+    ["historico", "seguranca", "Histórico de alterações", "Registro de quem mudou o quê no painel.", true, null, true]
+  ].map(([id, grupo, nome, descricao, ativo, etapa, fixo], i) => ({ id, grupo, nome, descricao, ativo, etapa: etapa || null, fixo: !!fixo, disponivel: !etapa, ordem: i }));
+  function modulosDemo() {
+    const salvos = ler(K.modulos, {});
+    return MODULOS_PADRAO.map((m) => Object.assign({}, m, m.disponivel && !m.fixo && typeof salvos[m.id] === "boolean" ? { ativo: salvos[m.id] } : {}));
+  }
+  let modulosPromise = null, modulosCache = null;
+  /** Lista de módulos (com cache). Se o banco não responder, tudo fica como está hoje (ligado). */
+  function modulos(recarregar) {
+    if (!modulosPromise || recarregar) {
+      modulosPromise = (async () => {
+        let lista = MODULOS_PADRAO;
+        if (!ONLINE) lista = modulosDemo();
+        else {
+          try {
+            const r = await fetch(SB.url + "/rest/v1/modulos?select=*&order=grupo,ordem", { headers: { apikey: SB.anonKey, Authorization: "Bearer " + SB.anonKey } });
+            if (r.ok) { const d = await r.json(); if (d.length) lista = d; }
+          } catch (e) { /* segue com o padrão */ }
+        }
+        modulosCache = {};
+        lista.forEach((m) => { modulosCache[m.id] = m.ativo !== false; });
+        return lista;
+      })();
+    }
+    return modulosPromise;
+  }
+  /** Consulta rápida (depois que os módulos carregaram). Desconhecido = ligado. */
+  const moduloLigado = (id) => !modulosCache || modulosCache[id] !== false;
+
   const achatar = (r) => Object.assign({}, r.dados || {}, { id: r.id, ordem: r.ordem ?? 0, ativo: r.ativo !== false }, r.categoria ? { categoria: r.categoria } : {});
   const porOrdem = (a, b) => (a.ordem || 0) - (b.ordem || 0) || String(a.nome).localeCompare(String(b.nome));
 
@@ -207,6 +256,7 @@
     },
     /** como: "cliente" | "equipe"; foto: arquivo de imagem (opcional) */
     async enviar(pedidoId, texto, como, foto) {
+      if (como !== "equipe" && !moduloLigado("chat")) throw new Error("O chat está pausado no momento. Fale com a gente pelo WhatsApp.");
       texto = String(texto || "").trim().slice(0, 2000);
       if (!texto && !foto) throw new Error("Escreva a mensagem.");
       let anexo = null;
@@ -243,6 +293,7 @@
     },
     /** Cobrança PIX no chat (valor informado pela equipe) */
     async enviarPix(pedidoId, valor, descricao, codigo) {
+      if (!moduloLigado("pix")) throw new Error("A cobrança PIX está desativada nos módulos.");
       if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("enviar_pix", { p_pedido: pedidoId, p_valor: valor, p_descricao: descricao || null, p_codigo: codigo })); }
       const todos = ler(K.pedidos, []), p = todos.find((x) => x.id === pedidoId);
       if (!p) throw new Error("Pedido não encontrado.");
@@ -497,6 +548,7 @@
 
     /** Registra a solicitação. itens: [id do serviço]. O preço vem do catálogo (no banco, conferido pelo servidor). */
     async criarPedido(ids, observacoes) {
+      if (!moduloLigado("pedidos")) throw new Error("Pedidos pelo site estão pausados no momento. Fale com a gente pelo WhatsApp.");
       if (!usuarioAtual) throw new Error("Entre na sua conta para enviar a solicitação.");
       if (!ids.length) throw new Error("Sua solicitação está vazia.");
       if (ONLINE) {
@@ -531,6 +583,7 @@
 
     /** Cliente cancela o próprio pedido (motivo obrigatório) */
     async cancelarPedido(id, motivo) {
+      if (!moduloLigado("cancelamento_cliente")) throw new Error("O cancelamento pelo site está desativado. Fale com a Milena pelo chat ou WhatsApp.");
       motivo = String(motivo || "").trim();
       if (motivo.length < 10) throw new Error("Explique o motivo do cancelamento (pelo menos 10 letras).");
       if (ONLINE) { const sb = await supabase(); await rodar(sb.rpc("cancelar_pedido", { p_id: id, p_motivo: motivo })); return; }
@@ -734,6 +787,32 @@
       return sb.storage.from("site").getPublicUrl(caminho).data.publicUrl;
     },
 
+    /* ---- Módulos e histórico (E03, só administrador) ---- */
+    modulos: () => modulos(true),
+    async alternarModulo(id, ativo) {
+      const lista = await modulos();
+      const m = lista.find((x) => x.id === id);
+      if (!m) throw new Error("Módulo não encontrado.");
+      if (m.fixo && !ativo) throw new Error("Esta proteção de segurança não pode ser desligada.");
+      if (!m.disponivel && ativo) throw new Error("Este recurso ainda não está pronto para ser ligado.");
+      if (ONLINE) {
+        const sb = await supabase();
+        const r = await rodar(sb.from("modulos").update({ ativo: !!ativo }).eq("id", id).select("id"));
+        if (!r || !r.length) throw new Error("Você não tem permissão para fazer isso.");
+      } else {
+        const salvos = ler(K.modulos, {}); salvos[id] = !!ativo; gravar(K.modulos, salvos);
+        const h = ler(K.auditoria, []);
+        h.unshift({ id: Date.now(), quando: new Date().toISOString(), quem: (usuarioAtual || {}).email, papel: "admin", tabela: "modulos", acao: "update", alvo: id, mudancas: { ativo: { antes: !ativo, depois: !!ativo } } });
+        gravar(K.auditoria, h.slice(0, 300));
+      }
+      await modulos(true);
+    },
+    async historico(limite = 200) {
+      if (!ONLINE) return ler(K.auditoria, []).slice(0, limite);
+      const sb = await supabase();
+      return (await rodar(sb.from("auditoria").select("*").order("quando", { ascending: false }).limit(limite))) || [];
+    },
+
     /* ---- Equipe ---- */
     async equipe() {
       if (!ONLINE) return ler(K.equipe, []);
@@ -759,6 +838,6 @@
     }
   };
 
-  window.Dados = { online: ONLINE, STATUS, CONFIRMADOS, site, catalogo, Conta, Painel, Chat, Push, slug };
+  window.Dados = { online: ONLINE, STATUS, CONFIRMADOS, site, catalogo, modulos, moduloLigado, Conta, Painel, Chat, Push, slug };
   window.ContaPronta = Conta.iniciar();
 })();

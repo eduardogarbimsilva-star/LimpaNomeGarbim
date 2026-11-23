@@ -17,6 +17,11 @@
   const ICONES = (window.PADRAO || {}).icones || {};
   const icone = (n, cls = "icone-svg") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${ICONES[n] || ICONES.estrela || ""}</svg>`;
 
+  /* Módulos desligados pelo administrador: a página ganha a classe "mod-off-<módulo>" e o CSS esconde os botões */
+  if (D && D.modulos) D.modulos().then((lista) => {
+    lista.forEach((m) => document.body.classList.toggle("mod-off-" + m.id, m.ativo === false));
+  }).catch(() => {});
+
   let numeroWhats = String(CFG.whatsapp || "").replace(/\D/g, "");
   const linkWhats = (texto) => (numeroWhats ? "https://wa.me/" + numeroWhats + "?text=" + encodeURIComponent(texto || "") : "");
 
@@ -391,6 +396,7 @@
 
   async function talvezAbrirTriagem() {
     if (!$("[data-frentes]") || Triagem.estado.visto || location.hash) return;
+    try { await D.modulos(); if (!D.moduloLigado("triagem")) return; } catch (e) { /* segue */ }
     try { const st = await D.site(); if (st.aparencia && (st.aparencia.triagem === false || (st.aparencia.secoes || {}).frentes === false)) return; } catch (e) { /* segue */ }
     const espera = document.body.classList.contains("com-abertura") ? 3600 : 1800;
     setTimeout(() => {

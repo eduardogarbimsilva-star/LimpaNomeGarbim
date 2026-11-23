@@ -37,6 +37,11 @@ async function db(caminho: string, init: RequestInit = {}): Promise<any> {
 }
 const umPedido = async (id: string) => ((await db(`pedidos?id=eq.${id}&select=*`)) ?? [])[0];
 const mensagensDo = async (id: string) => (await db(`mensagens?pedido_id=eq.${id}&select=autor,nome,texto,anexo,pix,criado_em&order=criado_em.asc&limit=60`)) ?? [];
+// Módulos ligados/desligados pelo painel (E03). Se a tabela não responder, segue ligado.
+async function moduloAtivo(id: string): Promise<boolean> {
+  try { const r = (await db(`modulos?id=eq.${id}&select=ativo`)) ?? []; return r.length ? r[0].ativo !== false : true; }
+  catch (_) { return true; }
+}
 async function escrever(pedido: string, autor: "ia" | "sistema", texto: string) {
   await db("mensagens", { method: "POST", body: JSON.stringify({ pedido_id: pedido, autor, nome: autor === "ia" ? NOME_IA : null, texto: texto.slice(0, 4000) }) });
 }
@@ -60,6 +65,7 @@ async function notificarCliente(clienteId: string, titulo: string, corpo: string
 }
 async function enviarPush(filtro: string, titulo: string, corpo: string, link: string, tag: string): Promise<string[]> {
   if (!prepararVapid()) return ["vapid ausente"];
+  if (!(await moduloAtivo("notificacoes"))) return ["notificações desligadas nos módulos"];
   const inscricoes = (await db(`push_inscricoes?select=endpoint,inscricao&${filtro}`)) ?? [];
   const carga = JSON.stringify({ titulo, corpo, link, tag });
   return await Promise.all(inscricoes.map(async (i: { endpoint: string; inscricao: webpush.PushSubscription }) => {
@@ -203,7 +209,7 @@ async function pedidoNovo(p: any) {
     avisarWhatsApp(`🔔 Novo pedido ${p.numero}\n${nome} (${cli.cidade ?? ""}/${cli.uf ?? ""})\nServiços: ${servicos}\nTelefone: ${cli.telefone ?? "-"}\nAbrir: ${SITE}/admin.html`),
     (async () => {
       const atual = await umPedido(p.id);
-      if (!atual?.ia_ativa) return;
+      if (!atual?.ia_ativa || !(await moduloAtivo("assistente"))) return;
       const texto = (await responderComIA(atual, [], true)) ?? boasVindasSemIA(atual);
       await escrever(p.id, "ia", texto);
     })(),
@@ -251,6 +257,7 @@ async function mensagemDoCliente(m: any) {
   if (!ultima || ultima.autor !== "cliente" || ultima.criado_em !== m.criado_em) return;
   const atual = await umPedido(p.id);
   if (!atual?.ia_ativa) return;   // a equipe assumiu enquanto isso
+  if (!(await moduloAtivo("assistente"))) return;   // assistente desligada no painel (Módulos)
   // com chave de IA (opcional) usa o modelo; sem chave, a assistente própria responde (sem custo)
   let texto = await responderComIA(atual, historico, false);
   if (!texto) {

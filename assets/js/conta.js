@@ -89,6 +89,7 @@
   let cepBuscado = "", cepBusca = null;
   async function buscarEndereco(focar) {
     const cep = BR.so(form.cep.value);
+    if (!D.moduloLigado("busca_cep")) return null;   // desligado no painel (Módulos)
     if (cep.length !== 8 || cep === cepBuscado) return cepBusca;
     cepBuscado = cep;
     cepBusca = (async () => {
@@ -323,6 +324,7 @@
   /* Avisos no celular/computador do cliente: pede a cada visita enquanto não estiver ativo */
   async function oferecerAvisos() {
     if (!D.online || !D.Push || !D.Push.suportado() || !pedidosAtuais.length) return;
+    if (!D.moduloLigado("notificacoes")) return;
     if (await D.Push.sincronizar(true)) return;
     if (Notification.permission === "denied") return;
     try { if (sessionStorage.getItem("mg_push_depois")) return; } catch (e) { /* ok */ }
