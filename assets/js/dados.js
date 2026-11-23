@@ -22,7 +22,7 @@
   const K = {
     sessao: "mg_demo_sessao", perfis: "mg_demo_perfis", pedidos: "mg_demo_pedidos", codigo: "mg_demo_codigo",
     categorias: "mg_demo_categorias", servicos: "mg_demo_servicos", site: "mg_demo_site", equipe: "mg_demo_equipe",
-    mensagens: "mg_demo_mensagens", modulos: "mg_demo_modulos", auditoria: "mg_demo_auditoria", produtos: "mg_demo_produtos", diagnostico: "mg_demo_diagnostico", consultas: "mg_demo_consultas"
+    mensagens: "mg_demo_mensagens", modulos: "mg_demo_modulos", auditoria: "mg_demo_auditoria", produtos: "mg_demo_produtos", diagnostico: "mg_demo_diagnostico", consultas: "mg_demo_consultas", consultaProdutos: "mg_demo_consulta_produtos"
   };
 
   const ler = (k, p) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? p; } catch (e) { return p; } };
@@ -483,6 +483,7 @@
     scr: "dívidas e atrasos com bancos (Registrato/SCR do Banco Central)"
   };
   const STATUS_CONSULTA = {
+    aguardando_pagamento: { nome: "Aguardando pagamento", cor: "champanhe" },
     aguardando_autorizacao: { nome: "Aguardando autorização do cliente", cor: "champanhe" },
     autorizada: { nome: "Autorizada — fazer a consulta", cor: "alerta" },
     em_andamento: { nome: "Em andamento", cor: "alerta" },
@@ -491,6 +492,23 @@
     falhou: { nome: "Falhou — tentar de novo", cor: "rosa" },
     cancelada: { nome: "Cancelada", cor: "cinza" }
   };
+  const PRODUTOS_CONSULTA_PADRAO = [
+    { id: "completa", tipo: "completa", nome: "Consulta completa", descricao: "Tudo o que pesa no seu nome em um só relatório, explicado em linguagem simples.", itens: ["Restrições no SPC, Serasa e Boa Vista", "Protestos em cartório (Cenprot)", "Score de crédito", "Dívidas com bancos (Registrato/SCR)"], preco: null, prazo: "Resultado em até 1 dia útil", destaque: true, ativo: false, ordem: 1 },
+    { id: "restricoes", tipo: "restricoes", nome: "Restrições no nome", descricao: "Veja se o seu CPF ou CNPJ está negativado e por quem.", itens: ["SPC, Serasa e Boa Vista", "Credor, valor e data de cada registro"], preco: null, prazo: "Resultado em até 1 dia útil", destaque: false, ativo: false, ordem: 2 },
+    { id: "protestos", tipo: "protestos", nome: "Protestos em cartório", descricao: "Consulta de protestos registrados na Central Nacional de Protesto.", itens: ["Cartório, valor e data", "Todos os estados"], preco: null, prazo: "Resultado em até 1 dia útil", destaque: false, ativo: false, ordem: 3 },
+    { id: "score", tipo: "score", nome: "Score de crédito", descricao: "Sua pontuação de crédito e o que ela significa.", itens: ["Pontuação atual", "O que ajuda e o que atrapalha"], preco: null, prazo: "Resultado em até 1 dia útil", destaque: false, ativo: false, ordem: 4 },
+    { id: "scr", tipo: "scr", nome: "Dívidas com bancos (Bacen)", descricao: "Empréstimos, financiamentos e atrasos registrados no Banco Central (SCR).", itens: ["Dívidas em dia e em atraso", "Prejuízos registrados pelos bancos"], preco: null, prazo: "Resultado em até 1 dia útil", destaque: false, ativo: false, ordem: 5 }
+  ];
+  const produtosConsultaDemo = () => { let l = ler(K.consultaProdutos, null); if (!l) { l = copia(PRODUTOS_CONSULTA_PADRAO); gravar(K.consultaProdutos, l); } return l; };
+  /** Consultas à venda (com preço, ativas e com o módulo ligado) */
+  async function consultaProdutos() {
+    await modulos();
+    if (!ONLINE) return moduloLigado("consultas") ? produtosConsultaDemo().filter((x) => x.ativo && x.preco).sort((a, b) => a.ordem - b.ordem) : [];
+    try {
+      const r = await fetch(SB.url + "/rest/v1/consulta_produtos?select=id,tipo,nome,descricao,itens,preco,prazo,destaque,ordem&order=ordem", { headers: { apikey: SB.anonKey, Authorization: "Bearer " + SB.anonKey } });
+      return r.ok ? await r.json() : [];
+    } catch (e) { return []; }
+  }
   const consultasDemo = () => ler(K.consultas, []);
   function gravarConsultaDemo(id, mudar) {
     const l = consultasDemo(), c = l.find((x) => x.id === id);
@@ -668,6 +686,28 @@
       if (!usuarioAtual) return [];
       if (ONLINE) { const sb = await supabase(); return ((await rodar(sb.from("consultas").select("*, pedido:pedidos(numero)").order("criado_em", { ascending: false }))) || []).map((c) => Object.assign(c, { numero: (c.pedido || {}).numero })); }
       return consultasDemo().filter((c) => c.cliente_id === usuarioAtual.email);
+    },
+    async comprarConsulta(produtoId, aceite) {
+      if (!aceite) throw new Error("Para continuar, marque a autorização da consulta.");
+      if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("comprar_consulta", { p_produto: produtoId, p_aceite: true })); }
+      if (!moduloLigado("consultas")) throw new Error("As consultas estão pausadas no momento.");
+      const prod = produtosConsultaDemo().find((x) => x.id === produtoId && x.ativo && x.preco);
+      if (!prod) throw new Error("Esta consulta não está disponível.");
+      const perfil = ler(K.perfis, {})[usuarioAtual.email] || {};
+      const doc = perfil.cpf || perfil.cnpj;
+      if (!doc) throw new Error("Complete seu cadastro (CPF ou CNPJ) em Minha conta antes de consultar.");
+      const igual = consultasDemo().find((c) => c.cliente_id === usuarioAtual.email && c.produto_id === produtoId && c.status === "aguardando_pagamento");
+      if (igual) return igual.id;
+      const num = "CS-" + new Date().toISOString().slice(2, 10).replace(/-/g, "") + "-" + Math.random().toString(16).slice(2, 7).toUpperCase();
+      const agora = new Date().toISOString();
+      const c = { id: "c" + Date.now(), cliente_id: usuarioAtual.email, tipo: prod.tipo, finalidade: "Entregar ao titular o resultado da consulta contratada no site", status: "aguardando_pagamento", origem: "cliente", produto_id: prod.id, valor: prod.preco, pagamento_status: "pendente", pagamento_ref: num.replace(/-/g, ""), pagamento_meio: "pix", numero: num, modo: "manual", pendencias: [], consentimento_em: agora, respondido_em: agora,
+        consentimento_texto: "Eu, titular do documento " + doc + ", autorizo Milena Garbim · Limpa Nome a consultar " + TIPOS_CONSULTA[prod.tipo] + " em meu nome, exclusivamente para me entregar o resultado desta consulta (" + num + "). Os dados serão usados somente para este fim, conforme a Política de Privacidade e a LGPD (Lei 13.709/2018). Autorizado em " + new Date().toLocaleString("pt-BR") + ".", criado_em: agora };
+      const l = consultasDemo(); l.push(c); gravar(K.consultas, l);
+      return c.id;
+    },
+    async informarPagamento(id) {
+      if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("informar_pagamento_consulta", { p_id: id })); }
+      gravarConsultaDemo(id, { informou_pago_em: new Date().toISOString() });
     },
     async responderConsulta(id, autoriza) {
       if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("responder_consulta", { p_id: id, p_autoriza: !!autoriza })); }
@@ -975,8 +1015,30 @@
       if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("registrar_consulta", { p_id: id, p_resumo: resumo, p_pendencias: pend, p_fonte: fonte, p_data: d.data })); }
       const c = consultasDemo().find((x) => x.id === id);
       if (!c || !["autorizada", "em_andamento", "falhou"].includes(c.status)) throw new Error("Só dá para registrar resultado de consulta autorizada pelo cliente.");
+      if (c.origem === "cliente" && c.pagamento_status !== "pago") throw new Error("Confirme o pagamento antes de registrar o resultado.");
       gravarConsultaDemo(id, { status: "concluida", resultado_resumo: resumo, pendencias: pend, fonte, data_consulta: d.data, concluido_por: (usuarioAtual || {}).email });
-      demoMensagem(c.pedido_id, "sistema", "O resultado da consulta de " + TIPOS_CONSULTA[c.tipo] + ' está disponível em "Meus pedidos".');
+      if (c.pedido_id) demoMensagem(c.pedido_id, "sistema", "O resultado da consulta de " + TIPOS_CONSULTA[c.tipo] + ' está disponível em "Meus pedidos".');
+    },
+    async consultaProdutos() {
+      if (!ONLINE) return produtosConsultaDemo().slice().sort((a, b) => a.ordem - b.ordem);
+      const sb = await supabase();
+      return (await rodar(sb.from("consulta_produtos").select("*").order("ordem"))) || [];
+    },
+    async salvarConsultaProduto(x) {
+      const preco = x.preco === "" || x.preco === null || x.preco === undefined ? null : Math.round(Number(String(x.preco).replace(",", ".")) * 100) / 100;
+      if (preco !== null && !(preco > 0)) throw new Error("Preço inválido.");
+      if (x.ativo && !preco) throw new Error("Defina o preço antes de colocar à venda.");
+      const d = { nome: String(x.nome || "").trim().slice(0, 80), descricao: String(x.descricao || "").trim().slice(0, 600), itens: (x.itens || []).map((t) => String(t).trim()).filter(Boolean).slice(0, 8), preco, prazo: String(x.prazo || "").trim().slice(0, 80) || "Resultado em até 1 dia útil", destaque: !!x.destaque, ativo: !!x.ativo };
+      if (!d.nome) throw new Error("Dê um nome à consulta.");
+      if (ONLINE) { const sb = await supabase(); const r = await rodar(sb.from("consulta_produtos").update(d).eq("id", x.id).select("id")); if (!r || !r.length) throw new Error("Você não tem permissão para fazer isso."); return; }
+      const l = produtosConsultaDemo(), i = l.findIndex((y) => y.id === x.id); if (i < 0) throw new Error("Consulta não encontrada.");
+      l[i] = Object.assign(l[i], d); gravar(K.consultaProdutos, l);
+    },
+    async confirmarPagamentoConsulta(id) {
+      if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("confirmar_pagamento_consulta", { p_id: id })); }
+      const c = consultasDemo().find((x) => x.id === id);
+      if (!c || c.status !== "aguardando_pagamento") throw new Error("Esta consulta não está aguardando pagamento.");
+      gravarConsultaDemo(id, { pagamento_status: "pago", pago_em: new Date().toISOString(), status: "autorizada", modo: "manual" });
     },
     async cancelarConsulta(id, motivo) {
       if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("cancelar_consulta", { p_id: id, p_motivo: motivo || "" })); }
@@ -1008,6 +1070,6 @@
     }
   };
 
-  window.Dados = { online: ONLINE, STATUS, CONFIRMADOS, site, catalogo, modulos, moduloLigado, produtosCredito, PERFIS_CREDITO, diagnosticoRegras, TIPOS_CONSULTA, STATUS_CONSULTA, Conta, Painel, Chat, Push, slug };
+  window.Dados = { online: ONLINE, STATUS, CONFIRMADOS, site, catalogo, modulos, moduloLigado, produtosCredito, PERFIS_CREDITO, diagnosticoRegras, TIPOS_CONSULTA, STATUS_CONSULTA, consultaProdutos, Conta, Painel, Chat, Push, slug };
   window.ContaPronta = Conta.iniciar();
 })();

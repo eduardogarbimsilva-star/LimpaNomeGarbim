@@ -111,7 +111,9 @@ begin
   update public.consultas set status = 'concluida', resultado_resumo = left(trim(p_resumo), 3000), pendencias = coalesce(p_pendencias, '[]'::jsonb),
     fonte = left(trim(p_fonte), 150), data_consulta = p_data, concluido_por = public.meu_email(), erro = null, atualizado_em = now()
   where id = p_id;
-  insert into public.mensagens (pedido_id, autor, texto) values (v_c.pedido_id, 'sistema', 'O resultado da consulta de ' || privado.nome_consulta(v_c.tipo) || ' está disponível em "Meus pedidos".');
+  if v_c.pedido_id is not null then
+    insert into public.mensagens (pedido_id, autor, texto) values (v_c.pedido_id, 'sistema', 'O resultado da consulta de ' || privado.nome_consulta(v_c.tipo) || ' está disponível em "Meus pedidos".');
+  end if;
 end $$;
 
 create or replace function public.cancelar_consulta(p_id uuid, p_motivo text)

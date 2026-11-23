@@ -186,6 +186,7 @@
   $$(".abas [data-aba]").forEach((b) => b.addEventListener("click", () => abrirAba(b.dataset.aba)));
   function abrirAba(aba) {
     if (aba === "mensagens") montarCaixa();
+    if (aba === "consultas") desenharConsultas();
     $$(".abas [data-aba]").forEach((x) => { x.classList.toggle("ativo", x.dataset.aba === aba); x.setAttribute("aria-selected", x.dataset.aba === aba); });
     $$("[data-painel]").forEach((p) => { p.hidden = p.dataset.painel !== aba; });
   }
@@ -251,6 +252,44 @@
   let consultasAtuais = [];
   let pedidosAtuais = [], naoLidas = {}, fotoMilena = "assets/img/milena-garbim-avatar.jpg";
   D.site().then((s) => { fotoMilena = s.fotos.avatar || fotoMilena; });
+  /* ---------- Aba "Consultas" (E06b): compradas no site, com andamento e resultado ---------- */
+  async function desenharConsultas() {
+    const alvo = $("#conta-consultas");
+    alvo.innerHTML = `<p class="vazio">Carregando suas consultas...</p>`;
+    try { consultasAtuais = await C.consultas(); } catch (e) { alvo.innerHTML = `<p class="vazio">${esc(e.message)}</p>`; return; }
+    const minhas = consultasAtuais.filter((c) => c.origem === "cliente");
+    const passos = (c) => {
+      const pago = c.pagamento_status === "pago", feita = c.status === "concluida";
+      return `<ol class="progresso consulta-progresso"><li class="feito"><span></span>Pedido</li><li class="${pago ? "feito" : ""}"><span></span>Pagamento</li><li class="${pago ? "feito" : ""}"><span></span>Consulta</li><li class="${feita ? "feito" : ""}"><span></span>Resultado</li></ol>`;
+    };
+    alvo.innerHTML = (minhas.length ? minhas.map((c) => {
+      const st = (D.STATUS_CONSULTA || {})[c.status] || { nome: c.status, cor: "cinza" };
+      const nomeSt = c.status === "autorizada" ? "Pagamento confirmado — consultando" : c.status === "aguardando_pagamento" && c.informou_pago_em ? "Pagamento em conferência" : st.nome;
+      return `<div class="consulta-item"><div class="consulta-cab"><div><strong>${esc((D.TIPOS_CONSULTA || {})[c.tipo] || "Consulta")}</strong><small> · ${esc(c.numero || "")} · ${esc(brl(c.valor || 0))}</small></div><span class="selo-status st-${st.cor}">${esc(nomeSt)}</span></div>
+        ${passos(c)}
+        ${c.status === "aguardando_pagamento" ? `<div class="botoes-form">${c.informou_pago_em ? `<p class="adm-dica">Você avisou que pagou. Estamos conferindo — você será avisado aqui e no celular.</p>` : `<button type="button" class="btn btn-primario" data-pagar-consulta="${esc(c.id)}">Pagar com PIX</button>`}</div>` : ""}
+        ${c.status === "concluida" ? resultadoConsulta(c) : ""}
+        ${c.consentimento_texto ? `<details class="consulta-aceite"><summary>Ver a autorização que você deu</summary><p>${esc(c.consentimento_texto)}</p></details>` : ""}</div>`;
+    }).join("") : `<div class="cartao centro caixa-aviso"><h3>Nenhuma consulta ainda</h3><p>Consulte restrições, protestos, score e dívidas com bancos do seu CPF ou CNPJ.</p><a href="/consultas" class="btn btn-primario">Fazer uma consulta</a></div>`)
+      + (minhas.length ? `<p class="centro"><a href="/consultas" class="btn btn-contorno-rosa">Fazer outra consulta</a></p>` : "");
+    D.site().then((st) => { const n = String((st.contatos || {}).whatsapp || "").replace(/\D/g, ""); alvo.querySelectorAll("[data-whats]").forEach((x) => { if (n) { x.href = "https://wa.me/" + n + "?text=" + encodeURIComponent(x.dataset.whats); x.target = "_blank"; x.rel = "noopener"; } else x.hidden = true; }); });
+  }
+  function resultadoConsulta(c) {
+    const pend = Array.isArray(c.pendencias) ? c.pendencias : [];
+    const dt = (d) => (d ? new Date(d.length === 10 ? d + "T12:00:00" : d).toLocaleDateString("pt-BR") : "");
+    return `<div class="consulta-resultado"><h4>Resultado</h4><p class="consulta-resumo">${esc(c.resultado_resumo || "")}</p>
+      ${pend.length ? `<div class="tabela-rolagem"><table class="tabela tabela-pend"><thead><tr><th>Onde</th><th>Credor</th><th>Valor</th><th>Data</th></tr></thead><tbody>${pend.map((x) => `<tr><td>${esc(x.orgao || "")}</td><td>${esc(x.credor || "")}</td><td>${esc(x.valor || "")}</td><td>${esc(x.data || "")}</td></tr>`).join("")}</tbody></table></div>
+        <p class="centro"><a class="btn btn-whats" data-whats="Olá, Milena! Recebi o resultado da consulta ${esc(c.numero || "")} e quero ajuda para resolver.">Quero ajuda para resolver</a></p>` : `<p>Nenhuma pendência encontrada nesta consulta. 🎉</p>`}
+      <small class="consulta-fonte">Fonte: ${esc(c.fonte || "")} · consultado em ${esc(dt(c.data_consulta))}</small></div>`;
+  }
+  $("#conta-consultas").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-pagar-consulta]");
+    if (!b || !window.ConsultasPix) return;
+    const c = consultasAtuais.find((x) => x.id === b.dataset.pagarConsulta);
+    const m = MG.modal(`<div class="consulta-fluxo"></div>`);
+    await window.ConsultasPix.mostrarPix(m, c, {});
+  });
+
   /* ---------- Consultas do CPF/CNPJ (E06): o cliente autoriza e vê o resultado ---------- */
   function blocoConsultas(pedidoId) {
     const lista = consultasAtuais.filter((c) => c.pedido_id === pedidoId);
@@ -396,7 +435,7 @@
      ========================================================= */
   async function decidir(acabouDeEntrar) {
     if (!C.usuario) { mostrar("conta-entrar"); return; }
-    if (voltar) { location.href = voltar; return; }
+    if (voltar && (voltar !== "/consultas" || C.perfilCompleto())) { location.href = voltar; return; }   // consultas precisam do cadastro completo (CPF/CNPJ)
     if (!C.perfilCompleto() || editando) {
       // a equipe pode ir direto ao painel sem cadastro de cliente
       preencherCadastro(C.perfil);
@@ -415,6 +454,7 @@
     await desenharPedidos();
     atualizarNaoLidas();
     if (!ouvindo) ouvindo = D.Chat.ouvir(null, atualizarNaoLidas);
+    D.modulos().then(() => { const tem = consultasAtuais.some((c) => c.origem === "cliente"); $("[data-aba-consultas]").hidden = !(tem || D.moduloLigado("consultas")); if (params.get("aba") === "consultas" && !$("[data-aba-consultas]").hidden) abrirAba("consultas"); }).catch(() => {});
     const pedirChat = params.get("chat");
     if (pedirChat) abrirChat(pedirChat);
     D.Painel.meuPapel().then((papel) => { $("#link-painel").hidden = !papel; if (!papel) setTimeout(oferecerAvisos, 1200); }).catch(() => {});

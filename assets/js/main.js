@@ -20,6 +20,8 @@
   /* Módulos desligados pelo administrador: a página ganha a classe "mod-off-<módulo>" e o CSS esconde os botões */
   if (D && D.modulos) D.modulos().then((lista) => {
     lista.forEach((m) => document.body.classList.toggle("mod-off-" + m.id, m.ativo === false));
+    const consultas = lista.find((m) => m.id === "consultas");
+    document.querySelectorAll("[data-link-consultas]").forEach((li) => { li.hidden = !(consultas && consultas.ativo); });
   }).catch(() => {});
 
   let numeroWhats = String(CFG.whatsapp || "").replace(/\D/g, "");

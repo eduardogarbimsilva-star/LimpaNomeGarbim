@@ -848,30 +848,87 @@
   };
 
   /* =========================================================
-     CONSULTAS (E06): equipe pede, cliente autoriza, equipe registra
-     o resultado (manual pelo portal do revendedor até a API chegar).
-     Nunca inventar resultado: só o que veio da fonte informada.
+     CONSULTAS (E06/E06b): painel de controle das consultas.
+     Cliente compra no site (/consultas), paga por PIX; a equipe
+     confirma o pagamento com 1 clique e registra o resultado.
+     Com gateway e API do fornecedor, esses passos ficam automáticos.
      ========================================================= */
   CARREGAR.consultas = async function () {
     const p = painel("consultas");
     const TIPOS = D.TIPOS_CONSULTA, ST = D.STATUS_CONSULTA;
-    let lista = [], filtro = "abertas";
-    const abertas = ["aguardando_autorizacao", "autorizada", "em_andamento", "falhou"];
-    const nomeCli = (c) => { const k = c.cliente || {}; return (k.tipo === "pj" ? k.razao_social : k.nome) || "Cliente"; };
+    let lista = [], produtos = [], clientes = {}, vista = "fila";
+    const fila = ["aguardando_pagamento", "aguardando_autorizacao", "autorizada", "em_andamento", "falhou"];
+    const nomeCli = (c) => { const k = c.cliente || clientes[c.cliente_id] || {}; return (k.tipo === "pj" ? k.razao_social : k.nome) || k.email || "Cliente"; };
     const dt = (d) => (d ? new Date(d.length === 10 ? d + "T12:00:00" : d).toLocaleDateString("pt-BR") : "—");
-    async function desenhar(recarregar) {
-      if (recarregar) { try { lista = await A.consultas(); } catch (e) { avisar(e.message); } }
+    const haQuanto = (d) => { const m = Math.round((Date.now() - new Date(d)) / 60000); return m < 60 ? `há ${Math.max(m, 1)} min` : m < 1440 ? `há ${Math.round(m / 60)} h` : `há ${Math.round(m / 1440)} d`; };
+    const nomeProd = (c) => ((produtos.find((x) => x.id === c.produto_id) || {}).nome) || (TIPOS[c.tipo] || c.tipo).replace(/^./, (l) => l.toUpperCase());
+    async function carregar() {
+      try { [lista, produtos] = await Promise.all([A.consultas(), A.consultaProdutos()]); } catch (e) { avisar(e.message); }
+      try { (await A.clientes()).forEach((c) => { clientes[c.id] = c; if (c.email) clientes[c.email] = c; }); } catch (e) { /* ok */ }
       try { await D.modulos(); } catch (e) { /* ok */ }
+    }
+    function cartao(c) {
+      const st = ST[c.status] || { nome: c.status, cor: "cinza" };
+      const avisou = c.status === "aguardando_pagamento" && c.informou_pago_em;
+      let acao = "";
+      if (c.status === "aguardando_pagamento") acao = `<button type="button" class="btn ${avisou ? "btn-primario" : "btn-contorno-rosa"}" data-confirmar-pag="${esc(c.id)}">${icone("check")}Confirmar pagamento</button>`;
+      else if (["autorizada", "em_andamento", "falhou"].includes(c.status)) acao = `<button type="button" class="btn btn-primario" data-registrar-consulta="${esc(c.id)}">${icone("check")}Registrar resultado</button>`;
+      return `<article class="cons-card${avisou ? " cons-alerta" : ""}">
+        <div class="cons-info">
+          <div class="cons-topo"><strong>${esc(nomeProd(c))}</strong><span class="selo-status st-${st.cor}">${esc(avisou ? "Cliente avisou que pagou" : st.nome)}</span></div>
+          <div class="cons-meta"><span>${esc(nomeCli(c))}</span><span>${esc(c.numero || "")}</span>${c.valor ? `<span>${esc(brl(c.valor))}</span>` : `<span>pedido da equipe</span>`}<span>${esc(haQuanto(c.criado_em))}</span></div>
+        </div>
+        <div class="cons-acoes">${acao}<button type="button" class="btn-texto" data-ver-consulta="${esc(c.id)}">Ver</button>${fila.includes(c.status) ? `<button type="button" class="btn-texto perigo" data-cancelar-consulta="${esc(c.id)}">Cancelar</button>` : ""}</div>
+      </article>`;
+    }
+    function desenhar() {
       const ligado = D.moduloLigado("consultas");
-      const vis = lista.filter((c) => filtro === "todas" || (filtro === "abertas" ? abertas.includes(c.status) : c.status === filtro));
-      p.innerHTML = `<p class="adm-dica">Peça a consulta dentro do pedido; o cliente <strong>autoriza na área dele</strong> (a autorização fica registrada com data e hora). Depois, faça a consulta no <strong>portal do revendedor</strong> e registre aqui o resultado. Quando a chave da API do fornecedor for configurada, a consulta passa a rodar sozinha.</p>
-        ${ligado ? "" : `<p class="adm-dica">⚠️ O módulo <strong>Central de consultas</strong> está desligado (aba Módulos): não dá para pedir consultas novas.</p>`}
-        <div class="botoes-form"><button type="button" class="btn btn-primario" data-nova-consulta${ligado ? "" : " disabled"}>${icone("mais")}Nova consulta</button></div>
-        <div class="filtro-catalogo">${[["abertas", "Em aberto"], ["concluida", "Concluídas"], ["recusada", "Recusadas"], ["todas", "Todas"]].map(([k, t]) => `<button type="button" class="chip-filtro${filtro === k ? " ativo" : ""}" data-fconsulta="${k}">${t}</button>`).join("")}</div>
-        ${vis.length ? `<div class="tabela-rolagem"><table class="tabela"><thead><tr><th>Pedido</th><th>Cliente</th><th>Consulta</th><th>Situação</th><th>Pedida em</th><th></th></tr></thead><tbody>
-          ${vis.map((c) => { const st = ST[c.status] || { nome: c.status, cor: "cinza" }; return `<tr><td><strong>${esc(c.numero || "")}</strong></td><td>${esc(nomeCli(c))}</td><td>${esc(TIPOS[c.tipo] || c.tipo)}</td><td><span class="selo-status st-${st.cor}">${esc(st.nome)}</span></td><td>${esc(dt(c.criado_em))}</td>
-            <td class="acoes">${["autorizada", "em_andamento", "falhou"].includes(c.status) ? `<button type="button" class="btn-texto" data-registrar-consulta="${esc(c.id)}">Registrar resultado</button>` : ""}<button type="button" class="btn-texto" data-ver-consulta="${esc(c.id)}">Ver</button>${abertas.includes(c.status) ? `<button type="button" class="btn-texto perigo" data-cancelar-consulta="${esc(c.id)}">Cancelar</button>` : ""}</td></tr>`; }).join("")}
-        </tbody></table></div>` : `<p class="vazio">Nenhuma consulta ${filtro === "abertas" ? "em aberto" : "neste filtro"}.</p>`}`;
+      const mes = new Date().toISOString().slice(0, 7);
+      const aguardando = lista.filter((c) => c.status === "aguardando_pagamento");
+      const fazer = lista.filter((c) => ["autorizada", "em_andamento", "falhou"].includes(c.status));
+      const doMes = lista.filter((c) => c.pago_em && c.pago_em.slice(0, 7) === mes);
+      const concluidasMes = lista.filter((c) => c.status === "concluida" && (c.atualizado_em || c.criado_em || "").slice(0, 7) === mes).length;
+      const vendidos = produtos.filter((x) => x.ativo && x.preco).length;
+      const kpi = (n, t, d, destaque) => `<div class="cons-kpi${destaque ? " destaque" : ""}"><strong>${n}</strong><span>${t}</span>${d ? `<small>${d}</small>` : ""}</div>`;
+      const conteudo = vista === "precos" ? precosHtml() : (() => {
+        const v = vista === "fila" ? lista.filter((c) => fila.includes(c.status)).sort((a, b) => (b.informou_pago_em ? 1 : 0) - (a.informou_pago_em ? 1 : 0)) : lista.filter((c) => !fila.includes(c.status));
+        return v.length ? `<div class="cons-lista">${v.map(cartao).join("")}</div>` : `<div class="cons-vazio">${vista === "fila" ? "🎉 Nada pendente agora. Novas consultas aparecem aqui e chegam como notificação." : "Nenhuma consulta finalizada ainda."}</div>`;
+      })();
+      p.innerHTML = `<div class="cons-kpis">
+          ${kpi(aguardando.length, "Aguardando PIX", aguardando.filter((c) => c.informou_pago_em).length ? `${aguardando.filter((c) => c.informou_pago_em).length} avisaram que pagaram` : "", aguardando.some((c) => c.informou_pago_em))}
+          ${kpi(fazer.length, "Para consultar agora", fazer.length ? "registre o resultado" : "", fazer.length > 0)}
+          ${kpi(concluidasMes, "Concluídas no mês", "")}
+          ${kpi(esc(brl(doMes.reduce((t, c) => t + Number(c.valor || 0), 0))), "Recebido no mês", "pagamentos confirmados")}
+        </div>
+        <div class="cons-status">
+          <div><span class="cons-ponto ${ligado ? "ok" : "off"}"></span><strong>Venda no site</strong> ${ligado ? `ligada · ${vendidos} consulta${vendidos === 1 ? "" : "s"} à venda em <a href="/consultas" target="_blank">/consultas</a>` : "desligada (aba Módulos)"}</div>
+          <div><span class="cons-ponto espera"></span><strong>Pagamento</strong> PIX · você confirma com 1 clique <small>(automático quando houver gateway)</small></div>
+          <div><span class="cons-ponto espera"></span><strong>Consulta</strong> manual no portal do revendedor <small>(automática quando a Relinq liberar a API)</small></div>
+        </div>
+        <div class="seg cons-abas" role="group">
+          <button type="button" class="${vista === "fila" ? "ativo" : ""}" data-vista="fila">Fila de trabalho${aguardando.length + fazer.length ? ` (${aguardando.length + fazer.length})` : ""}</button>
+          <button type="button" class="${vista === "feitas" ? "ativo" : ""}" data-vista="feitas">Finalizadas</button>
+          <button type="button" class="${vista === "precos" ? "ativo" : ""}" data-vista="precos">Preços e produtos</button>
+        </div>
+        ${conteudo}
+        <p class="cons-avancado"><button type="button" class="btn-texto" data-nova-consulta${ligado ? "" : " disabled"}>+ Pedir autorização de consulta para um pedido (avançado)</button></p>`;
+    }
+    function precosHtml() {
+      return `<p class="adm-dica">Defina o preço e coloque à venda. Só aparece em /consultas o que estiver <strong>à venda</strong> e com preço — e com a venda ligada na aba Módulos.</p>
+        <div class="cons-lista">${produtos.map((x) => `<form class="cons-produto" data-produto="${esc(x.id)}" novalidate>
+          <div class="cons-produto-cab"><strong>${esc(x.nome)}</strong><label class="cons-switch"><input type="checkbox" name="ativo"${x.ativo ? " checked" : ""}><span>À venda</span></label></div>
+          <div class="cons-produto-campos">
+            <label class="campo"><span>Preço (R$)</span><input name="preco" inputmode="decimal" value="${x.preco ? String(x.preco).replace(".", ",") : ""}" placeholder="0,00"></label>
+            <label class="campo"><span>Prazo mostrado</span><input name="prazo" maxlength="80" value="${esc(x.prazo || "")}"></label>
+          </div>
+          <details><summary>Editar nome, descrição e itens</summary>
+            <label class="campo"><span>Nome</span><input name="nome" maxlength="80" value="${esc(x.nome)}"></label>
+            <label class="campo"><span>Descrição</span><textarea name="descricao" rows="2" maxlength="600">${esc(x.descricao || "")}</textarea></label>
+            <label class="campo"><span>Itens (um por linha)</span><textarea name="itens" rows="3">${esc((x.itens || []).join("\n"))}</textarea></label>
+            <label class="aceite"><input type="checkbox" name="destaque"${x.destaque ? " checked" : ""}><span>Destacar como “mais completa”</span></label>
+          </details>
+          <div class="botoes-form"><button type="submit" class="btn btn-contorno-rosa">Salvar</button></div>
+        </form>`).join("")}</div>`;
     }
     async function nova() {
       let peds = [];
@@ -886,7 +943,7 @@
           <div class="botoes-form"><button type="submit" class="btn btn-primario">Pedir autorização</button><button type="button" class="btn-texto" data-fechar>Cancelar</button></div>
         </form>`);
       const f = m.querySelector("form");
-      f.addEventListener("submit", (e) => { e.preventDefault(); comBotao($("button[type=submit]", f), async () => { await A.solicitarConsulta(f.pedido.value, f.tipo.value, f.finalidade.value); m.closest(".modal-fundo").remove(); avisar("Pedido de autorização enviado ao cliente."); await desenhar(true); }); });
+      f.addEventListener("submit", (e) => { e.preventDefault(); comBotao($("button[type=submit]", f), async () => { await A.solicitarConsulta(f.pedido.value, f.tipo.value, f.finalidade.value); m.closest(".modal-fundo").remove(); avisar("Pedido de autorização enviado ao cliente."); await atualizar(); }); });
     }
     function registrar(c) {
       const hoje = new Date().toISOString().slice(0, 10);
@@ -903,7 +960,7 @@
       f.addEventListener("submit", (e) => {
         e.preventDefault();
         const pendencias = f.pend.value.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => { const [orgao, credor, valor, data] = l.split("|").map((x) => (x || "").trim()); return { orgao, credor, valor, data }; });
-        comBotao($("button[type=submit]", f), async () => { await A.registrarConsulta(c.id, { fonte: f.fonte.value, data: f.data.value, resumo: f.resumo.value, pendencias }); m.closest(".modal-fundo").remove(); avisar("Resultado salvo. O cliente já pode ver em “Meus pedidos”."); await desenhar(true); });
+        comBotao($("button[type=submit]", f), async () => { await A.registrarConsulta(c.id, { fonte: f.fonte.value, data: f.data.value, resumo: f.resumo.value, pendencias }); m.closest(".modal-fundo").remove(); avisar("Resultado salvo. O cliente já pode ver em “Meus pedidos”."); await atualizar(); });
       });
     }
     function ver(c) {
@@ -914,18 +971,33 @@
         ${c.status === "concluida" ? `<h4>Resultado</h4><p>${esc(c.resultado_resumo || "")}</p>${pend.length ? `<ul>${pend.map((x) => `<li>${esc([x.orgao, x.credor, x.valor, x.data].filter(Boolean).join(" · "))}</li>`).join("")}</ul>` : "<p>Nenhuma pendência registrada.</p>"}<small>Fonte: ${esc(c.fonte || "")} · ${esc(dt(c.data_consulta))}</small>` : ""}
         ${c.erro ? `<p><strong>Observação:</strong> ${esc(c.erro)}</p>` : ""}`);
     }
+    async function atualizar() { await carregar(); desenhar(); }
+    p.addEventListener("submit", (e) => {
+      const f = e.target.closest("[data-produto]"); if (!f) return;
+      e.preventDefault();
+      comBotao($("button[type=submit]", f), async () => {
+        await A.salvarConsultaProduto({ id: f.dataset.produto, preco: f.preco.value.trim(), prazo: f.prazo.value, ativo: f.ativo.checked, nome: f.nome.value, descricao: f.descricao.value, itens: f.itens.value.split("\n"), destaque: f.destaque.checked });
+        avisar("Consulta salva."); await atualizar();
+      });
+    });
     p.addEventListener("click", async (e) => {
-      const fc = e.target.closest("[data-fconsulta]"); if (fc) { filtro = fc.dataset.fconsulta; return desenhar(); }
+      const vb = e.target.closest("[data-vista]"); if (vb) { vista = vb.dataset.vista; return desenhar(); }
       if (e.target.closest("[data-nova-consulta]")) return nova();
+      const cp = e.target.closest("[data-confirmar-pag]");
+      if (cp) {
+        const c = lista.find((x) => x.id === cp.dataset.confirmarPag);
+        if (!(await MG.confirmar(`Confirma que o PIX de ${brl(c.valor)} da consulta ${c.numero} caiu na conta?`, { titulo: "Confirmar pagamento?", botao: "Confirmar" }))) return;
+        return comBotao(cp, async () => { await A.confirmarPagamentoConsulta(c.id); avisar("Pagamento confirmado. O cliente foi avisado."); await atualizar(); });
+      }
       const rg = e.target.closest("[data-registrar-consulta]"); if (rg) return registrar(lista.find((c) => c.id === rg.dataset.registrarConsulta));
       const vr = e.target.closest("[data-ver-consulta]"); if (vr) return ver(lista.find((c) => c.id === vr.dataset.verConsulta));
       const cc = e.target.closest("[data-cancelar-consulta]");
       if (cc) {
         if (!(await MG.confirmar("Cancelar esta consulta? O cliente verá como cancelada.", { titulo: "Cancelar consulta?", botao: "Cancelar consulta" }))) return;
-        try { await A.cancelarConsulta(cc.dataset.cancelarConsulta, "Cancelada pela equipe"); avisar("Consulta cancelada."); await desenhar(true); } catch (err) { avisar(err.message); }
+        try { await A.cancelarConsulta(cc.dataset.cancelarConsulta, "Cancelada pela equipe"); avisar("Consulta cancelada."); await atualizar(); } catch (err) { avisar(err.message); }
       }
     });
-    await desenhar(true);
+    await atualizar();
   };
 
   /* =========================================================
@@ -1136,6 +1208,8 @@
     mostrar("adm-painel");
     let aba = "pedidos";
     try { const s = sessionStorage.getItem("mg_aba"); if (s && $(`.abas-painel [data-aba="${s}"]`)) aba = s; } catch (e) { /* ok */ }
+    const abaUrl = new URLSearchParams(location.search).get("aba");   // link das notificações (ex.: ?aba=consultas)
+    if (abaUrl && $(`.abas-painel [data-aba="${abaUrl}"]`)) aba = abaUrl;
     abrirAba(aba);
     atualizarChatNaoLidas();
     D.Chat.ouvir(null, atualizarChatNaoLidas);

@@ -1745,3 +1745,56 @@ body.mod-off-chat:not(.pagina-painel) .chat-mensagens::after { content: "O chat 
 .consulta-aceite p { color: var(--texto-suave, #6b5b60); }
 .tabela-pend { font-size: .88rem; }
 .aviso-consulta { margin-bottom: 14px; }
+
+/* Consultas em autoatendimento (E06b) */
+.consulta-passos { list-style: none; padding: 0; margin: 0 0 28px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+.consulta-passos li { background: var(--fundo-cartao, #fff); border: 1px solid var(--borda, #eadde1); border-radius: 16px; padding: 16px 18px; display: grid; gap: 4px; }
+.consulta-passos span { width: 30px; height: 30px; border-radius: 50%; background: var(--rosa, #a5536b); color: #fff; display: grid; place-items: center; font-weight: 700; }
+.consulta-passos small { color: var(--texto-suave, #6b5b60); }
+.consulta-grade { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); }
+.consulta-card { position: relative; background: var(--fundo-cartao, #fff); border: 1px solid var(--borda, #eadde1); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 10px; }
+.consulta-card.destaque { border: 2px solid var(--rosa, #a5536b); box-shadow: 0 12px 30px rgba(165, 83, 107, .12); }
+.consulta-card .etiqueta { position: absolute; top: -12px; left: 20px; }
+.consulta-card h2 { font-size: 1.3rem; margin: 0; }
+.consulta-card ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; font-size: .92rem; }
+.consulta-card li { display: flex; gap: 8px; }
+.consulta-card li .icone-svg { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 3px; color: var(--rosa, #a5536b); }
+.consulta-preco { margin-top: auto; display: grid; }
+.consulta-preco strong { font-size: 1.7rem; color: var(--ameixa, #4a2a35); }
+.consulta-preco small { color: var(--texto-suave, #6b5b60); }
+.consulta-confianca { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); }
+.consulta-confianca p { margin: 4px 0 0; color: var(--texto-suave, #6b5b60); }
+.consulta-aviso { font-size: .82rem; color: var(--texto-suave, #6b5b60); margin-top: 18px; text-align: center; }
+.consulta-valor { font-size: 1.5rem; font-weight: 700; margin: 4px 0 10px; }
+.consulta-valor small { font-size: .85rem; font-weight: 400; color: var(--texto-suave, #6b5b60); margin-left: 6px; }
+.consulta-qr { width: 210px; max-width: 100%; margin: 6px auto 12px; }
+.consulta-qr svg { width: 100%; height: auto; }
+.consulta-progresso { margin: 12px 0; }
+.consulta-resultado { border-top: 1px solid var(--borda, #eadde1); margin-top: 10px; padding-top: 10px; }
+
+/* Painel → Consultas */
+.cons-kpis { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); margin-bottom: 14px; }
+.cons-kpi { background: var(--fundo-cartao, #fff); border: 1px solid var(--borda, #eadde1); border-radius: 16px; padding: 14px 16px; display: grid; gap: 2px; }
+.cons-kpi strong { font-size: 1.6rem; color: var(--ameixa, #4a2a35); line-height: 1.1; }
+.cons-kpi span { font-weight: 600; font-size: .9rem; }
+.cons-kpi small { color: var(--texto-suave, #6b5b60); font-size: .78rem; }
+.cons-kpi.destaque { border-color: var(--rosa, #a5536b); background: var(--rosa-claro, #f6e2e7); }
+.cons-status { display: grid; gap: 6px; background: var(--fundo-alt, #faf5f6); border-radius: 14px; padding: 12px 16px; margin-bottom: 16px; font-size: .9rem; }
+.cons-status small { color: var(--texto-suave, #6b5b60); }
+.cons-ponto { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle; background: #c9b6bc; }
+.cons-ponto.ok { background: #2f9e6e; } .cons-ponto.off { background: #c0392b; } .cons-ponto.espera { background: #e0a030; }
+.cons-abas { margin-bottom: 14px; }
+.cons-lista { display: grid; gap: 10px; }
+.cons-card { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; background: var(--fundo-cartao, #fff); border: 1px solid var(--borda, #eadde1); border-radius: 16px; padding: 14px 16px; }
+.cons-card.cons-alerta { border-color: #e0a030; box-shadow: 0 0 0 3px rgba(224, 160, 48, .15); }
+.cons-topo { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.cons-meta { display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: .85rem; color: var(--texto-suave, #6b5b60); margin-top: 4px; }
+.cons-acoes { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cons-acoes .btn .icone-svg { width: 16px; height: 16px; }
+.cons-vazio { text-align: center; padding: 28px 16px; color: var(--texto-suave, #6b5b60); background: var(--fundo-alt, #faf5f6); border-radius: 16px; }
+.cons-avancado { margin-top: 18px; font-size: .88rem; }
+.cons-produto { background: var(--fundo-cartao, #fff); border: 1px solid var(--borda, #eadde1); border-radius: 16px; padding: 14px 16px; }
+.cons-produto-cab { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+.cons-produto-campos { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); }
+.cons-switch { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; }
+.cons-produto details { margin: 8px 0; }

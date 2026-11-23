@@ -365,5 +365,5 @@
     return { abrirConversa: async (id) => { await pronto; return abrirConversa(id); }, atualizar };
   }
 
-  window.ChatUI = { abrir, montar, caixaEntrada, pixCodigo };
+  window.ChatUI = { abrir, montar, caixaEntrada, pixCodigo, qrSvg };
 })();

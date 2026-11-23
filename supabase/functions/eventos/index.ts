@@ -243,6 +243,28 @@ async function situacaoMudou(p: any, anterior: string) {
   await notificarCliente(p.cliente_id, `Pedido ${p.numero}: ${SITUACOES_TXT[p.status] ?? p.status}`, ultimo.texto ? String(ultimo.texto).slice(0, 140) : "Toque para ver os detalhes do seu pedido.", `${SITE}/conta`, `situacao-${p.id}`);
 }
 
+// Consultas (E06b): avisa equipe e cliente a cada passo
+const brl = (v: any) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+async function consultaMudou(evento: string, c: any) {
+  const nome = c.produto || "consulta";
+  const num = c.numero ? ` ${c.numero}` : "";
+  if (evento === "nova") {
+    await notificarEquipe(`Nova consulta${num}`, `${nome} — ${brl(c.valor)} · aguardando PIX`, `${SITE}/admin?aba=consultas`, `consulta-${c.id}`);
+  } else if (evento === "informou_pagamento") {
+    await Promise.all([
+      notificarEquipe(`PIX informado${num}`, `O cliente diz que pagou ${brl(c.valor)} (${nome}). Confira e confirme no painel.`, `${SITE}/admin?aba=consultas`, `consulta-${c.id}`),
+      avisarWhatsApp(`💰 Cliente informou o PIX da consulta${num} (${nome}, ${brl(c.valor)}). Confira e confirme no painel: ${SITE}/admin`),
+    ]);
+  } else if (evento === "autorizada" && c.origem === "cliente") {
+    await notificarCliente(c.cliente_id, "Pagamento confirmado ✅", `Sua ${nome.toLowerCase()} está sendo feita. Avisaremos quando o resultado sair.`, `${SITE}/conta?aba=consultas`, `consulta-${c.id}`);
+    await notificarEquipe(`Fazer consulta${num}`, `${nome} paga. Faça a consulta e registre o resultado.`, `${SITE}/admin?aba=consultas`, `consulta-${c.id}`);
+  } else if (evento === "concluida") {
+    await notificarCliente(c.cliente_id, "Resultado pronto 📄", `O resultado da sua ${nome.toLowerCase()} já está na sua conta.`, `${SITE}/conta?aba=consultas`, `consulta-${c.id}`);
+  } else if (evento === "pedido_autorizacao") {
+    await notificarCliente(c.cliente_id, "Autorização de consulta", "A Milena pediu sua autorização para uma consulta. Toque para ver.", `${SITE}/conta`, `consulta-${c.id}`);
+  }
+}
+
 async function mensagemDoCliente(m: any) {
   const p = await umPedido(m.pedido_id);
   if (!p) return;
@@ -282,6 +304,7 @@ Deno.serve(async (req) => {
       else if (ev.tabela === "mensagens" && ev.registro?.autor === "cliente") await mensagemDoCliente(ev.registro);
       else if (ev.tabela === "mensagens" && ev.registro?.autor === "equipe") await mensagemDaEquipe(ev.registro);
       else if (ev.tabela === "pedidos_situacao") await situacaoMudou(ev.registro, (ev as any).anterior);
+      else if (ev.tabela === "consultas") await consultaMudou((ev as any).evento, ev.registro);
     } catch (e) { console.error("eventos:", e); }
   })();
   // responde logo para o banco e continua o trabalho em segundo plano
