@@ -610,3 +610,4 @@ on conflict (email) do update set papel = 'admin', nome = coalesce(public.equipe
 -- (desfazer: supabase/desfazer/e03.sql)
 -- =========================================================
 -- E04: produtos de crédito (Portfólio Ditto, rascunhos) -> rode também supabase/e04_produtos_credito.sql (desfazer: supabase/desfazer/e04.sql)
+-- E04b: sugestões de texto dos produtos Ditto -> supabase/e04b_sugestoes_ditto.sql

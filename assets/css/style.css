@@ -1714,3 +1714,8 @@ body.mod-off-chat:not(.pagina-painel) .chat-mensagens::after { content: "O chat 
 .prod-check { color: var(--texto-suave, #6b5b60); display: inline-flex; align-items: center; gap: 4px; }
 .prod-check.sim { color: #2f6f55; font-weight: 600; }
 .prod-check .icone-svg { width: 14px; height: 14px; }
+
+.credito-previa { background: #fdebd8; color: #7a4510; border-radius: 12px; padding: 12px 16px; margin: 0 0 16px; font-size: .92rem; }
+.credito-previa a { color: inherit; font-weight: 700; }
+.credito-rascunho { border-style: dashed; opacity: .92; }
+.credito-st { color: #9a5412; }

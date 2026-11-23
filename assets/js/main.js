@@ -271,9 +271,18 @@
   async function desenharCredito() {
     const sec = $("[data-produtos-credito]");
     if (!sec || !D.produtosCredito) return;
-    let lista = [];
+    let lista = [], previa = false;
     try { lista = await D.produtosCredito(); } catch (e) { lista = []; }
+    // Prévia: quem é da equipe (logado no painel) vê também os rascunhos, para revisar como vão ficar
+    try {
+      await window.ContaPronta;
+      if (D.Conta.usuario && (await D.Painel.meuPapel())) {
+        const todos = (await D.Painel.produtosCredito()).filter((x) => x.status !== "arquivado");
+        if (todos.length > lista.length) { lista = todos; previa = true; }
+      }
+    } catch (e) { /* visitante comum */ }
     if (!lista.length) { sec.hidden = true; return; }
+    const ST = { rascunho: "Rascunho", revisao: "Em revisão", publicado: "Publicado" };
     const PERF = D.PERFIS_CREDITO || {};
     const perfis = Object.keys(PERF).filter((k) => lista.some((x) => x.perfil === k));
     let filtro = "";
@@ -282,8 +291,8 @@
       filtroEl.innerHTML = perfis.length > 1 ? `<button type="button" class="chip-filtro${filtro ? "" : " ativo"}" data-cperfil="">Todos</button>` + perfis.map((k) => `<button type="button" class="chip-filtro${filtro === k ? " ativo" : ""}" data-cperfil="${k}">${esc(PERF[k])}</button>`).join("") : "";
       listaEl.innerHTML = lista.filter((x) => !filtro || x.perfil === filtro).map((x) => {
         const link = linkWhats(`Olá, Milena! Vim pelo site e tenho interesse em: *${x.nome}*.`);
-        return `<article class="credito-card">
-          <span class="credito-perfil">${esc(PERF[x.perfil] || "")}</span>
+        return `<article class="credito-card${previa && x.status !== "publicado" ? " credito-rascunho" : ""}">
+          <span class="credito-perfil">${esc(PERF[x.perfil] || "")}${previa ? ` · <span class="credito-st">${esc(ST[x.status] || x.status)}</span>` : ""}</span>
           <h3>${esc(x.nome)}</h3>
           ${x.descricao_comercial ? `<p>${fmt(x.descricao_comercial)}</p>` : ""}
           ${(x.requisitos || []).length ? `<h4>Requisitos</h4><ul>${x.requisitos.map((t) => `<li>${icone("check")}<span>${esc(t)}</span></li>`).join("")}</ul>` : ""}
@@ -293,6 +302,10 @@
           ${link ? `<a class="btn btn-whats" href="${esc(link)}" target="_blank" rel="noopener">${icone("chat")}Tenho interesse</a>` : ""}
         </article>`;
       }).join("");
+    }
+    if (previa && !$(".credito-previa", sec)) {
+      const pub = lista.filter((x) => x.status === "publicado").length;
+      filtroEl.insertAdjacentHTML("beforebegin", `<p class="credito-previa">👁️ <strong>Prévia da equipe:</strong> você está vendo ${lista.length} produtos porque entrou no painel. Os clientes veem só os publicados (${pub}) e só com o módulo “Produtos de crédito” ligado. <a href="/admin">Revisar no painel</a></p>`);
     }
     filtroEl.addEventListener("click", (e) => { const b = e.target.closest("[data-cperfil]"); if (b) { filtro = b.dataset.cperfil; desenhar(); } });
     desenhar();
