@@ -41,6 +41,19 @@
     return calc(12) === +c[12] && calc(13) === +c[13];
   }
 
+  const UF_NOMES = {"AC": "Acre", "AL": "Alagoas", "AP": "Amapá", "AM": "Amazonas", "BA": "Bahia", "CE": "Ceará", "DF": "Distrito Federal", "ES": "Espírito Santo", "GO": "Goiás", "MA": "Maranhão", "MT": "Mato Grosso", "MS": "Mato Grosso do Sul", "MG": "Minas Gerais", "PA": "Pará", "PB": "Paraíba", "PR": "Paraná", "PE": "Pernambuco", "PI": "Piauí", "RJ": "Rio de Janeiro", "RN": "Rio Grande do Norte", "RS": "Rio Grande do Sul", "RO": "Rondônia", "RR": "Roraima", "SC": "Santa Catarina", "SP": "São Paulo", "SE": "Sergipe", "TO": "Tocantins"};
+  /** Aceita sigla ou nome por extenso (com ou sem acento) e devolve a sigla, ou "" */
+  function ufSigla(v) {
+    const t = String(v || "").trim();
+    if (!t) return "";
+    const base = (x) => x.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+    const sig = t.toUpperCase();
+    if (UF_NOMES[sig]) return sig;
+    const nome = base(t.replace(/^[A-Za-z]{2}\s*[—-]\s*/, ""));
+    const achou = Object.keys(UF_NOMES).find((k) => base(UF_NOMES[k]) === nome);
+    return achou || "";
+  }
+
   async function buscarCep(cep) {
     const c = so(cep);
     if (c.length !== 8) throw new Error("CEP deve ter 8 dígitos.");
@@ -117,5 +130,5 @@ mascaras.documento = function(valor) {
 };
 
    
-window.BR = { so, mascaras, cpfValido, cnpjValido, documentoValido, telefoneValido, cepValido, nomeValido, ieValida, limpar, sugerirEmail, UFS: "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" "), buscarCep, buscarCnpj };
+window.BR = { so, mascaras, cpfValido, cnpjValido, documentoValido, telefoneValido, cepValido, nomeValido, ieValida, limpar, sugerirEmail, UFS: "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE PI RJ RN RS RO RR SC SP SE TO".split(" "), buscarCep, buscarCnpj, ufSigla, UF_NOMES };
 })();

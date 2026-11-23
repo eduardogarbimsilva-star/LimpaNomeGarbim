@@ -85,15 +85,32 @@
   }
   $$("input[name=tipo]", form).forEach((r) => r.addEventListener("change", alternarTipo));
 
-  form.cep.addEventListener("blur", async () => {
-    if (BR.so(form.cep.value).length !== 8) return;
-    try {
-      const d = await BR.buscarCep(form.cep.value);
-      ["logradouro", "bairro", "cidade"].forEach((k) => { if (d[k]) form[k].value = d[k]; });
-      if (d.uf) form.uf.value = d.uf;
-      form.numero.focus();
-    } catch (e) { avisar(e.message); }
-  });
+  // CEP: busca o endereço assim que tiver 8 dígitos (digitado, colado ou preenchido pelo celular)
+  let cepBuscado = "", cepBusca = null;
+  async function buscarEndereco(focar) {
+    const cep = BR.so(form.cep.value);
+    if (cep.length !== 8 || cep === cepBuscado) return cepBusca;
+    cepBuscado = cep;
+    cepBusca = (async () => {
+      try {
+        const d = await BR.buscarCep(cep);
+        if (BR.so(form.cep.value) !== cep) return;
+        ["logradouro", "bairro", "cidade"].forEach((k) => { if (d[k]) form[k].value = d[k]; });
+        const uf = BR.ufSigla(d.uf);
+        if (uf) form.uf.value = uf;
+        if (focar && document.activeElement === form.cep) form.numero.focus();
+      } catch (e) {
+        cepBuscado = "";
+        avisar(e.message === "CEP não encontrado." ? "CEP não encontrado. Confira os números ou preencha cidade e estado manualmente." : e.message);
+      }
+    })();
+    return cepBusca;
+  }
+  form.cep.addEventListener("input", () => { if (BR.so(form.cep.value).length === 8) buscarEndereco(true); });
+  form.cep.addEventListener("blur", () => buscarEndereco(false));
+  form.cep.addEventListener("change", () => buscarEndereco(false));
+  // Estado: o preenchimento automático do celular pode mandar o nome por extenso
+  form.uf.addEventListener("change", () => { const s = BR.ufSigla(form.uf.value); if (s && s !== form.uf.value) form.uf.value = s; });
   $("#k-buscar-cnpj").addEventListener("click", async (e) => {
     e.target.disabled = true;
     try {
@@ -102,7 +119,7 @@
       form.nome_fantasia.value = d.nome_fantasia || "";
       if (d.cep) form.cep.value = BR.mascaras.cep(d.cep);
       ["logradouro", "numero", "complemento", "bairro", "cidade"].forEach((k) => { if (d[k]) form[k].value = d[k]; });
-      if (d.uf) form.uf.value = d.uf;
+      if (BR.ufSigla(d.uf)) form.uf.value = BR.ufSigla(d.uf);
       if (d.telefone && !form.telefone.value) form.telefone.value = BR.mascaras.telefone(d.telefone);
       if (d.situacao && d.situacao !== "ATIVA") avisar("Atenção: situação do CNPJ na Receita: " + d.situacao);
     } catch (err) { avisar(err.message); }
@@ -114,7 +131,7 @@
     const tipo = p.tipo || "pf";
     $$("input[name=tipo]", form).forEach((r) => { r.checked = r.value === tipo; });
     ["nome", "cpf", "cnpj", "razao_social", "nome_fantasia", "responsavel", "telefone", "cep", "logradouro", "numero", "complemento", "bairro", "cidade", "uf"]
-      .forEach((k) => { if (form[k]) form[k].value = p[k] || ""; });
+      .forEach((k) => { if (form[k]) form[k].value = k === "uf" ? BR.ufSigla(p[k]) : p[k] || ""; });
     alternarTipo();
   }
 
@@ -128,7 +145,7 @@
       nome_fantasia: pj ? L("nome_fantasia", 150) || null : null, responsavel: pj ? L("responsavel", 100) : null,
       telefone: BR.mascaras.telefone(form.telefone.value), cep: BR.so(form.cep.value) ? BR.mascaras.cep(form.cep.value) : null,
       logradouro: L("logradouro", 150) || null, numero: L("numero", 20) || null, complemento: L("complemento", 80) || null,
-      bairro: L("bairro", 80) || null, cidade: L("cidade", 80), uf: form.uf.value
+      bairro: L("bairro", 80) || null, cidade: L("cidade", 80), uf: BR.ufSigla(form.uf.value)
     };
     if (!pj && !BR.nomeValido(d.nome)) throw new Error("Informe seu nome completo (nome e sobrenome).");
     if (!pj && !BR.cpfValido(d.cpf)) throw new Error("CPF inválido. Confira os números.");
@@ -147,6 +164,9 @@
     e.preventDefault();
     const b = $("button[type=submit]", form);
     try {
+      b.disabled = true;
+      await buscarEndereco(false); // espera a busca do CEP terminar antes de validar
+      b.disabled = false;
       const d = lerCadastro();
       b.disabled = true;
       await C.salvarPerfil(d);
