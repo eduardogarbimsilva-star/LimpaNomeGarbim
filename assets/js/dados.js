@@ -22,7 +22,7 @@
   const K = {
     sessao: "mg_demo_sessao", perfis: "mg_demo_perfis", pedidos: "mg_demo_pedidos", codigo: "mg_demo_codigo",
     categorias: "mg_demo_categorias", servicos: "mg_demo_servicos", site: "mg_demo_site", equipe: "mg_demo_equipe",
-    mensagens: "mg_demo_mensagens", modulos: "mg_demo_modulos", auditoria: "mg_demo_auditoria", produtos: "mg_demo_produtos", diagnostico: "mg_demo_diagnostico"
+    mensagens: "mg_demo_mensagens", modulos: "mg_demo_modulos", auditoria: "mg_demo_auditoria", produtos: "mg_demo_produtos", diagnostico: "mg_demo_diagnostico", consultas: "mg_demo_consultas"
   };
 
   const ler = (k, p) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? p; } catch (e) { return p; } };
@@ -149,7 +149,7 @@
     ["triagem", "site", "Pergunta inicial \"Como está o seu nome?\"", "Janela que ajuda o visitante a filtrar os serviços.", true],
     ["catalogo_ditto", "novos", "Produtos de crédito (Ditto)", "20 produtos do portfólio Ditto, todos como rascunho até você confirmar parceria e regras.", false],
     ["diagnostico", "novos", "Diagnóstico inteligente", "Perguntas condicionais que indicam o caminho, com explicação de cada resultado.", false],
-    ["consultas", "novos", "Central de consultas", "Consultas a birôs só por fornecedor contratado e com autorização do cliente.", false, "E06"],
+    ["consultas", "novos", "Central de consultas", "Consultas de CPF/CNPJ com autorização do cliente. Manual (portal do revendedor) até a chave da API do fornecedor ser configurada.", false],
     ["relatorios", "novos", "Relatórios em PDF", "Relatórios protegidos, com fonte e data, só com dados reais.", false, "E07"],
     ["pagamentos", "novos", "Pagamento online", "Cartão/boleto/PIX automático por um gateway, com estorno e conciliação.", false, "E08"],
     ["crm", "novos", "CRM e métricas", "Funil de atendimento, indicadores reais e exportação segura.", false, "E10"],
@@ -474,6 +474,32 @@
   }
   function precoItem(s) { return typeof s.preco === "number" && s.preco > 0 ? s.preco : null; }
 
+  /* ---------- Central de consultas (E06) ---------- */
+  const TIPOS_CONSULTA = {
+    completa: "consulta completa (restrições, protestos, score e Registrato/SCR)",
+    restricoes: "restrições no SPC, Serasa e Boa Vista",
+    protestos: "protestos em cartório (Cenprot)",
+    score: "score de crédito",
+    scr: "dívidas e atrasos com bancos (Registrato/SCR do Banco Central)"
+  };
+  const STATUS_CONSULTA = {
+    aguardando_autorizacao: { nome: "Aguardando autorização do cliente", cor: "champanhe" },
+    autorizada: { nome: "Autorizada — fazer a consulta", cor: "alerta" },
+    em_andamento: { nome: "Em andamento", cor: "alerta" },
+    concluida: { nome: "Concluída", cor: "ok" },
+    recusada: { nome: "Recusada pelo cliente", cor: "cinza" },
+    falhou: { nome: "Falhou — tentar de novo", cor: "rosa" },
+    cancelada: { nome: "Cancelada", cor: "cinza" }
+  };
+  const consultasDemo = () => ler(K.consultas, []);
+  function gravarConsultaDemo(id, mudar) {
+    const l = consultasDemo(), c = l.find((x) => x.id === id);
+    if (!c) throw new Error("Consulta não encontrada.");
+    Object.assign(c, mudar, { atualizado_em: new Date().toISOString() });
+    gravar(K.consultas, l);
+    return c;
+  }
+
   const Conta = {
     get usuario() { return usuarioAtual; },
     get perfil() { return perfilAtual; },
@@ -635,6 +661,25 @@
       p.andamento.push({ data: p.atualizado_em, autor: "cliente", status: "cancelado", texto: "Cancelado pelo cliente. Motivo: " + motivo });
       gravar(K.pedidos, todos);
       demoMensagem(id, "sistema", "Pedido cancelado pelo cliente. Motivo: " + motivo);
+    },
+
+    /** Consultas do próprio cliente (para autorizar e ver o resultado) */
+    async consultas() {
+      if (!usuarioAtual) return [];
+      if (ONLINE) { const sb = await supabase(); return ((await rodar(sb.from("consultas").select("*, pedido:pedidos(numero)").order("criado_em", { ascending: false }))) || []).map((c) => Object.assign(c, { numero: (c.pedido || {}).numero })); }
+      return consultasDemo().filter((c) => c.cliente_id === usuarioAtual.email);
+    },
+    async responderConsulta(id, autoriza) {
+      if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("responder_consulta", { p_id: id, p_autoriza: !!autoriza })); }
+      const c = consultasDemo().find((x) => x.id === id && x.cliente_id === (usuarioAtual || {}).email);
+      if (!c) throw new Error("Consulta não encontrada.");
+      if (c.status !== "aguardando_autorizacao") throw new Error("Esta consulta já foi respondida.");
+      const agora = new Date().toISOString();
+      if (!autoriza) { gravarConsultaDemo(id, { status: "recusada", respondido_em: agora }); demoMensagem(c.pedido_id, "sistema", "O cliente não autorizou a consulta de " + TIPOS_CONSULTA[c.tipo] + "."); return; }
+      const perfil = ler(K.perfis, {})[usuarioAtual.email] || {};
+      const texto = "Eu, titular do documento " + (perfil.cpf || perfil.cnpj || "(não informado)") + ", autorizo Milena Garbim · Limpa Nome a consultar " + TIPOS_CONSULTA[c.tipo] + " em meu nome, exclusivamente para: " + c.finalidade + " (pedido " + c.numero + "). Os dados serão usados somente neste atendimento, conforme a Política de Privacidade e a LGPD (Lei 13.709/2018). Autorizado em " + new Date().toLocaleString("pt-BR") + ".";
+      gravarConsultaDemo(id, { status: "autorizada", respondido_em: agora, consentimento_em: agora, consentimento_texto: texto, modo: "manual" });
+      demoMensagem(c.pedido_id, "sistema", "Consulta autorizada pelo cliente: " + TIPOS_CONSULTA[c.tipo] + ".");
     },
 
     async listarPedidos() {
@@ -901,6 +946,43 @@
       gravar(K.diagnostico, diagnosticoDemo().map((x) => Object.assign(x, { ativo: x.versao === versao })));
     },
 
+    /* ---- Central de consultas (E06) ---- */
+    async consultas() {
+      if (!ONLINE) return consultasDemo().slice().sort((a, b) => (b.criado_em > a.criado_em ? 1 : -1));
+      const sb = await supabase();
+      return ((await rodar(sb.from("consultas").select("*, pedido:pedidos(numero, cliente)").order("criado_em", { ascending: false }).limit(300))) || []).map((c) => Object.assign(c, { numero: (c.pedido || {}).numero, cliente: (c.pedido || {}).cliente }));
+    },
+    async solicitarConsulta(pedidoId, tipo, finalidade) {
+      if (!moduloLigado("consultas")) throw new Error("A central de consultas está desligada (aba Módulos).");
+      if (!TIPOS_CONSULTA[tipo]) throw new Error("Escolha o tipo de consulta.");
+      finalidade = String(finalidade || "").trim();
+      if (finalidade.length < 5) throw new Error("Explique a finalidade da consulta.");
+      if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("solicitar_consulta", { p_pedido: pedidoId, p_tipo: tipo, p_finalidade: finalidade })); }
+      const p = ler(K.pedidos, []).find((x) => x.id === pedidoId);
+      if (!p) throw new Error("Pedido não encontrado.");
+      if (consultasDemo().some((c) => c.pedido_id === pedidoId && c.tipo === tipo && ["aguardando_autorizacao", "autorizada", "em_andamento"].includes(c.status))) throw new Error("Já existe uma consulta deste tipo em aberto para este pedido.");
+      const c = { id: "c" + Date.now(), pedido_id: pedidoId, numero: p.numero, cliente: p.cliente, cliente_id: p.cliente_id, tipo, finalidade, status: "aguardando_autorizacao", modo: "manual", pendencias: [], solicitado_por: (usuarioAtual || {}).email, criado_em: new Date().toISOString() };
+      const l = consultasDemo(); l.push(c); gravar(K.consultas, l);
+      demoMensagem(pedidoId, "sistema", "A Milena pediu sua autorização para consultar " + TIPOS_CONSULTA[tipo] + '. Abra "Meus pedidos" para autorizar ou recusar.');
+      return c.id;
+    },
+    async registrarConsulta(id, d) {
+      const resumo = String(d.resumo || "").trim(), fonte = String(d.fonte || "").trim();
+      if (!fonte) throw new Error("Informe a fonte da consulta (ex.: portal do revendedor, Serasa, Registrato).");
+      if (!resumo) throw new Error("Escreva o resumo do resultado.");
+      if (!d.data || d.data > new Date().toISOString().slice(0, 10)) throw new Error("Data da consulta inválida.");
+      const pend = (d.pendencias || []).slice(0, 100);
+      if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("registrar_consulta", { p_id: id, p_resumo: resumo, p_pendencias: pend, p_fonte: fonte, p_data: d.data })); }
+      const c = consultasDemo().find((x) => x.id === id);
+      if (!c || !["autorizada", "em_andamento", "falhou"].includes(c.status)) throw new Error("Só dá para registrar resultado de consulta autorizada pelo cliente.");
+      gravarConsultaDemo(id, { status: "concluida", resultado_resumo: resumo, pendencias: pend, fonte, data_consulta: d.data, concluido_por: (usuarioAtual || {}).email });
+      demoMensagem(c.pedido_id, "sistema", "O resultado da consulta de " + TIPOS_CONSULTA[c.tipo] + ' está disponível em "Meus pedidos".');
+    },
+    async cancelarConsulta(id, motivo) {
+      if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("cancelar_consulta", { p_id: id, p_motivo: motivo || "" })); }
+      gravarConsultaDemo(id, { status: "cancelada", erro: motivo || "Cancelada pela equipe" });
+    },
+
     /* ---- Equipe ---- */
     async equipe() {
       if (!ONLINE) return ler(K.equipe, []);
@@ -926,6 +1008,6 @@
     }
   };
 
-  window.Dados = { online: ONLINE, STATUS, CONFIRMADOS, site, catalogo, modulos, moduloLigado, produtosCredito, PERFIS_CREDITO, diagnosticoRegras, Conta, Painel, Chat, Push, slug };
+  window.Dados = { online: ONLINE, STATUS, CONFIRMADOS, site, catalogo, modulos, moduloLigado, produtosCredito, PERFIS_CREDITO, diagnosticoRegras, TIPOS_CONSULTA, STATUS_CONSULTA, Conta, Painel, Chat, Push, slug };
   window.ContaPronta = Conta.iniciar();
 })();

@@ -214,14 +214,15 @@
     const alvo = $("#conta-pedidos");
     alvo.innerHTML = `<p class="vazio">Carregando suas solicitações...</p>`;
     let lista = [];
-    try { [lista] = await Promise.all([C.listarPedidos(), D.Chat.naoLidas("cliente").then((r) => { naoLidas = r; }).catch(() => {})]); }
+    try { [lista, consultasAtuais] = await Promise.all([C.listarPedidos(), (C.consultas ? C.consultas() : Promise.resolve([])).catch(() => []), D.Chat.naoLidas("cliente").then((r) => { naoLidas = r; }).catch(() => {})]); }
     catch (e) { alvo.innerHTML = `<p class="vazio">${esc(e.message)}</p>`; return; }
     pedidosAtuais = lista;
     if (!lista.length) {
       alvo.innerHTML = `<div class="cartao centro caixa-aviso">${icone("sacola", "icone-svg grande")}<h3>Nenhuma solicitação ainda</h3><p>Escolha os serviços no catálogo e envie a sua solicitação. Você acompanha tudo por aqui.</p><a href="/servicos" class="btn btn-primario">Ver serviços</a></div>`;
       return;
     }
-    alvo.innerHTML = lista.map((p, i) => {
+    const pendentes = consultasAtuais.filter((c) => c.status === "aguardando_autorizacao").length;
+    alvo.innerHTML = (pendentes ? `<p class="aviso-cliente aviso-consulta">${icone("alerta")}A Milena pediu sua autorização para ${pendentes === 1 ? "uma consulta" : pendentes + " consultas"} do seu CPF/CNPJ. Veja no pedido abaixo.</p>` : "") + lista.map((p, i) => {
       const itens = p.itens || [];
       return `<details class="pedido-cartao"${i === 0 ? " open" : ""} data-pedido="${esc(p.id)}">
         <summary>
@@ -235,6 +236,7 @@
           ${p.observacoes ? `<p class="pedido-obs"><strong>Sua observação:</strong> ${esc(p.observacoes)}</p>` : ""}
           <h4>Andamento</h4>
           ${linhaTempo(p)}
+          ${blocoConsultas(p.id)}
           ${blocoChat(p)}
           ${["recebido", "em_analise", "confirmado", "aguardando_cliente"].includes(p.status) ? `<p class="pedido-cancelar"><button type="button" class="btn-texto perigo" data-cancelar-pedido="${esc(p.id)}">${icone("x")}Cancelar este pedido</button></p>` : ""}
         </div>
@@ -246,8 +248,35 @@
     });
   }
   /* ---------- Chat do pedido (abre na hora: a assistente atende até a Milena responder) ---------- */
+  let consultasAtuais = [];
   let pedidosAtuais = [], naoLidas = {}, fotoMilena = "assets/img/milena-garbim-avatar.jpg";
   D.site().then((s) => { fotoMilena = s.fotos.avatar || fotoMilena; });
+  /* ---------- Consultas do CPF/CNPJ (E06): o cliente autoriza e vê o resultado ---------- */
+  function blocoConsultas(pedidoId) {
+    const lista = consultasAtuais.filter((c) => c.pedido_id === pedidoId);
+    if (!lista.length) return "";
+    const TIPOS = D.TIPOS_CONSULTA || {}, ST = D.STATUS_CONSULTA || {};
+    const dt = (d) => (d ? new Date(d.length === 10 ? d + "T12:00:00" : d).toLocaleDateString("pt-BR") : "");
+    return `<h4>Consultas do seu CPF/CNPJ</h4>` + lista.map((c) => {
+      const st = ST[c.status] || { nome: c.status, cor: "cinza" };
+      const nomeSt = c.status === "autorizada" ? "Autorizada — a Milena vai consultar" : st.nome;
+      let corpo = "";
+      if (c.status === "aguardando_autorizacao") {
+        corpo = `<p>A Milena quer consultar <strong>${esc(TIPOS[c.tipo] || c.tipo)}</strong> em seu nome.</p>
+          <p><strong>Para quê:</strong> ${esc(c.finalidade)}</p>
+          <p class="consulta-termo">Ao autorizar, você permite essa consulta <strong>somente para este atendimento</strong>, conforme a <a href="/privacidade" target="_blank">Política de Privacidade</a> e a LGPD. A data e a hora da sua autorização ficam registradas. Você pode recusar.</p>
+          <div class="botoes-form"><button type="button" class="btn btn-primario" data-consulta-resp="${esc(c.id)}" data-sim="1">Autorizo a consulta</button><button type="button" class="btn-texto" data-consulta-resp="${esc(c.id)}" data-sim="0">Não autorizo</button></div>`;
+      } else if (c.status === "concluida") {
+        const pend = Array.isArray(c.pendencias) ? c.pendencias : [];
+        corpo = `<p class="consulta-resumo">${esc(c.resultado_resumo || "")}</p>
+          ${pend.length ? `<div class="tabela-rolagem"><table class="tabela tabela-pend"><thead><tr><th>Onde</th><th>Credor</th><th>Valor</th><th>Data</th></tr></thead><tbody>${pend.map((x) => `<tr><td>${esc(x.orgao || "")}</td><td>${esc(x.credor || "")}</td><td>${esc(x.valor || "")}</td><td>${esc(x.data || "")}</td></tr>`).join("")}</tbody></table></div>` : `<p>Nenhuma pendência encontrada nesta consulta.</p>`}
+          <small class="consulta-fonte">Fonte: ${esc(c.fonte || "")} · consultado em ${esc(dt(c.data_consulta))}</small>`;
+      }
+      const aceite = c.consentimento_texto ? `<details class="consulta-aceite"><summary>Ver a autorização que você deu</summary><p>${esc(c.consentimento_texto)}</p></details>` : "";
+      return `<div class="consulta-item"><div class="consulta-cab"><strong>${esc(TIPOS[c.tipo] || c.tipo)}</strong><span class="selo-status st-${st.cor}">${esc(nomeSt)}</span></div>${corpo}${aceite}</div>`;
+    }).join("");
+  }
+
   function blocoChat(p) {
     const whats = `<a class="btn btn-contorno-rosa" data-whats="Olá! Quero falar sobre a minha solicitação ${esc(p.numero)}.">WhatsApp</a>`;
     if (D.Chat.aberto(p)) {
@@ -294,7 +323,17 @@
     if (b) abrirChat(b.dataset.abrirChat);
     const c = e.target.closest("[data-cancelar-pedido]");
     if (c) cancelarPedido(c.dataset.cancelarPedido);
+    const cr = e.target.closest("[data-consulta-resp]");
+    if (cr) responderConsulta(cr);
   });
+
+  async function responderConsulta(b) {
+    const sim = b.dataset.sim === "1";
+    if (!sim && !(await MG.confirmar("Sem a consulta, a Milena pode não conseguir ver todas as pendências do seu nome. Deseja mesmo recusar?", { titulo: "Recusar a consulta?", botao: "Recusar" }))) return;
+    b.disabled = true;
+    try { await C.responderConsulta(b.dataset.consultaResp, sim); avisar(sim ? "Obrigado! Sua autorização foi registrada." : "Tudo bem, a consulta não será feita."); await desenharPedidos(); }
+    catch (err) { avisar(err.message); b.disabled = false; }
+  }
 
   /* Cancelar o próprio pedido: o motivo é obrigatório */
   function cancelarPedido(id) {

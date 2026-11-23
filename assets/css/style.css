@@ -1734,3 +1734,14 @@ body.mod-off-chat:not(.pagina-painel) .chat-mensagens::after { content: "O chat 
 .diag-erros { background: #fdebd8; color: #7a4510; border-radius: 10px; padding: 10px 14px; font-size: .88rem; }
 .diag-erros ul { margin: 6px 0 0; padding-left: 18px; }
 .diag-simulador { border: 1px dashed var(--borda, #eadde1); border-radius: 16px; padding: 16px; margin-top: 12px; }
+
+/* Central de consultas (E06) */
+.consulta-item { border: 1px solid var(--borda, #eadde1); border-radius: 14px; padding: 14px 16px; margin: 8px 0 14px; background: var(--fundo-cartao, #fff); }
+.consulta-cab { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 6px; }
+.consulta-termo { font-size: .85rem; color: var(--texto-suave, #6b5b60); }
+.consulta-resumo { font-weight: 500; }
+.consulta-fonte { display: block; color: var(--texto-suave, #6b5b60); margin-top: 6px; }
+.consulta-aceite { margin-top: 8px; font-size: .85rem; }
+.consulta-aceite p { color: var(--texto-suave, #6b5b60); }
+.tabela-pend { font-size: .88rem; }
+.aviso-consulta { margin-bottom: 14px; }

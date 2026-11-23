@@ -848,6 +848,87 @@
   };
 
   /* =========================================================
+     CONSULTAS (E06): equipe pede, cliente autoriza, equipe registra
+     o resultado (manual pelo portal do revendedor até a API chegar).
+     Nunca inventar resultado: só o que veio da fonte informada.
+     ========================================================= */
+  CARREGAR.consultas = async function () {
+    const p = painel("consultas");
+    const TIPOS = D.TIPOS_CONSULTA, ST = D.STATUS_CONSULTA;
+    let lista = [], filtro = "abertas";
+    const abertas = ["aguardando_autorizacao", "autorizada", "em_andamento", "falhou"];
+    const nomeCli = (c) => { const k = c.cliente || {}; return (k.tipo === "pj" ? k.razao_social : k.nome) || "Cliente"; };
+    const dt = (d) => (d ? new Date(d.length === 10 ? d + "T12:00:00" : d).toLocaleDateString("pt-BR") : "—");
+    async function desenhar(recarregar) {
+      if (recarregar) { try { lista = await A.consultas(); } catch (e) { avisar(e.message); } }
+      try { await D.modulos(); } catch (e) { /* ok */ }
+      const ligado = D.moduloLigado("consultas");
+      const vis = lista.filter((c) => filtro === "todas" || (filtro === "abertas" ? abertas.includes(c.status) : c.status === filtro));
+      p.innerHTML = `<p class="adm-dica">Peça a consulta dentro do pedido; o cliente <strong>autoriza na área dele</strong> (a autorização fica registrada com data e hora). Depois, faça a consulta no <strong>portal do revendedor</strong> e registre aqui o resultado. Quando a chave da API do fornecedor for configurada, a consulta passa a rodar sozinha.</p>
+        ${ligado ? "" : `<p class="adm-dica">⚠️ O módulo <strong>Central de consultas</strong> está desligado (aba Módulos): não dá para pedir consultas novas.</p>`}
+        <div class="botoes-form"><button type="button" class="btn btn-primario" data-nova-consulta${ligado ? "" : " disabled"}>${icone("mais")}Nova consulta</button></div>
+        <div class="filtro-catalogo">${[["abertas", "Em aberto"], ["concluida", "Concluídas"], ["recusada", "Recusadas"], ["todas", "Todas"]].map(([k, t]) => `<button type="button" class="chip-filtro${filtro === k ? " ativo" : ""}" data-fconsulta="${k}">${t}</button>`).join("")}</div>
+        ${vis.length ? `<div class="tabela-rolagem"><table class="tabela"><thead><tr><th>Pedido</th><th>Cliente</th><th>Consulta</th><th>Situação</th><th>Pedida em</th><th></th></tr></thead><tbody>
+          ${vis.map((c) => { const st = ST[c.status] || { nome: c.status, cor: "cinza" }; return `<tr><td><strong>${esc(c.numero || "")}</strong></td><td>${esc(nomeCli(c))}</td><td>${esc(TIPOS[c.tipo] || c.tipo)}</td><td><span class="selo-status st-${st.cor}">${esc(st.nome)}</span></td><td>${esc(dt(c.criado_em))}</td>
+            <td class="acoes">${["autorizada", "em_andamento", "falhou"].includes(c.status) ? `<button type="button" class="btn-texto" data-registrar-consulta="${esc(c.id)}">Registrar resultado</button>` : ""}<button type="button" class="btn-texto" data-ver-consulta="${esc(c.id)}">Ver</button>${abertas.includes(c.status) ? `<button type="button" class="btn-texto perigo" data-cancelar-consulta="${esc(c.id)}">Cancelar</button>` : ""}</td></tr>`; }).join("")}
+        </tbody></table></div>` : `<p class="vazio">Nenhuma consulta ${filtro === "abertas" ? "em aberto" : "neste filtro"}.</p>`}`;
+    }
+    async function nova() {
+      let peds = [];
+      try { peds = (await A.pedidos()).filter((x) => x.status !== "cancelado"); } catch (e) { return avisar(e.message); }
+      if (!peds.length) return avisar("Não há pedidos em aberto para consultar.");
+      const m = modal(`<h2>Nova consulta</h2>
+        <form class="form-modal" novalidate>
+          <label class="campo"><span>Pedido</span><select name="pedido">${peds.map((x) => `<option value="${esc(x.id)}">${esc(x.numero)} — ${esc(nomeCli(x))}</option>`).join("")}</select></label>
+          <label class="campo"><span>O que consultar</span><select name="tipo">${Object.entries(TIPOS).map(([k, t]) => `<option value="${k}">${esc(t[0].toUpperCase() + t.slice(1))}</option>`).join("")}</select></label>
+          <label class="campo"><span>Para quê <small>(o cliente vê este texto na autorização)</small></span><input name="finalidade" maxlength="200" value="Análise das pendências para o serviço contratado"></label>
+          <p class="adm-dica">O cliente recebe o pedido de autorização em “Meus pedidos” e uma mensagem no chat. Nada é consultado antes do “Autorizo”.</p>
+          <div class="botoes-form"><button type="submit" class="btn btn-primario">Pedir autorização</button><button type="button" class="btn-texto" data-fechar>Cancelar</button></div>
+        </form>`);
+      const f = m.querySelector("form");
+      f.addEventListener("submit", (e) => { e.preventDefault(); comBotao($("button[type=submit]", f), async () => { await A.solicitarConsulta(f.pedido.value, f.tipo.value, f.finalidade.value); m.closest(".modal-fundo").remove(); avisar("Pedido de autorização enviado ao cliente."); await desenhar(true); }); });
+    }
+    function registrar(c) {
+      const hoje = new Date().toISOString().slice(0, 10);
+      const m = modal(`<h2>Resultado — ${esc(c.numero || "")}</h2>
+        <p class="adm-dica">${esc(TIPOS[c.tipo] || c.tipo)} · autorizada em ${esc(dt(c.consentimento_em))}. Registre <strong>somente</strong> o que apareceu na consulta.</p>
+        <form class="form-modal" novalidate>
+          <label class="campo"><span>Fonte</span><input name="fonte" maxlength="150" value="Portal do revendedor (Relinq)"></label>
+          <label class="campo"><span>Data da consulta</span><input type="date" name="data" value="${hoje}" max="${hoje}"></label>
+          <label class="campo"><span>Resumo para o cliente</span><textarea name="resumo" rows="3" maxlength="3000" placeholder="Ex.: Encontramos 2 restrições no Serasa e 1 protesto em cartório."></textarea></label>
+          <label class="campo"><span>Pendências encontradas <small>(uma por linha: Onde | Credor | Valor | Data — deixe vazio se não houver)</small></span><textarea name="pend" rows="5" placeholder="Serasa | Banco X | R$ 1.250,00 | 10/03/2023"></textarea></label>
+          <div class="botoes-form"><button type="submit" class="btn btn-primario">Salvar resultado</button><button type="button" class="btn-texto" data-fechar>Cancelar</button></div>
+        </form>`);
+      const f = m.querySelector("form");
+      f.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const pendencias = f.pend.value.split("\n").map((l) => l.trim()).filter(Boolean).map((l) => { const [orgao, credor, valor, data] = l.split("|").map((x) => (x || "").trim()); return { orgao, credor, valor, data }; });
+        comBotao($("button[type=submit]", f), async () => { await A.registrarConsulta(c.id, { fonte: f.fonte.value, data: f.data.value, resumo: f.resumo.value, pendencias }); m.closest(".modal-fundo").remove(); avisar("Resultado salvo. O cliente já pode ver em “Meus pedidos”."); await desenhar(true); });
+      });
+    }
+    function ver(c) {
+      const pend = Array.isArray(c.pendencias) ? c.pendencias : [];
+      modal(`<h2>${esc(c.numero || "")} — ${esc(nomeCli(c))}</h2>
+        <p><strong>Consulta:</strong> ${esc(TIPOS[c.tipo] || c.tipo)}<br><strong>Para quê:</strong> ${esc(c.finalidade)}<br><strong>Situação:</strong> ${esc((ST[c.status] || {}).nome || c.status)}<br><strong>Modo:</strong> ${c.modo === "automatico" ? "automático (" + esc(c.provedor || "") + ")" : "manual"}</p>
+        ${c.consentimento_texto ? `<h4>Autorização do cliente</h4><p class="consulta-termo">${esc(c.consentimento_texto)}</p>` : ""}
+        ${c.status === "concluida" ? `<h4>Resultado</h4><p>${esc(c.resultado_resumo || "")}</p>${pend.length ? `<ul>${pend.map((x) => `<li>${esc([x.orgao, x.credor, x.valor, x.data].filter(Boolean).join(" · "))}</li>`).join("")}</ul>` : "<p>Nenhuma pendência registrada.</p>"}<small>Fonte: ${esc(c.fonte || "")} · ${esc(dt(c.data_consulta))}</small>` : ""}
+        ${c.erro ? `<p><strong>Observação:</strong> ${esc(c.erro)}</p>` : ""}`);
+    }
+    p.addEventListener("click", async (e) => {
+      const fc = e.target.closest("[data-fconsulta]"); if (fc) { filtro = fc.dataset.fconsulta; return desenhar(); }
+      if (e.target.closest("[data-nova-consulta]")) return nova();
+      const rg = e.target.closest("[data-registrar-consulta]"); if (rg) return registrar(lista.find((c) => c.id === rg.dataset.registrarConsulta));
+      const vr = e.target.closest("[data-ver-consulta]"); if (vr) return ver(lista.find((c) => c.id === vr.dataset.verConsulta));
+      const cc = e.target.closest("[data-cancelar-consulta]");
+      if (cc) {
+        if (!(await MG.confirmar("Cancelar esta consulta? O cliente verá como cancelada.", { titulo: "Cancelar consulta?", botao: "Cancelar consulta" }))) return;
+        try { await A.cancelarConsulta(cc.dataset.cancelarConsulta, "Cancelada pela equipe"); avisar("Consulta cancelada."); await desenhar(true); } catch (err) { avisar(err.message); }
+      }
+    });
+    await desenhar(true);
+  };
+
+  /* =========================================================
      MÓDULOS (E03): o administrador liga e desliga recursos.
      Proteções de segurança ficam sempre ligadas; recursos novos
      só podem ser ligados quando a etapa deles estiver pronta.
