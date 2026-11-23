@@ -1798,3 +1798,5 @@ body.mod-off-chat:not(.pagina-painel) .chat-mensagens::after { content: "O chat 
 .cons-produto-campos { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); }
 .cons-switch { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; }
 .cons-produto details { margin: 8px 0; }
+.cons-erro { font-size: .85rem; color: #9a3412; margin-top: 4px; }
+.cons-auto { font-size: .9rem; color: var(--texto-suave, #6b5b60); }

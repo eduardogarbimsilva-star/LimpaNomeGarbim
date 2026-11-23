@@ -15,6 +15,7 @@
 //   SITE_URL             — endereço do site (para o link das notificações)
 // SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY já vêm prontos no Supabase.
 // =========================================================
+import { consultarDirectD, ErroFornecedor } from "./fornecedores.ts";
 import Anthropic from "npm:@anthropic-ai/sdk";
 import webpush from "npm:web-push@3.6.7";
 import { responderSemIA, boasVindasSemIA, type Servico } from "./atendente.ts";
@@ -245,6 +246,31 @@ async function situacaoMudou(p: any, anterior: string) {
 
 // Consultas (E06b): avisa equipe e cliente a cada passo
 const brl = (v: any) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+// Consulta automática: chama o fornecedor configurado e grava o resultado (ou devolve para a fila manual)
+async function processarConsulta(id: string) {
+  // trava: só um processamento por consulta (eventos repetidos são ignorados)
+  const pegou = (await db(`consultas?id=eq.${id}&status=eq.em_andamento&erro=is.null`, { method: "PATCH", body: JSON.stringify({ erro: "processando" }) })) ?? [];
+  if (!pegou.length) return;
+  const c = pegou[0];
+  try {
+    const cfg = (await db("rpc/config_fornecedor_consulta", { method: "POST", body: "{}" })) ?? {};
+    if (!cfg.provedor || !cfg.token) throw new ErroFornecedor("Nenhum fornecedor automático configurado.");
+    const cli = ((await db(`clientes?id=eq.${c.cliente_id}&select=tipo,cpf,cnpj`)) ?? [])[0] ?? {};
+    const pj = cli.tipo === "pj" || (!cli.cpf && !!cli.cnpj);
+    const doc = pj ? cli.cnpj : cli.cpf;
+    const prod = c.produto_id ? ((await db(`consulta_produtos?id=eq.${c.produto_id}&select=codigo_fornecedor`)) ?? [])[0] ?? {} : {};
+    let r;
+    if (cfg.provedor === "directd") r = await consultarDirectD(cfg.token, c.tipo, doc, pj, prod.codigo_fornecedor);
+    else throw new ErroFornecedor("A API da Relinq ainda não foi liberada: consulta feita manualmente.");
+    const hoje = new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
+    await db(`consultas?id=eq.${id}`, { method: "PATCH", body: JSON.stringify({ status: "concluida", resultado_resumo: r.resumo.slice(0, 3000), pendencias: r.pendencias, fonte: r.fonte.slice(0, 150), data_consulta: hoje, concluido_por: "automático (" + cfg.provedor + ")", erro: null, atualizado_em: new Date().toISOString() }) });
+  } catch (e: any) {
+    const msg = e instanceof ErroFornecedor ? e.message : "Erro inesperado na consulta automática.";
+    console.error("consulta automatica:", e?.message ?? e);
+    await db(`consultas?id=eq.${id}`, { method: "PATCH", body: JSON.stringify({ status: "falhou", erro: msg.slice(0, 300), atualizado_em: new Date().toISOString() }) }).catch(() => {});
+  }
+}
+
 async function consultaMudou(evento: string, c: any) {
   const nome = c.produto || "consulta";
   const num = c.numero ? ` ${c.numero}` : "";
@@ -258,6 +284,10 @@ async function consultaMudou(evento: string, c: any) {
   } else if (evento === "autorizada" && c.origem === "cliente") {
     await notificarCliente(c.cliente_id, "Pagamento confirmado ✅", `Sua ${nome.toLowerCase()} está sendo feita. Avisaremos quando o resultado sair.`, `${SITE}/conta?aba=consultas`, `consulta-${c.id}`);
     await notificarEquipe(`Fazer consulta${num}`, `${nome} paga. Faça a consulta e registre o resultado.`, `${SITE}/admin?aba=consultas`, `consulta-${c.id}`);
+  } else if (evento === "em_andamento") {
+    await processarConsulta(c.id);
+  } else if (evento === "falhou") {
+    await notificarEquipe(`Consulta${num} precisa de você`, `A consulta automática não deu certo (${nome}). Faça manualmente e registre o resultado.`, `${SITE}/admin?aba=consultas`, `consulta-${c.id}`);
   } else if (evento === "concluida") {
     await notificarCliente(c.cliente_id, "Resultado pronto 📄", `O resultado da sua ${nome.toLowerCase()} já está na sua conta.`, `${SITE}/conta?aba=consultas`, `consulta-${c.id}`);
   } else if (evento === "pedido_autorizacao") {

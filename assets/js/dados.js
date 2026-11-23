@@ -1019,6 +1019,24 @@
       gravarConsultaDemo(id, { status: "concluida", resultado_resumo: resumo, pendencias: pend, fonte, data_consulta: d.data, concluido_por: (usuarioAtual || {}).email });
       if (c.pedido_id) demoMensagem(c.pedido_id, "sistema", "O resultado da consulta de " + TIPOS_CONSULTA[c.tipo] + ' está disponível em "Meus pedidos".');
     },
+    async situacaoIntegracao() {
+      if (!ONLINE) return ler("mg_demo_integracao", { provedor: "", directd: false, relinq: false });
+      const sb = await supabase();
+      return (await rodar(sb.rpc("situacao_integracao_consulta"))) || { provedor: "" };
+    },
+    async definirIntegracao(provedor, chave) {
+      if (!["", "directd", "relinq"].includes(provedor)) throw new Error("Fornecedor inválido.");
+      chave = String(chave || "").trim();
+      if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("definir_integracao_consulta", { p_provedor: provedor, p_chave: chave || null })); }
+      const st = ler("mg_demo_integracao", { provedor: "", directd: false, relinq: false });
+      if (provedor && chave) st[provedor] = true;
+      if (provedor && !st[provedor]) throw new Error("Cole a chave de acesso do fornecedor para ativar a consulta automática.");
+      st.provedor = provedor; gravar("mg_demo_integracao", st);
+    },
+    async reprocessarConsulta(id) {
+      if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("reprocessar_consulta", { p_id: id })); }
+      throw new Error("No modo demonstração não há fornecedor automático.");
+    },
     async consultaProdutos() {
       if (!ONLINE) return produtosConsultaDemo().slice().sort((a, b) => a.ordem - b.ordem);
       const sb = await supabase();
@@ -1028,7 +1046,7 @@
       const preco = x.preco === "" || x.preco === null || x.preco === undefined ? null : Math.round(Number(String(x.preco).replace(",", ".")) * 100) / 100;
       if (preco !== null && !(preco > 0)) throw new Error("Preço inválido.");
       if (x.ativo && !preco) throw new Error("Defina o preço antes de colocar à venda.");
-      const d = { nome: String(x.nome || "").trim().slice(0, 80), descricao: String(x.descricao || "").trim().slice(0, 600), itens: (x.itens || []).map((t) => String(t).trim()).filter(Boolean).slice(0, 8), preco, prazo: String(x.prazo || "").trim().slice(0, 80) || "Resultado em até 1 dia útil", destaque: !!x.destaque, ativo: !!x.ativo };
+      const d = { codigo_fornecedor: String(x.codigo_fornecedor || "").trim().slice(0, 80) || null, nome: String(x.nome || "").trim().slice(0, 80), descricao: String(x.descricao || "").trim().slice(0, 600), itens: (x.itens || []).map((t) => String(t).trim()).filter(Boolean).slice(0, 8), preco, prazo: String(x.prazo || "").trim().slice(0, 80) || "Resultado em até 1 dia útil", destaque: !!x.destaque, ativo: !!x.ativo };
       if (!d.nome) throw new Error("Dê um nome à consulta.");
       if (ONLINE) { const sb = await supabase(); const r = await rodar(sb.from("consulta_produtos").update(d).eq("id", x.id).select("id")); if (!r || !r.length) throw new Error("Você não tem permissão para fazer isso."); return; }
       const l = produtosConsultaDemo(), i = l.findIndex((y) => y.id === x.id); if (i < 0) throw new Error("Consulta não encontrada.");

@@ -856,7 +856,7 @@
   CARREGAR.consultas = async function () {
     const p = painel("consultas");
     const TIPOS = D.TIPOS_CONSULTA, ST = D.STATUS_CONSULTA;
-    let lista = [], produtos = [], clientes = {}, vista = "fila";
+    let lista = [], produtos = [], clientes = {}, vista = "fila", integ = {};
     const fila = ["aguardando_pagamento", "aguardando_autorizacao", "autorizada", "em_andamento", "falhou"];
     const nomeCli = (c) => { const k = c.cliente || clientes[c.cliente_id] || {}; return (k.tipo === "pj" ? k.razao_social : k.nome) || k.email || "Cliente"; };
     const dt = (d) => (d ? new Date(d.length === 10 ? d + "T12:00:00" : d).toLocaleDateString("pt-BR") : "—");
@@ -864,6 +864,7 @@
     const nomeProd = (c) => ((produtos.find((x) => x.id === c.produto_id) || {}).nome) || (TIPOS[c.tipo] || c.tipo).replace(/^./, (l) => l.toUpperCase());
     async function carregar() {
       try { [lista, produtos] = await Promise.all([A.consultas(), A.consultaProdutos()]); } catch (e) { avisar(e.message); }
+      try { integ = (await A.situacaoIntegracao()) || {}; } catch (e) { integ = {}; }
       try { (await A.clientes()).forEach((c) => { clientes[c.id] = c; if (c.email) clientes[c.email] = c; }); } catch (e) { /* ok */ }
       try { await D.modulos(); } catch (e) { /* ok */ }
     }
@@ -872,10 +873,12 @@
       const avisou = c.status === "aguardando_pagamento" && c.informou_pago_em;
       let acao = "";
       if (c.status === "aguardando_pagamento") acao = `<button type="button" class="btn ${avisou ? "btn-primario" : "btn-contorno-rosa"}" data-confirmar-pag="${esc(c.id)}">${icone("check")}Confirmar pagamento</button>`;
-      else if (["autorizada", "em_andamento", "falhou"].includes(c.status)) acao = `<button type="button" class="btn btn-primario" data-registrar-consulta="${esc(c.id)}">${icone("check")}Registrar resultado</button>`;
+      else if (c.status === "em_andamento" && c.modo === "automatico") acao = `<span class="cons-auto">⏳ Consultando automaticamente…</span>`;
+      else if (["autorizada", "em_andamento", "falhou"].includes(c.status)) acao = (c.status === "falhou" && integ.provedor ? `<button type="button" class="btn btn-contorno-rosa" data-reprocessar="${esc(c.id)}">Tentar automático de novo</button>` : "") + `<button type="button" class="btn btn-primario" data-registrar-consulta="${esc(c.id)}">${icone("check")}Registrar resultado</button>`;
       return `<article class="cons-card${avisou ? " cons-alerta" : ""}">
         <div class="cons-info">
           <div class="cons-topo"><strong>${esc(nomeProd(c))}</strong><span class="selo-status st-${st.cor}">${esc(avisou ? "Cliente avisou que pagou" : st.nome)}</span></div>
+          ${c.status === "falhou" && c.erro ? `<div class="cons-erro">⚠️ ${esc(c.erro)}</div>` : ""}
           <div class="cons-meta"><span>${esc(nomeCli(c))}</span><span>${esc(c.numero || "")}</span>${c.valor ? `<span>${esc(brl(c.valor))}</span>` : `<span>pedido da equipe</span>`}<span>${esc(haQuanto(c.criado_em))}</span></div>
         </div>
         <div class="cons-acoes">${acao}<button type="button" class="btn-texto" data-ver-consulta="${esc(c.id)}">Ver</button>${fila.includes(c.status) ? `<button type="button" class="btn-texto perigo" data-cancelar-consulta="${esc(c.id)}">Cancelar</button>` : ""}</div>
@@ -903,7 +906,7 @@
         <div class="cons-status">
           <div><span class="cons-ponto ${ligado ? "ok" : "off"}"></span><strong>Venda no site</strong> ${ligado ? `ligada · ${vendidos} consulta${vendidos === 1 ? "" : "s"} à venda em <a href="/consultas" target="_blank">/consultas</a>` : "desligada (aba Módulos)"}</div>
           <div><span class="cons-ponto espera"></span><strong>Pagamento</strong> PIX · você confirma com 1 clique <small>(automático quando houver gateway)</small></div>
-          <div><span class="cons-ponto espera"></span><strong>Consulta</strong> manual no portal do revendedor <small>(automática quando a Relinq liberar a API)</small></div>
+          <div><span class="cons-ponto ${integ.provedor ? "ok" : "espera"}"></span><strong>Consulta</strong> ${integ.provedor ? `<b>automática</b> pela ${integ.provedor === "directd" ? "Direct Data" : "Relinq"} <small>(Bacen/SCR continua manual)</small>` : "manual no portal do revendedor"} · <button type="button" class="btn-texto" data-integracao>Configurar fornecedor</button></div>
         </div>
         <div class="seg cons-abas" role="group">
           <button type="button" class="${vista === "fila" ? "ativo" : ""}" data-vista="fila">Fila de trabalho${aguardando.length + fazer.length ? ` (${aguardando.length + fazer.length})` : ""}</button>
@@ -926,6 +929,7 @@
             <label class="campo"><span>Descrição</span><textarea name="descricao" rows="2" maxlength="600">${esc(x.descricao || "")}</textarea></label>
             <label class="campo"><span>Itens (um por linha)</span><textarea name="itens" rows="3">${esc((x.itens || []).join("\n"))}</textarea></label>
             <label class="aceite"><input type="checkbox" name="destaque"${x.destaque ? " checked" : ""}><span>Destacar como “mais completa”</span></label>
+            <label class="campo"><span>Código no fornecedor <small>(avançado — vazio usa o padrão)</small></span><input name="codigo_fornecedor" maxlength="80" value="${esc(x.codigo_fornecedor || "")}" placeholder="Ex.: ProtestosCompleta,Score"></label>
           </details>
           <div class="botoes-form"><button type="submit" class="btn btn-contorno-rosa">Salvar</button></div>
         </form>`).join("")}</div>`;
@@ -972,11 +976,28 @@
         ${c.erro ? `<p><strong>Observação:</strong> ${esc(c.erro)}</p>` : ""}`);
     }
     async function atualizar() { await carregar(); desenhar(); }
+    function configurarIntegracao() {
+      if (!ehAdmin) return avisar("Só o administrador configura o fornecedor.");
+      const m = modal(`<h2>Fornecedor da consulta automática</h2>
+        <p class="adm-dica">Com um fornecedor ligado, a consulta é feita <strong>sozinha</strong> logo depois do pagamento confirmado, e o resultado aparece na conta do cliente. Se algo falhar, a consulta volta para a sua fila manual — nada se perde.</p>
+        <form class="form-modal" novalidate>
+          <label class="campo"><span>Fornecedor</span><select name="provedor">
+            <option value=""${!integ.provedor ? " selected" : ""}>Manual (eu consulto no portal e registro)</option>
+            <option value="directd"${integ.provedor === "directd" ? " selected" : ""}>Direct Data${integ.directd ? " — chave salva ✓" : ""}</option>
+            <option value="relinq"${integ.provedor === "relinq" ? " selected" : ""} disabled>Relinq — aguardando a API ser liberada</option>
+          </select></label>
+          <label class="campo"><span>Chave de acesso (TOKEN) <small>${integ.directd ? "— já existe uma salva; deixe vazio para manter" : ""}</small></span><input name="chave" type="password" autocomplete="off" placeholder="Cole aqui o TOKEN do painel da Direct Data"></label>
+          <p class="adm-dica">🔒 A chave fica guardada no servidor e <strong>nunca</strong> aparece de novo no site — nem para você. Bacen/SCR continua manual (a Direct Data não oferece). Confira se os textos de cada consulta (aba Preços) combinam com as fontes que ela usa.</p>
+          <div class="botoes-form"><button type="submit" class="btn btn-primario">Salvar</button><button type="button" class="btn-texto" data-fechar>Cancelar</button></div>
+        </form>`);
+      const f = m.querySelector("form");
+      f.addEventListener("submit", (e) => { e.preventDefault(); comBotao($("button[type=submit]", f), async () => { await A.definirIntegracao(f.provedor.value, f.chave.value); m.closest(".modal-fundo").remove(); avisar(f.provedor.value ? "Consulta automática ligada." : "Consulta voltou para o modo manual."); await atualizar(); }); });
+    }
     p.addEventListener("submit", (e) => {
       const f = e.target.closest("[data-produto]"); if (!f) return;
       e.preventDefault();
       comBotao($("button[type=submit]", f), async () => {
-        await A.salvarConsultaProduto({ id: f.dataset.produto, preco: f.preco.value.trim(), prazo: f.prazo.value, ativo: f.ativo.checked, nome: f.nome.value, descricao: f.descricao.value, itens: f.itens.value.split("\n"), destaque: f.destaque.checked });
+        await A.salvarConsultaProduto({ id: f.dataset.produto, preco: f.preco.value.trim(), prazo: f.prazo.value, ativo: f.ativo.checked, nome: f.nome.value, descricao: f.descricao.value, itens: f.itens.value.split("\n"), destaque: f.destaque.checked, codigo_fornecedor: f.codigo_fornecedor.value });
         avisar("Consulta salva."); await atualizar();
       });
     });
@@ -989,6 +1010,9 @@
         if (!(await MG.confirmar(`Confirma que o PIX de ${brl(c.valor)} da consulta ${c.numero} caiu na conta?`, { titulo: "Confirmar pagamento?", botao: "Confirmar" }))) return;
         return comBotao(cp, async () => { await A.confirmarPagamentoConsulta(c.id); avisar("Pagamento confirmado. O cliente foi avisado."); await atualizar(); });
       }
+      if (e.target.closest("[data-integracao]")) return configurarIntegracao();
+      const rp = e.target.closest("[data-reprocessar]");
+      if (rp) return comBotao(rp, async () => { await A.reprocessarConsulta(rp.dataset.reprocessar); avisar("Consultando de novo…"); setTimeout(atualizar, 6000); await atualizar(); });
       const rg = e.target.closest("[data-registrar-consulta]"); if (rg) return registrar(lista.find((c) => c.id === rg.dataset.registrarConsulta));
       const vr = e.target.closest("[data-ver-consulta]"); if (vr) return ver(lista.find((c) => c.id === vr.dataset.verConsulta));
       const cc = e.target.closest("[data-cancelar-consulta]");
