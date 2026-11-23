@@ -15,13 +15,13 @@
   async function desenhar() {
     produtos = await D.consultaProdutos();
     if (!produtos.length) { lista.hidden = true; $("[data-consultas-fechado]").hidden = false; return; }
-    lista.innerHTML = produtos.map((p) => `<article class="consulta-card${p.destaque ? " destaque" : ""}">
+    lista.innerHTML = produtos.map((p) => `<article class="consulta-card${p.destaque ? " destaque" : ""}${p.tipo === "documentos" ? " gratuita" : ""}">
       ${p.destaque ? `<span class="etiqueta">Mais completa</span>` : ""}
       <h2>${esc(p.nome)}</h2>
       <p>${esc(p.descricao || "")}</p>
       ${(p.itens || []).length ? `<ul>${p.itens.map((t) => `<li>${icone("check")}<span>${esc(t)}</span></li>`).join("")}</ul>` : ""}
-      <div class="consulta-preco"><strong>${esc(brl(p.preco))}</strong><small>${esc(p.prazo || "")}</small></div>
-      <button type="button" class="btn btn-primario btn-bloco" data-comprar="${esc(p.id)}">Consultar agora</button>
+      <div class="consulta-preco"><strong>${p.tipo === "documentos" ? "Grátis" : esc(brl(p.preco))}</strong><small>${esc(p.prazo || "")}</small></div>
+      <button type="button" class="btn ${p.tipo === "documentos" ? "btn-contorno-rosa" : "btn-primario"} btn-bloco" data-comprar="${esc(p.id)}">${p.tipo === "documentos" ? "Começar análise grátis" : "Consultar agora"}</button>
     </article>`).join("");
   }
 
@@ -35,6 +35,7 @@
       setTimeout(() => { location.href = "/conta?voltar=consultas"; }, 900);
       return;
     }
+    if (p.tipo === "documentos") return analiseGratuita(p);
     const perfil = C.perfil || {};
     const doc = perfil.tipo === "pj" ? perfil.cnpj : perfil.cpf;
     const m = modal(`<div class="consulta-fluxo">
@@ -57,6 +58,40 @@
         const todas = await C.consultas();
         await mostrarPix(m, todas.find((x) => x.id === cid) || { id: cid, valor: p.preco, numero: "" }, p);
       } catch (err) { avisar(err.message); b.disabled = false; }
+    });
+  }
+
+  /** Análise gratuita guiada: passo a passo + envio dos relatórios */
+  function analiseGratuita(p) {
+    const pj = (C.perfil || {}).tipo === "pj";
+    const m = modal(`<div class="consulta-fluxo analise-gratuita">
+      <span class="quiz-num">Análise gratuita</span>
+      <h2>Baixe seus relatórios e envie aqui</h2>
+      <p>São gratuitos e só você pode emiti-los. Envie <strong>pelo menos um</strong> — quanto mais, melhor a análise.</p>
+      <ol class="guia-relatorios">
+        <li><strong>Registrato (Banco Central)</strong> — dívidas com bancos. Entre com sua conta gov.br e gere o relatório de empréstimos e financiamentos em PDF. <a href="https://www.bcb.gov.br/cidadaniafinanceira/registrato" target="_blank" rel="noopener">Abrir Registrato</a></li>
+        <li><strong>Serasa</strong> — dívidas negativadas e score. No app ou site da Serasa, entre com seu ${pj ? "CNPJ" : "CPF"} e tire prints das telas de dívidas e score. <a href="https://www.serasa.com.br" target="_blank" rel="noopener">Abrir Serasa</a></li>
+        <li><strong>Boa Vista (Consumidor Positivo)</strong> — dívidas e score na Boa Vista. Tire prints das telas. <a href="https://www.consumidorpositivo.com.br" target="_blank" rel="noopener">Abrir Consumidor Positivo</a></li>
+        <li><strong>Protestos em cartório</strong> — consulte seu ${pj ? "CNPJ" : "CPF"} e tire print do resultado. <a href="https://www.pesquisaprotesto.com.br" target="_blank" rel="noopener">Abrir pesquisa de protestos</a></li>
+      </ol>
+      <form class="form-modal" novalidate>
+        <label class="campo"><span>Seus relatórios <small>(PDF ou fotos · até 8 arquivos de 10 MB)</small></span><input type="file" name="arquivos" multiple accept="application/pdf,image/jpeg,image/png,image/webp"></label>
+        <label class="campo"><span>Quer contar algo? <small>(opcional)</small></span><textarea name="obs" rows="2" maxlength="1000" placeholder="Ex.: o banco negou meu financiamento e não sei o motivo."></textarea></label>
+        <label class="aceite"><input type="checkbox" name="aceite"><span>Envio meus próprios relatórios e autorizo a Milena Garbim · Limpa Nome a analisá-los somente para me orientar, conforme a <a href="/privacidade" target="_blank">Política de Privacidade</a> e a LGPD.</span></label>
+        <div class="botoes-form"><button type="submit" class="btn btn-primario">Enviar para análise</button><button type="button" class="btn-texto" data-fechar>Cancelar</button></div>
+      </form></div>`);
+    const f = m.querySelector("form");
+    f.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!f.arquivos.files.length) { avisar("Escolha pelo menos um relatório (PDF ou foto)."); return; }
+      if (!f.aceite.checked) { avisar("Marque a autorização para continuar."); return; }
+      const b = f.querySelector("button[type=submit]"); b.disabled = true; b.textContent = "Enviando...";
+      try {
+        await C.enviarAnaliseGratuita(f.arquivos.files, f.obs.value, true);
+        try { sessionStorage.removeItem(CHAVE); } catch (err) { /* ok */ }
+        m.querySelector(".consulta-fluxo").innerHTML = `<h2>Recebido! ✅</h2><p>A Milena vai analisar seus relatórios e responder em até 2 dias úteis. A análise aparece em <strong>Minha conta → Consultas</strong>, com aviso no seu celular.</p>
+          <div class="botoes-form"><a class="btn btn-primario" href="/conta?aba=consultas">Acompanhar minha análise</a></div>`;
+      } catch (err) { avisar(err.message); b.disabled = false; b.textContent = "Enviar para análise"; }
     });
   }
 

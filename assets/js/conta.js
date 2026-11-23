@@ -259,13 +259,14 @@
     try { consultasAtuais = await C.consultas(); } catch (e) { alvo.innerHTML = `<p class="vazio">${esc(e.message)}</p>`; return; }
     const minhas = consultasAtuais.filter((c) => c.origem === "cliente");
     const passos = (c) => {
+      if (c.tipo === "documentos") return `<ol class="progresso consulta-progresso"><li class="feito"><span></span>Enviado</li><li class="feito"><span></span>Em análise</li><li class="${c.status === "concluida" ? "feito" : ""}"><span></span>Resposta</li></ol>`;
       const pago = c.pagamento_status === "pago", feita = c.status === "concluida";
       return `<ol class="progresso consulta-progresso"><li class="feito"><span></span>Pedido</li><li class="${pago ? "feito" : ""}"><span></span>Pagamento</li><li class="${pago ? "feito" : ""}"><span></span>Consulta</li><li class="${feita ? "feito" : ""}"><span></span>Resultado</li></ol>`;
     };
     alvo.innerHTML = (minhas.length ? minhas.map((c) => {
       const st = (D.STATUS_CONSULTA || {})[c.status] || { nome: c.status, cor: "cinza" };
-      const nomeSt = c.status === "autorizada" ? "Pagamento confirmado — consultando" : c.status === "aguardando_pagamento" && c.informou_pago_em ? "Pagamento em conferência" : st.nome;
-      return `<div class="consulta-item"><div class="consulta-cab"><div><strong>${esc((D.TIPOS_CONSULTA || {})[c.tipo] || "Consulta")}</strong><small> · ${esc(c.numero || "")} · ${esc(brl(c.valor || 0))}</small></div><span class="selo-status st-${st.cor}">${esc(nomeSt)}</span></div>
+      const nomeSt = c.tipo === "documentos" && c.status === "autorizada" ? "Em análise pela Milena" : c.status === "autorizada" ? "Pagamento confirmado — consultando" : c.status === "aguardando_pagamento" && c.informou_pago_em ? "Pagamento em conferência" : st.nome;
+      return `<div class="consulta-item"><div class="consulta-cab"><div><strong>${c.tipo === "documentos" ? "Análise gratuita" : esc(((D.TIPOS_CONSULTA || {})[c.tipo] || "Consulta").replace(/^./, (l) => l.toUpperCase()))}</strong><small> · ${esc(c.numero || "")} · ${c.tipo === "documentos" ? "grátis" : esc(brl(c.valor || 0))}</small></div><span class="selo-status st-${st.cor}">${esc(nomeSt)}</span></div>
         ${passos(c)}
         ${c.status === "aguardando_pagamento" ? `<div class="botoes-form">${c.informou_pago_em ? `<p class="adm-dica">Você avisou que pagou. Estamos conferindo — você será avisado aqui e no celular.</p>` : `<button type="button" class="btn btn-primario" data-pagar-consulta="${esc(c.id)}">Pagar com PIX</button>`}</div>` : ""}
         ${c.status === "concluida" ? resultadoConsulta(c) : ""}

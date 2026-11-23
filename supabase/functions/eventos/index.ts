@@ -274,7 +274,12 @@ async function processarConsulta(id: string) {
 async function consultaMudou(evento: string, c: any) {
   const nome = c.produto || "consulta";
   const num = c.numero ? ` ${c.numero}` : "";
-  if (evento === "nova") {
+  if (evento === "nova" && c.tipo === "documentos") {
+    await Promise.all([
+      notificarEquipe(`Análise gratuita${num}`, "Um cliente enviou os relatórios para análise. Toque para ver.", `${SITE}/admin?aba=consultas`, `consulta-${c.id}`),
+      avisarWhatsApp(`📄 Nova análise gratuita${num}: o cliente enviou os relatórios. Veja no painel: ${SITE}/admin`),
+    ]);
+  } else if (evento === "nova") {
     await notificarEquipe(`Nova consulta${num}`, `${nome} — ${brl(c.valor)} · aguardando PIX`, `${SITE}/admin?aba=consultas`, `consulta-${c.id}`);
   } else if (evento === "informou_pagamento") {
     await Promise.all([
@@ -289,7 +294,7 @@ async function consultaMudou(evento: string, c: any) {
   } else if (evento === "falhou") {
     await notificarEquipe(`Consulta${num} precisa de você`, `A consulta automática não deu certo (${nome}). Faça manualmente e registre o resultado.`, `${SITE}/admin?aba=consultas`, `consulta-${c.id}`);
   } else if (evento === "concluida") {
-    await notificarCliente(c.cliente_id, "Resultado pronto 📄", `O resultado da sua ${nome.toLowerCase()} já está na sua conta.`, `${SITE}/conta?aba=consultas`, `consulta-${c.id}`);
+    await notificarCliente(c.cliente_id, "Resultado pronto 📄", c.tipo === "documentos" ? "A Milena analisou seus relatórios. Veja na sua conta." : `O resultado da sua ${nome.toLowerCase()} já está na sua conta.`, `${SITE}/conta?aba=consultas`, `consulta-${c.id}`);
   } else if (evento === "pedido_autorizacao") {
     await notificarCliente(c.cliente_id, "Autorização de consulta", "A Milena pediu sua autorização para uma consulta. Toque para ver.", `${SITE}/conta`, `consulta-${c.id}`);
   }

@@ -476,11 +476,12 @@
 
   /* ---------- Central de consultas (E06) ---------- */
   const TIPOS_CONSULTA = {
-    completa: "consulta completa (restrições, protestos, score e Registrato/SCR)",
-    restricoes: "restrições no SPC, Serasa e Boa Vista",
+    completa: "consulta completa (restrições, protestos e score)",
+    restricoes: "dívidas negativadas (restrições)",
     protestos: "protestos em cartório (Cenprot)",
     score: "score de crédito",
-    scr: "dívidas e atrasos com bancos (Registrato/SCR do Banco Central)"
+    scr: "dívidas e atrasos com bancos (Registrato/SCR do Banco Central)",
+    documentos: "análise dos relatórios enviados por você"
   };
   const STATUS_CONSULTA = {
     aguardando_pagamento: { nome: "Aguardando pagamento", cor: "champanhe" },
@@ -493,8 +494,9 @@
     cancelada: { nome: "Cancelada", cor: "cinza" }
   };
   const PRODUTOS_CONSULTA_PADRAO = [
-    { id: "completa", tipo: "completa", nome: "Consulta completa", descricao: "Tudo o que pesa no seu nome em um só relatório, explicado em linguagem simples.", itens: ["Restrições no SPC, Serasa e Boa Vista", "Protestos em cartório (Cenprot)", "Score de crédito", "Dívidas com bancos (Registrato/SCR)"], preco: null, prazo: "Resultado em até 1 dia útil", destaque: true, ativo: false, ordem: 1 },
-    { id: "restricoes", tipo: "restricoes", nome: "Restrições no nome", descricao: "Veja se o seu CPF ou CNPJ está negativado e por quem.", itens: ["SPC, Serasa e Boa Vista", "Credor, valor e data de cada registro"], preco: null, prazo: "Resultado em até 1 dia útil", destaque: false, ativo: false, ordem: 2 },
+    { id: "gratuita", tipo: "documentos", nome: "Análise gratuita", descricao: "Você baixa seus relatórios gratuitos, envia aqui e a Milena explica o que está pesando no seu nome.", itens: ["Passo a passo para baixar seus relatórios", "Registrato (Banco Central), Serasa, Boa Vista e protestos", "Análise explicada e o melhor caminho"], preco: null, prazo: "Resposta em até 2 dias úteis", destaque: false, ativo: false, ordem: 0 },
+    { id: "completa", tipo: "completa", nome: "Consulta completa", descricao: "Restrições, protestos e score em um só relatório, explicado em linguagem simples.", itens: ["Dívidas negativadas: Boa Vista (CPF) ou QUOD (CNPJ)", "Protestos em cartório em todo o Brasil (Cenprot/IEPTB)", "Score de crédito (QUOD)", "Credor, valor e data de cada registro"], preco: null, prazo: "Resultado em até 1 dia útil", destaque: true, ativo: false, ordem: 1 },
+    { id: "restricoes", tipo: "restricoes", nome: "Restrições no nome", descricao: "Veja se o seu CPF ou CNPJ tem dívidas negativadas e por quem.", itens: ["CPF: base Boa Vista", "CNPJ: base QUOD", "Credor, valor e data de cada registro"], preco: null, prazo: "Resultado em até 1 dia útil", destaque: false, ativo: false, ordem: 2 },
     { id: "protestos", tipo: "protestos", nome: "Protestos em cartório", descricao: "Consulta de protestos registrados na Central Nacional de Protesto.", itens: ["Cartório, valor e data", "Todos os estados"], preco: null, prazo: "Resultado em até 1 dia útil", destaque: false, ativo: false, ordem: 3 },
     { id: "score", tipo: "score", nome: "Score de crédito", descricao: "Sua pontuação de crédito e o que ela significa.", itens: ["Pontuação atual", "O que ajuda e o que atrapalha"], preco: null, prazo: "Resultado em até 1 dia útil", destaque: false, ativo: false, ordem: 4 },
     { id: "scr", tipo: "scr", nome: "Dívidas com bancos (Bacen)", descricao: "Empréstimos, financiamentos e atrasos registrados no Banco Central (SCR).", itens: ["Dívidas em dia e em atraso", "Prejuízos registrados pelos bancos"], preco: null, prazo: "Resultado em até 1 dia útil", destaque: false, ativo: false, ordem: 5 }
@@ -503,7 +505,7 @@
   /** Consultas à venda (com preço, ativas e com o módulo ligado) */
   async function consultaProdutos() {
     await modulos();
-    if (!ONLINE) return moduloLigado("consultas") ? produtosConsultaDemo().filter((x) => x.ativo && x.preco).sort((a, b) => a.ordem - b.ordem) : [];
+    if (!ONLINE) return moduloLigado("consultas") ? produtosConsultaDemo().filter((x) => x.ativo && (x.preco || x.tipo === "documentos")).sort((a, b) => a.ordem - b.ordem) : [];
     try {
       const r = await fetch(SB.url + "/rest/v1/consulta_produtos?select=id,tipo,nome,descricao,itens,preco,prazo,destaque,ordem&order=ordem", { headers: { apikey: SB.anonKey, Authorization: "Bearer " + SB.anonKey } });
       return r.ok ? await r.json() : [];
@@ -702,6 +704,35 @@
       const agora = new Date().toISOString();
       const c = { id: "c" + Date.now(), cliente_id: usuarioAtual.email, tipo: prod.tipo, finalidade: "Entregar ao titular o resultado da consulta contratada no site", status: "aguardando_pagamento", origem: "cliente", produto_id: prod.id, valor: prod.preco, pagamento_status: "pendente", pagamento_ref: num.replace(/-/g, ""), pagamento_meio: "pix", numero: num, modo: "manual", pendencias: [], consentimento_em: agora, respondido_em: agora,
         consentimento_texto: "Eu, titular do documento " + doc + ", autorizo Milena Garbim · Limpa Nome a consultar " + TIPOS_CONSULTA[prod.tipo] + " em meu nome, exclusivamente para me entregar o resultado desta consulta (" + num + "). Os dados serão usados somente para este fim, conforme a Política de Privacidade e a LGPD (Lei 13.709/2018). Autorizado em " + new Date().toLocaleString("pt-BR") + ".", criado_em: agora };
+      const l = consultasDemo(); l.push(c); gravar(K.consultas, l);
+      return c.id;
+    },
+    /** Análise gratuita: envia os relatórios do próprio cliente (PDF ou foto) */
+    async enviarAnaliseGratuita(arquivos, observacao, aceite) {
+      if (!aceite) throw new Error("Para continuar, marque a autorização.");
+      arquivos = Array.from(arquivos || []);
+      if (!arquivos.length) throw new Error("Envie pelo menos um relatório (PDF ou foto).");
+      if (arquivos.length > 8) throw new Error("Envie no máximo 8 arquivos.");
+      for (const f of arquivos) {
+        if (!/^(application\/pdf|image\/(jpeg|png|webp))$/.test(f.type)) throw new Error(`"${f.name}" não é PDF nem foto (JPG/PNG).`);
+        if (f.size > 10 * 1024 * 1024) throw new Error(`"${f.name}" passa de 10 MB.`);
+      }
+      if (ONLINE) {
+        const sb = await supabase();
+        const caminhos = [];
+        for (const [i, f] of arquivos.entries()) {
+          const ext = f.type === "application/pdf" ? "pdf" : f.type.split("/")[1].replace("jpeg", "jpg");
+          const caminho = `${usuarioAtual.id}/${Date.now()}-${i + 1}-${slug(f.name.replace(/\.[^.]+$/, "")) || "relatorio"}.${ext}`;
+          await rodar(sb.storage.from("documentos").upload(caminho, f, { contentType: f.type, upsert: false }));
+          caminhos.push(caminho);
+        }
+        return rodar(sb.rpc("enviar_analise_gratuita", { p_anexos: caminhos, p_observacao: String(observacao || "").trim(), p_aceite: true }));
+      }
+      if (!moduloLigado("consultas")) throw new Error("A análise gratuita está pausada no momento.");
+      if (consultasDemo().some((c) => c.cliente_id === usuarioAtual.email && c.tipo === "documentos" && ["autorizada", "em_andamento"].includes(c.status))) throw new Error("Você já tem uma análise gratuita em andamento. Aguarde a resposta da Milena.");
+      const agora = new Date().toISOString(), num = "AG-" + agora.slice(2, 10).replace(/-/g, "") + "-" + Math.random().toString(16).slice(2, 7).toUpperCase();
+      const c = { id: "c" + Date.now(), cliente_id: usuarioAtual.email, tipo: "documentos", finalidade: "Analisar os relatórios enviados pelo titular", status: "autorizada", origem: "cliente", produto_id: "gratuita", valor: null, pagamento_status: "dispensado", numero: num, modo: "manual", pendencias: [],
+        anexos: arquivos.map((f) => "demo/" + f.name), observacao_cliente: String(observacao || "").trim(), consentimento_em: agora, consentimento_texto: "Envio meus próprios relatórios de crédito e autorizo a análise (" + num + "), conforme a LGPD.", criado_em: agora };
       const l = consultasDemo(); l.push(c); gravar(K.consultas, l);
       return c.id;
     },
@@ -1015,7 +1046,7 @@
       if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("registrar_consulta", { p_id: id, p_resumo: resumo, p_pendencias: pend, p_fonte: fonte, p_data: d.data })); }
       const c = consultasDemo().find((x) => x.id === id);
       if (!c || !["autorizada", "em_andamento", "falhou"].includes(c.status)) throw new Error("Só dá para registrar resultado de consulta autorizada pelo cliente.");
-      if (c.origem === "cliente" && c.pagamento_status !== "pago") throw new Error("Confirme o pagamento antes de registrar o resultado.");
+      if (c.origem === "cliente" && c.pagamento_status === "pendente") throw new Error("Confirme o pagamento antes de registrar o resultado.");
       gravarConsultaDemo(id, { status: "concluida", resultado_resumo: resumo, pendencias: pend, fonte, data_consulta: d.data, concluido_por: (usuarioAtual || {}).email });
       if (c.pedido_id) demoMensagem(c.pedido_id, "sistema", "O resultado da consulta de " + TIPOS_CONSULTA[c.tipo] + ' está disponível em "Meus pedidos".');
     },
@@ -1045,7 +1076,7 @@
     async salvarConsultaProduto(x) {
       const preco = x.preco === "" || x.preco === null || x.preco === undefined ? null : Math.round(Number(String(x.preco).replace(",", ".")) * 100) / 100;
       if (preco !== null && !(preco > 0)) throw new Error("Preço inválido.");
-      if (x.ativo && !preco) throw new Error("Defina o preço antes de colocar à venda.");
+      if (x.ativo && !preco && x.tipo !== "documentos") throw new Error("Defina o preço antes de colocar à venda.");
       const d = { codigo_fornecedor: String(x.codigo_fornecedor || "").trim().slice(0, 80) || null, nome: String(x.nome || "").trim().slice(0, 80), descricao: String(x.descricao || "").trim().slice(0, 600), itens: (x.itens || []).map((t) => String(t).trim()).filter(Boolean).slice(0, 8), preco, prazo: String(x.prazo || "").trim().slice(0, 80) || "Resultado em até 1 dia útil", destaque: !!x.destaque, ativo: !!x.ativo };
       if (!d.nome) throw new Error("Dê um nome à consulta.");
       if (ONLINE) { const sb = await supabase(); const r = await rodar(sb.from("consulta_produtos").update(d).eq("id", x.id).select("id")); if (!r || !r.length) throw new Error("Você não tem permissão para fazer isso."); return; }
@@ -1057,6 +1088,13 @@
       const c = consultasDemo().find((x) => x.id === id);
       if (!c || c.status !== "aguardando_pagamento") throw new Error("Esta consulta não está aguardando pagamento.");
       gravarConsultaDemo(id, { pagamento_status: "pago", pago_em: new Date().toISOString(), status: "autorizada", modo: "manual" });
+    },
+    /** Link temporário (5 min) para a equipe abrir um relatório enviado pelo cliente */
+    async linkDocumento(caminho) {
+      if (!ONLINE) return null;
+      const sb = await supabase();
+      const r = await rodar(sb.storage.from("documentos").createSignedUrl(caminho, 300));
+      return r && r.signedUrl;
     },
     async cancelarConsulta(id, motivo) {
       if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("cancelar_consulta", { p_id: id, p_motivo: motivo || "" })); }

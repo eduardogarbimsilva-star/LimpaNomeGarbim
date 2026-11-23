@@ -874,12 +874,13 @@
       let acao = "";
       if (c.status === "aguardando_pagamento") acao = `<button type="button" class="btn ${avisou ? "btn-primario" : "btn-contorno-rosa"}" data-confirmar-pag="${esc(c.id)}">${icone("check")}Confirmar pagamento</button>`;
       else if (c.status === "em_andamento" && c.modo === "automatico") acao = `<span class="cons-auto">⏳ Consultando automaticamente…</span>`;
+      else if (c.tipo === "documentos" && c.status === "autorizada") acao = `<button type="button" class="btn btn-primario" data-registrar-consulta="${esc(c.id)}">${icone("check")}Analisar documentos</button>`;
       else if (["autorizada", "em_andamento", "falhou"].includes(c.status)) acao = (c.status === "falhou" && integ.provedor ? `<button type="button" class="btn btn-contorno-rosa" data-reprocessar="${esc(c.id)}">Tentar automático de novo</button>` : "") + `<button type="button" class="btn btn-primario" data-registrar-consulta="${esc(c.id)}">${icone("check")}Registrar resultado</button>`;
       return `<article class="cons-card${avisou ? " cons-alerta" : ""}">
         <div class="cons-info">
           <div class="cons-topo"><strong>${esc(nomeProd(c))}</strong><span class="selo-status st-${st.cor}">${esc(avisou ? "Cliente avisou que pagou" : st.nome)}</span></div>
           ${c.status === "falhou" && c.erro ? `<div class="cons-erro">⚠️ ${esc(c.erro)}</div>` : ""}
-          <div class="cons-meta"><span>${esc(nomeCli(c))}</span><span>${esc(c.numero || "")}</span>${c.valor ? `<span>${esc(brl(c.valor))}</span>` : `<span>pedido da equipe</span>`}<span>${esc(haQuanto(c.criado_em))}</span></div>
+          <div class="cons-meta"><span>${esc(nomeCli(c))}</span><span>${esc(c.numero || "")}</span>${c.valor ? `<span>${esc(brl(c.valor))}</span>` : `<span>${c.tipo === "documentos" ? "grátis · " + (c.anexos || []).length + " arquivo(s)" : "pedido da equipe"}</span>`}<span>${esc(haQuanto(c.criado_em))}</span></div>
         </div>
         <div class="cons-acoes">${acao}<button type="button" class="btn-texto" data-ver-consulta="${esc(c.id)}">Ver</button>${fila.includes(c.status) ? `<button type="button" class="btn-texto perigo" data-cancelar-consulta="${esc(c.id)}">Cancelar</button>` : ""}</div>
       </article>`;
@@ -951,15 +952,21 @@
     }
     function registrar(c) {
       const hoje = new Date().toISOString().slice(0, 10);
+      const anexos = Array.isArray(c.anexos) ? c.anexos : [];
       const m = modal(`<h2>Resultado — ${esc(c.numero || "")}</h2>
+        ${anexos.length ? `<div class="anexos-cliente"><strong>Relatórios enviados pelo cliente:</strong><ul>${anexos.map((a, i) => `<li><button type="button" class="btn-texto" data-abrir-doc="${esc(a)}">📄 Arquivo ${i + 1} — ${esc(a.split("/").pop())}</button></li>`).join("")}</ul>${c.observacao_cliente ? `<p><strong>O cliente escreveu:</strong> ${esc(c.observacao_cliente)}</p>` : ""}</div>` : ""}
         <p class="adm-dica">${esc(TIPOS[c.tipo] || c.tipo)} · autorizada em ${esc(dt(c.consentimento_em))}. Registre <strong>somente</strong> o que apareceu na consulta.</p>
         <form class="form-modal" novalidate>
-          <label class="campo"><span>Fonte</span><input name="fonte" maxlength="150" value="Portal do revendedor (Relinq)"></label>
+          <label class="campo"><span>Fonte</span><input name="fonte" maxlength="150" value="${c.tipo === "documentos" ? "Relatórios enviados pelo cliente" : "Portal do revendedor (Relinq)"}"></label>
           <label class="campo"><span>Data da consulta</span><input type="date" name="data" value="${hoje}" max="${hoje}"></label>
           <label class="campo"><span>Resumo para o cliente</span><textarea name="resumo" rows="3" maxlength="3000" placeholder="Ex.: Encontramos 2 restrições no Serasa e 1 protesto em cartório."></textarea></label>
           <label class="campo"><span>Pendências encontradas <small>(uma por linha: Onde | Credor | Valor | Data — deixe vazio se não houver)</small></span><textarea name="pend" rows="5" placeholder="Serasa | Banco X | R$ 1.250,00 | 10/03/2023"></textarea></label>
           <div class="botoes-form"><button type="submit" class="btn btn-primario">Salvar resultado</button><button type="button" class="btn-texto" data-fechar>Cancelar</button></div>
         </form>`);
+      m.addEventListener("click", async (ev) => {
+        const d = ev.target.closest("[data-abrir-doc]"); if (!d) return;
+        try { const url = await A.linkDocumento(d.dataset.abrirDoc); if (url) window.open(url, "_blank", "noopener"); else avisar("No modo demonstração os arquivos não são enviados de verdade."); } catch (err) { avisar(err.message); }
+      });
       const f = m.querySelector("form");
       f.addEventListener("submit", (e) => {
         e.preventDefault();

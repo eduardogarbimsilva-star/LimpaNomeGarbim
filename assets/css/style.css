@@ -1800,3 +1800,8 @@ body.mod-off-chat:not(.pagina-painel) .chat-mensagens::after { content: "O chat 
 .cons-produto details { margin: 8px 0; }
 .cons-erro { font-size: .85rem; color: #9a3412; margin-top: 4px; }
 .cons-auto { font-size: .9rem; color: var(--texto-suave, #6b5b60); }
+.consulta-card.gratuita { background: linear-gradient(180deg, var(--rosa-claro, #f6e2e7), var(--fundo-cartao, #fff)); }
+.guia-relatorios { padding-left: 20px; display: grid; gap: 10px; font-size: .92rem; margin: 10px 0 16px; }
+.guia-relatorios a { font-weight: 600; white-space: nowrap; }
+.anexos-cliente { background: var(--fundo-alt, #faf5f6); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; font-size: .92rem; }
+.anexos-cliente ul { list-style: none; padding: 0; margin: 6px 0; }
