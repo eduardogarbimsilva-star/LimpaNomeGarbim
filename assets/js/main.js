@@ -265,6 +265,42 @@
   }
 
   /* =========================================================
+     Produtos de crédito (E04): só aparecem os publicados, com o
+     módulo ligado. Sem promessa de aprovação.
+     ========================================================= */
+  async function desenharCredito() {
+    const sec = $("[data-produtos-credito]");
+    if (!sec || !D.produtosCredito) return;
+    let lista = [];
+    try { lista = await D.produtosCredito(); } catch (e) { lista = []; }
+    if (!lista.length) { sec.hidden = true; return; }
+    const PERF = D.PERFIS_CREDITO || {};
+    const perfis = Object.keys(PERF).filter((k) => lista.some((x) => x.perfil === k));
+    let filtro = "";
+    const filtroEl = $("[data-credito-filtro]", sec), listaEl = $("[data-credito-lista]", sec);
+    function desenhar() {
+      filtroEl.innerHTML = perfis.length > 1 ? `<button type="button" class="chip-filtro${filtro ? "" : " ativo"}" data-cperfil="">Todos</button>` + perfis.map((k) => `<button type="button" class="chip-filtro${filtro === k ? " ativo" : ""}" data-cperfil="${k}">${esc(PERF[k])}</button>`).join("") : "";
+      listaEl.innerHTML = lista.filter((x) => !filtro || x.perfil === filtro).map((x) => {
+        const link = linkWhats(`Olá, Milena! Vim pelo site e tenho interesse em: *${x.nome}*.`);
+        return `<article class="credito-card">
+          <span class="credito-perfil">${esc(PERF[x.perfil] || "")}</span>
+          <h3>${esc(x.nome)}</h3>
+          ${x.descricao_comercial ? `<p>${fmt(x.descricao_comercial)}</p>` : ""}
+          ${(x.requisitos || []).length ? `<h4>Requisitos</h4><ul>${x.requisitos.map((t) => `<li>${icone("check")}<span>${esc(t)}</span></li>`).join("")}</ul>` : ""}
+          ${(x.documentos || []).length ? `<h4>Documentos</h4><ul>${x.documentos.map((t) => `<li>${icone("check")}<span>${esc(t)}</span></li>`).join("")}</ul>` : ""}
+          ${x.preco ? `<p class="credito-preco">${esc(x.preco)}</p>` : ""}
+          <p class="credito-aviso">Oferecido por ${esc(x.fornecedor || "instituição parceira")}. Sujeito à análise de crédito e às regras da instituição.</p>
+          ${link ? `<a class="btn btn-whats" href="${esc(link)}" target="_blank" rel="noopener">${icone("chat")}Tenho interesse</a>` : ""}
+        </article>`;
+      }).join("");
+    }
+    filtroEl.addEventListener("click", (e) => { const b = e.target.closest("[data-cperfil]"); if (b) { filtro = b.dataset.cperfil; desenhar(); } });
+    desenhar();
+    sec.hidden = false;
+  }
+  desenharCredito();
+
+  /* =========================================================
      Frentes de atuação (página inicial): filtros "Para quem é"
      e "Como está o seu nome", cartões numerados e WhatsApp com
      o assunto já preenchido. Triagem "Como está o seu nome hoje?"

@@ -1694,3 +1694,23 @@ body.mod-off-chat:not(.pagina-painel) .chat-mensagens::after { content: "O chat 
 @media (prefers-reduced-motion: reduce) { .chave, .chave::after { transition: none; } }
 .modulo-selo { white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
 .modulo-selo .icone-svg { width: 12px; height: 12px; display: inline-block; margin: 0; }
+
+/* Produtos de crédito (E04) */
+.credito-grade { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+.credito-card { background: var(--fundo-cartao, #fff); border: 1px solid var(--borda, #eadde1); border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 8px; }
+.credito-card h3 { margin: 0; }
+.credito-card h4 { font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; margin: 8px 0 2px; color: var(--champanhe-escuro, #8a6a4a); }
+.credito-card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .92rem; }
+.credito-card li { display: flex; gap: 6px; align-items: flex-start; }
+.credito-card li .icone-svg { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 3px; color: var(--rosa, #a5536b); }
+.credito-perfil { font-size: .75rem; font-weight: 700; color: var(--rosa-escuro, #7d3a50); text-transform: uppercase; letter-spacing: .06em; }
+.credito-preco { font-weight: 600; }
+.credito-aviso { font-size: .8rem; color: var(--texto-suave, #6b5b60); margin-top: auto; }
+.prod-lista { display: grid; gap: 10px; margin-top: 14px; }
+.prod-item { border: 1px solid var(--borda, #eadde1); border-radius: 14px; padding: 14px 16px; background: var(--fundo-cartao, #fff); }
+.prod-item small { display: block; color: var(--texto-suave, #6b5b60); margin: 4px 0 8px; }
+.prod-cab { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+.prod-checks { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .82rem; }
+.prod-check { color: var(--texto-suave, #6b5b60); display: inline-flex; align-items: center; gap: 4px; }
+.prod-check.sim { color: #2f6f55; font-weight: 600; }
+.prod-check .icone-svg { width: 14px; height: 14px; }

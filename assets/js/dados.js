@@ -22,7 +22,7 @@
   const K = {
     sessao: "mg_demo_sessao", perfis: "mg_demo_perfis", pedidos: "mg_demo_pedidos", codigo: "mg_demo_codigo",
     categorias: "mg_demo_categorias", servicos: "mg_demo_servicos", site: "mg_demo_site", equipe: "mg_demo_equipe",
-    mensagens: "mg_demo_mensagens", modulos: "mg_demo_modulos", auditoria: "mg_demo_auditoria"
+    mensagens: "mg_demo_mensagens", modulos: "mg_demo_modulos", auditoria: "mg_demo_auditoria", produtos: "mg_demo_produtos"
   };
 
   const ler = (k, p) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? p; } catch (e) { return p; } };
@@ -147,7 +147,7 @@
     ["busca_cep", "site", "Endereço automático pelo CEP", "Preenche rua, bairro, cidade e estado pelo CEP (ViaCEP, gratuito).", true],
     ["busca_cnpj", "site", "Dados da empresa pelo CNPJ", "Preenche razão social e endereço pelo CNPJ (BrasilAPI, gratuito).", true],
     ["triagem", "site", "Pergunta inicial \"Como está o seu nome?\"", "Janela que ajuda o visitante a filtrar os serviços.", true],
-    ["catalogo_ditto", "novos", "Produtos de crédito (Ditto)", "20 produtos do portfólio Ditto, todos como rascunho até você confirmar parceria e regras.", false, "E04"],
+    ["catalogo_ditto", "novos", "Produtos de crédito (Ditto)", "20 produtos do portfólio Ditto, todos como rascunho até você confirmar parceria e regras.", false],
     ["diagnostico", "novos", "Diagnóstico inteligente", "Perguntas condicionais que indicam o caminho, com explicação de cada resultado.", false, "E05"],
     ["consultas", "novos", "Central de consultas", "Consultas a birôs só por fornecedor contratado e com autorização do cliente.", false, "E06"],
     ["relatorios", "novos", "Relatórios em PDF", "Relatórios protegidos, com fonte e data, só com dados reais.", false, "E07"],
@@ -184,6 +184,31 @@
   }
   /** Consulta rápida (depois que os módulos carregaram). Desconhecido = ligado. */
   const moduloLigado = (id) => !modulosCache || modulosCache[id] !== false;
+
+  /* ---------- Produtos de crédito (E04) ---------- */
+  const PERFIS_CREDITO = { clt: "Trabalhador CLT", aposentado: "Aposentado e pensionista", servidor: "Servidor público", autonomo: "Autônomo e baixa renda", patrimonio: "Quem tem patrimônio", complementar: "Soluções complementares" };
+  function produtosDemo() {
+    let l = ler(K.produtos, null);
+    if (!l) { l = copia(PADRAO.produtosCredito || []); gravar(K.produtos, l); }
+    return l;
+  }
+  const produtoVisivel = (p) => p.status === "publicado" && (!p.validade || p.validade >= new Date().toISOString().slice(0, 10));
+  /** Produtos publicados (o banco só devolve se o módulo estiver ligado) */
+  async function produtosCredito() {
+    if (!ONLINE) { await modulos(); return moduloLigado("catalogo_ditto") ? produtosDemo().filter(produtoVisivel).sort((a, b) => a.ordem - b.ordem) : []; }
+    try {
+      const r = await fetch(SB.url + "/rest/v1/produtos_credito?select=id,nome,perfil,pergunta_referencia,fornecedor,descricao_comercial,preco,requisitos,documentos,validade,ordem&status=eq.publicado&order=ordem", { headers: { apikey: SB.anonKey, Authorization: "Bearer " + SB.anonKey } });
+      return r.ok ? await r.json() : [];
+    } catch (e) { return []; }
+  }
+  /** Mesma regra do banco, para avisar antes de salvar */
+  function validarProduto(p) {
+    if (p.status === "publicado") {
+      if (!(p.parceria_confirmada && p.autorizacao_verificada && p.disponibilidade_verificada)) throw new Error("Para publicar, confirme parceria, autorização e disponibilidade em 2026.");
+      if (!String(p.descricao_comercial || "").trim() || !String(p.fornecedor || "").trim()) throw new Error("Para publicar, preencha a descrição comercial e o fornecedor/parceiro.");
+      if (p.validade && p.validade < new Date().toISOString().slice(0, 10)) throw new Error("A validade da oferta já passou. Atualize antes de publicar.");
+    }
+  }
 
   const achatar = (r) => Object.assign({}, r.dados || {}, { id: r.id, ordem: r.ordem ?? 0, ativo: r.ativo !== false }, r.categoria ? { categoria: r.categoria } : {});
   const porOrdem = (a, b) => (a.ordem || 0) - (b.ordem || 0) || String(a.nome).localeCompare(String(b.nome));
@@ -813,6 +838,36 @@
       return (await rodar(sb.from("auditoria").select("*").order("quando", { ascending: false }).limit(limite))) || [];
     },
 
+    /* ---- Produtos de crédito (E04) ---- */
+    async produtosCredito() {
+      if (!ONLINE) return produtosDemo().slice().sort((a, b) => a.ordem - b.ordem);
+      const sb = await supabase();
+      return (await rodar(sb.from("produtos_credito").select("*").order("ordem"))) || [];
+    },
+    async salvarProduto(p) {
+      const campos = ["status", "parceria_confirmada", "autorizacao_verificada", "disponibilidade_verificada", "fornecedor", "descricao_comercial", "preco", "requisitos", "documentos", "fonte_oferta", "validade", "observacao"];
+      const d = {};
+      campos.forEach((k) => { if (k in p) d[k] = p[k]; });
+      ["fornecedor", "descricao_comercial", "preco", "fonte_oferta", "observacao"].forEach((k) => { if (k in d) d[k] = String(d[k] || "").trim() || null; });
+      ["requisitos", "documentos"].forEach((k) => { if (k in d) d[k] = (d[k] || []).map((t) => String(t).trim()).filter(Boolean).slice(0, 20); });
+      if ("validade" in d) d.validade = d.validade || null;
+      validarProduto(Object.assign({}, p, d));
+      if (ONLINE) {
+        const sb = await supabase();
+        const r = await rodar(sb.from("produtos_credito").update(d).eq("id", p.id).select("id"));
+        if (!r || !r.length) throw new Error("Você não tem permissão para fazer isso.");
+        return;
+      }
+      const l = produtosDemo(), i = l.findIndex((x) => x.id === p.id);
+      if (i < 0) throw new Error("Produto não encontrado.");
+      const antes = l[i];
+      l[i] = Object.assign({}, antes, d, { atualizado_em: new Date().toISOString(), atualizado_por: (usuarioAtual || {}).email });
+      gravar(K.produtos, l);
+      const h = ler(K.auditoria, []);
+      h.unshift({ id: Date.now(), quando: new Date().toISOString(), quem: (usuarioAtual || {}).email, papel: "admin", tabela: "produtos_credito", acao: "update", alvo: p.id, mudancas: d.status !== antes.status ? { status: { antes: antes.status, depois: d.status } } : {} });
+      gravar(K.auditoria, h.slice(0, 300));
+    },
+
     /* ---- Equipe ---- */
     async equipe() {
       if (!ONLINE) return ler(K.equipe, []);
@@ -838,6 +893,6 @@
     }
   };
 
-  window.Dados = { online: ONLINE, STATUS, CONFIRMADOS, site, catalogo, modulos, moduloLigado, Conta, Painel, Chat, Push, slug };
+  window.Dados = { online: ONLINE, STATUS, CONFIRMADOS, site, catalogo, modulos, moduloLigado, produtosCredito, PERFIS_CREDITO, Conta, Painel, Chat, Push, slug };
   window.ContaPronta = Conta.iniciar();
 })();

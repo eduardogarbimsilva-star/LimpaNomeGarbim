@@ -890,8 +890,81 @@
     await desenhar();
   };
 
+  /* =========================================================
+     PRODUTOS DE CRÉDITO (E04): 20 produtos do Portfólio Ditto como
+     rascunho. Nada é publicado sem as 3 confirmações, descrição e
+     fornecedor. Preço e condições nunca são preenchidos sozinhos.
+     ========================================================= */
+  const ST_PROD = { rascunho: ["Rascunho", "cinza"], revisao: ["Em revisão", "alerta"], publicado: ["Publicado", "ok"], arquivado: ["Arquivado", "cinza"] };
+  CARREGAR.produtos = async function () {
+    const p = painel("produtos");
+    const PERFIS = D.PERFIS_CREDITO;
+    let lista = [], filtroPerfil = "", filtroStatus = "";
+    const ok = (v, t) => `<span class="prod-check${v ? " sim" : ""}">${v ? icone("check") : "○"} ${esc(t)}</span>`;
+    async function desenhar(recarregar) {
+      if (recarregar) { try { lista = await A.produtosCredito(); } catch (e) { avisar(e.message); } }
+      const ligado = D.moduloLigado("catalogo_ditto");
+      const vis = lista.filter((x) => (!filtroPerfil || x.perfil === filtroPerfil) && (!filtroStatus || x.status === filtroStatus));
+      const pub = lista.filter((x) => x.status === "publicado").length;
+      p.innerHTML = `<p class="adm-dica">Produtos do Portfólio Ditto, importados como <strong>rascunho</strong>. Um produto só aparece no site quando: as 3 confirmações estão marcadas, tem descrição e parceiro preenchidos, está <strong>Publicado</strong> e o módulo <strong>Produtos de crédito</strong> está ligado (aba Módulos — agora <strong>${ligado ? "ligado" : "desligado"}</strong>). Publicados: ${pub} de ${lista.length}.</p>
+        <p class="adm-dica">⚠️ Não prometa aprovação nem taxas: o crédito é sempre decidido pela instituição parceira. Preencha só o que estiver confirmado por escrito com o parceiro.</p>
+        <div class="filtro-catalogo"><button type="button" class="chip-filtro${filtroPerfil ? "" : " ativo"}" data-fperfil="">Todos os perfis</button>${Object.entries(PERFIS).map(([k, v]) => `<button type="button" class="chip-filtro${filtroPerfil === k ? " ativo" : ""}" data-fperfil="${k}">${esc(v)}</button>`).join("")}</div>
+        <div class="filtro-catalogo"><button type="button" class="chip-filtro${filtroStatus ? "" : " ativo"}" data-fstatus="">Todas as situações</button>${Object.entries(ST_PROD).map(([k, [v]]) => `<button type="button" class="chip-filtro${filtroStatus === k ? " ativo" : ""}" data-fstatus="${k}">${esc(v)}</button>`).join("")}</div>
+        <div class="prod-lista">${vis.map((x) => `<article class="prod-item">
+          <div class="prod-cab"><div><strong>${esc(x.nome)}</strong> <span class="selo-status st-${ST_PROD[x.status][1]}">${esc(ST_PROD[x.status][0])}</span>${x.sensivel ? ` <span class="modulo-selo" title="Regras mudam com frequência: confirme as regras atuais antes de publicar">⚠️ exige validação específica</span>` : ""}</div>
+            <button type="button" class="btn btn-contorno-rosa" data-editar-produto="${esc(x.id)}">Revisar</button></div>
+          <small>${esc(PERFIS[x.perfil] || x.perfil)} · ${esc(x.id)}${x.pagina_portfolio ? " · portfólio p. " + x.pagina_portfolio : ""}${x.pergunta_referencia ? " · “" + esc(x.pergunta_referencia) + "”" : ""}</small>
+          <div class="prod-checks">${ok(x.parceria_confirmada, "Parceria")}${ok(x.autorizacao_verificada, "Autorização")}${ok(x.disponibilidade_verificada, "Disponível 2026")}${ok(!!x.descricao_comercial, "Descrição")}${ok(!!x.fornecedor, "Parceiro")}</div>
+        </article>`).join("") || `<p class="vazio">Nenhum produto neste filtro.</p>`}</div>`;
+    }
+    p.addEventListener("click", (e) => {
+      const fp = e.target.closest("[data-fperfil]"); if (fp) { filtroPerfil = fp.dataset.fperfil; return desenhar(); }
+      const fs = e.target.closest("[data-fstatus]"); if (fs) { filtroStatus = fs.dataset.fstatus; return desenhar(); }
+      const ed = e.target.closest("[data-editar-produto]"); if (ed) editar(lista.find((x) => x.id === ed.dataset.editarProduto));
+    });
+    function editar(x) {
+      if (!x) return;
+      const linhas = (a) => esc((a || []).join("\n"));
+      const ck = (n, v, t, d) => `<label class="aceite"><input type="checkbox" name="${n}"${v ? " checked" : ""}><span><strong>${t}</strong><br><small>${d}</small></span></label>`;
+      const m = modal(`<h2>${esc(x.nome)}</h2>
+        <p class="adm-dica">${esc(D.PERFIS_CREDITO[x.perfil] || "")} · ${esc(x.id)}${x.observacao ? "<br>" + esc(x.observacao) : ""}</p>
+        ${x.sensivel ? `<p class="adm-dica">⚠️ Este produto tem regras que mudam com frequência (ex.: FGTS, cartões consignados, Bolsa Família). Confirme as regras atuais por escrito antes de publicar.</p>` : ""}
+        <form class="form-modal" novalidate>
+          ${ck("parceria_confirmada", x.parceria_confirmada, "Parceria confirmada", "Existe contrato ou acordo com a instituição/correspondente que oferece este produto.")}
+          ${ck("autorizacao_verificada", x.autorizacao_verificada, "Autorização verificada", "A instituição é autorizada pelo Banco Central (ou órgão competente) e você pode divulgar a oferta.")}
+          ${ck("disponibilidade_verificada", x.disponibilidade_verificada, "Disponível em 2026", "O produto está sendo oferecido hoje, com as regras atuais.")}
+          <label class="campo"><span>Parceiro / fornecedor <small>(obrigatório para publicar)</small></span><input name="fornecedor" maxlength="120" value="${esc(x.fornecedor || "")}" placeholder="Ex.: nome da instituição ou correspondente"></label>
+          <label class="campo"><span>Descrição para o cliente <small>(obrigatória para publicar — escreva com suas palavras, sem prometer aprovação)</small></span><textarea name="descricao_comercial" rows="4" maxlength="1500">${esc(x.descricao_comercial || "")}</textarea></label>
+          <label class="campo"><span>Preço / condições <small>(opcional — só o que o parceiro confirmou)</small></span><input name="preco" maxlength="200" value="${esc(x.preco || "")}" placeholder="Ex.: Sem custo para o cliente; condições definidas pela instituição"></label>
+          <label class="campo"><span>Requisitos <small>(um por linha)</small></span><textarea name="requisitos" rows="3">${linhas(x.requisitos)}</textarea></label>
+          <label class="campo"><span>Documentos necessários <small>(um por linha)</small></span><textarea name="documentos" rows="3">${linhas(x.documentos)}</textarea></label>
+          <label class="campo"><span>Fonte da oferta <small>(contrato, tabela ou e-mail do parceiro — só para controle interno)</small></span><input name="fonte_oferta" maxlength="300" value="${esc(x.fonte_oferta || "")}"></label>
+          <label class="campo"><span>Válida até <small>(opcional — some do site depois desta data)</small></span><input type="date" name="validade" value="${esc(x.validade || "")}"></label>
+          <label class="campo"><span>Observação interna</span><textarea name="observacao" rows="2" maxlength="600">${esc(x.observacao || "")}</textarea></label>
+          <label class="campo"><span>Situação</span><select name="status">${Object.entries(ST_PROD).map(([k, [v]]) => `<option value="${k}"${x.status === k ? " selected" : ""}>${v}</option>`).join("")}</select></label>
+          <div class="botoes-form"><button type="submit" class="btn btn-primario">Salvar</button><button type="button" class="btn-texto" data-fechar>Cancelar</button></div>
+        </form>`);
+      const f = m.querySelector("form");
+      f.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const linhasDe = (t) => t.split("\n").map((l) => l.trim()).filter(Boolean);
+        const dados = { id: x.id, status: f.status.value, parceria_confirmada: f.parceria_confirmada.checked, autorizacao_verificada: f.autorizacao_verificada.checked, disponibilidade_verificada: f.disponibilidade_verificada.checked,
+          fornecedor: f.fornecedor.value, descricao_comercial: f.descricao_comercial.value, preco: f.preco.value, requisitos: linhasDe(f.requisitos.value), documentos: linhasDe(f.documentos.value), fonte_oferta: f.fonte_oferta.value, validade: f.validade.value, observacao: f.observacao.value };
+        comBotao($("button[type=submit]", f), async () => {
+          await A.salvarProduto(dados);
+          m.closest(".modal-fundo").remove();
+          avisar(dados.status === "publicado" ? (D.moduloLigado("catalogo_ditto") ? "Produto publicado no site." : "Produto pronto. Ligue o módulo Produtos de crédito para aparecer no site.") : "Produto salvo.");
+          carregadas.delete("historico");
+          await desenhar(true);
+        });
+      });
+    }
+    try { await D.modulos(); } catch (e) { /* ok */ }
+    await desenhar(true);
+  };
+
   /* HISTÓRICO: quem mudou o quê no painel (somente leitura) */
-  const TABELAS_HIST = { configuracoes: "Textos, aparência e contato", categorias: "Categoria do catálogo", servicos: "Serviço do catálogo", equipe: "Equipe", modulos: "Módulo", pedidos: "Situação do pedido" };
+  const TABELAS_HIST = { configuracoes: "Textos, aparência e contato", categorias: "Categoria do catálogo", servicos: "Serviço do catálogo", equipe: "Equipe", modulos: "Módulo", pedidos: "Situação do pedido", produtos_credito: "Produto de crédito" };
   const ACOES_HIST = { insert: "criou", update: "alterou", delete: "excluiu" };
   CARREGAR.historico = async function () {
     const p = painel("historico");
