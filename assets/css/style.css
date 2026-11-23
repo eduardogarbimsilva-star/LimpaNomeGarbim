@@ -1719,3 +1719,18 @@ body.mod-off-chat:not(.pagina-painel) .chat-mensagens::after { content: "O chat 
 .credito-previa a { color: inherit; font-weight: 700; }
 .credito-rascunho { border-style: dashed; opacity: .92; }
 .credito-st { color: #9a5412; }
+
+/* Diagnóstico inteligente (E05) */
+.diag-porque { background: var(--rosa-claro, #f6e2e7); border-radius: 12px; padding: 12px 14px; margin: 10px 0; }
+.diag-porque strong { display: block; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+.diag-porque p { margin: 0; }
+.diag-respostas { margin: 10px 0; font-size: .9rem; }
+.diag-respostas ul { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 4px; }
+.diag-respostas li span { color: var(--texto-suave, #6b5b60); }
+.diag-versao { opacity: .6; font-size: .75rem; }
+.quiz-voltar { margin-top: 12px; }
+.diag .quiz-passo { display: block; }
+.diag-editor textarea { width: 100%; min-height: 380px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .82rem; }
+.diag-erros { background: #fdebd8; color: #7a4510; border-radius: 10px; padding: 10px 14px; font-size: .88rem; }
+.diag-erros ul { margin: 6px 0 0; padding-left: 18px; }
+.diag-simulador { border: 1px dashed var(--borda, #eadde1); border-radius: 16px; padding: 16px; margin-top: 12px; }

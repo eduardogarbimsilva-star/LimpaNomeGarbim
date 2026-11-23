@@ -76,6 +76,28 @@
 
   /* ---------- Diagnóstico em 30 segundos ---------- */
   const quiz = $("[data-quiz]");
+  // E05: com o módulo "Diagnóstico inteligente" ligado, o mesmo quadro passa a usar as regras do banco
+  if (quiz && window.Diagnostico && D.modulos && D.diagnosticoRegras) {
+    (async () => {
+      try {
+        await D.modulos();
+        if (!D.moduloLigado("diagnostico")) return;
+        const ativa = await D.diagnosticoRegras();
+        if (!ativa || window.Diagnostico.validar(ativa.regras).length) return;   // regra com problema: fica o questionário antigo
+        let cat = { servicos: [] };
+        try { cat = await D.catalogo(true); } catch (e) { /* sem catálogo */ }
+        const novo = document.createElement("div");
+        novo.className = "quiz diag";
+        novo.setAttribute("data-diagnostico", "");
+        quiz.replaceWith(novo);
+        window.Diagnostico.montar(novo, ativa.regras, {
+          catalogo: cat, esc, icone, versao: ativa.versao,
+          whats: (t) => (zap() ? "https://wa.me/" + zap() + "?text=" + encodeURIComponent(t) : ""),
+          aoSolicitar: window.Solicitacao ? (id) => { if (!window.Solicitacao.tem(id)) window.Solicitacao.alternar(id); else if (MG.abrirGaveta) MG.abrirGaveta(); } : null
+        });
+      } catch (e) { /* mantém o questionário antigo */ }
+    })();
+  }
   if (quiz) {
     const passos = $$(".quiz-passo", quiz), barra = $(".quiz-barra span", quiz), resultado = $(".quiz-resultado", quiz);
     let respostas = [];

@@ -22,7 +22,7 @@
   const K = {
     sessao: "mg_demo_sessao", perfis: "mg_demo_perfis", pedidos: "mg_demo_pedidos", codigo: "mg_demo_codigo",
     categorias: "mg_demo_categorias", servicos: "mg_demo_servicos", site: "mg_demo_site", equipe: "mg_demo_equipe",
-    mensagens: "mg_demo_mensagens", modulos: "mg_demo_modulos", auditoria: "mg_demo_auditoria", produtos: "mg_demo_produtos"
+    mensagens: "mg_demo_mensagens", modulos: "mg_demo_modulos", auditoria: "mg_demo_auditoria", produtos: "mg_demo_produtos", diagnostico: "mg_demo_diagnostico"
   };
 
   const ler = (k, p) => { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? p; } catch (e) { return p; } };
@@ -148,7 +148,7 @@
     ["busca_cnpj", "site", "Dados da empresa pelo CNPJ", "Preenche razão social e endereço pelo CNPJ (BrasilAPI, gratuito).", true],
     ["triagem", "site", "Pergunta inicial \"Como está o seu nome?\"", "Janela que ajuda o visitante a filtrar os serviços.", true],
     ["catalogo_ditto", "novos", "Produtos de crédito (Ditto)", "20 produtos do portfólio Ditto, todos como rascunho até você confirmar parceria e regras.", false],
-    ["diagnostico", "novos", "Diagnóstico inteligente", "Perguntas condicionais que indicam o caminho, com explicação de cada resultado.", false, "E05"],
+    ["diagnostico", "novos", "Diagnóstico inteligente", "Perguntas condicionais que indicam o caminho, com explicação de cada resultado.", false],
     ["consultas", "novos", "Central de consultas", "Consultas a birôs só por fornecedor contratado e com autorização do cliente.", false, "E06"],
     ["relatorios", "novos", "Relatórios em PDF", "Relatórios protegidos, com fonte e data, só com dados reais.", false, "E07"],
     ["pagamentos", "novos", "Pagamento online", "Cartão/boleto/PIX automático por um gateway, com estorno e conciliação.", false, "E08"],
@@ -208,6 +208,22 @@
       if (!String(p.descricao_comercial || "").trim() || !String(p.fornecedor || "").trim()) throw new Error("Para publicar, preencha a descrição comercial e o fornecedor/parceiro.");
       if (p.validade && p.validade < new Date().toISOString().slice(0, 10)) throw new Error("A validade da oferta já passou. Atualize antes de publicar.");
     }
+  }
+
+  /* ---------- Diagnóstico inteligente (E05): regras versionadas ---------- */
+  function diagnosticoDemo() {
+    let l = ler(K.diagnostico, null);
+    if (!l) { l = [{ versao: 1, regras: copia(PADRAO.diagnostico || {}), nota: "Versão inicial (E05)", ativo: true, criado_em: new Date().toISOString(), criado_por: "sistema" }]; gravar(K.diagnostico, l); }
+    return l;
+  }
+  /** Versão ativa das regras: { versao, regras } ou null */
+  async function diagnosticoRegras() {
+    if (!ONLINE) { const a = diagnosticoDemo().find((x) => x.ativo); return a ? { versao: a.versao, regras: a.regras } : null; }
+    try {
+      const r = await fetch(SB.url + "/rest/v1/diagnostico_regras?select=versao,regras&ativo=eq.true", { headers: { apikey: SB.anonKey, Authorization: "Bearer " + SB.anonKey } });
+      const d = r.ok ? await r.json() : [];
+      return d[0] || null;
+    } catch (e) { return null; }
   }
 
   const achatar = (r) => Object.assign({}, r.dados || {}, { id: r.id, ordem: r.ordem ?? 0, ativo: r.ativo !== false }, r.categoria ? { categoria: r.categoria } : {});
@@ -868,6 +884,28 @@
       gravar(K.auditoria, h.slice(0, 300));
     },
 
+    /* ---- Diagnóstico (E05) ---- */
+    async diagnosticoVersoes() {
+      if (!ONLINE) return diagnosticoDemo().slice().sort((a, b) => b.versao - a.versao);
+      const sb = await supabase();
+      return (await rodar(sb.from("diagnostico_regras").select("*").order("versao", { ascending: false }))) || [];
+    },
+    async salvarDiagnostico(regras, nota) {
+      const erros = window.Diagnostico ? window.Diagnostico.validar(regras) : [];
+      if (erros.length) throw new Error("Regras com problema: " + erros.slice(0, 3).join(" "));
+      nota = String(nota || "").trim().slice(0, 300);
+      if (nota.length < 3) throw new Error("Escreva uma nota curta dizendo o que mudou nesta versão.");
+      const versoes = await this.diagnosticoVersoes();
+      const versao = (versoes[0] ? versoes[0].versao : 0) + 1;
+      if (ONLINE) { const sb = await supabase(); await rodar(sb.from("diagnostico_regras").insert({ versao, regras, nota })); return versao; }
+      const l = diagnosticoDemo(); l.push({ versao, regras, nota, ativo: false, criado_em: new Date().toISOString(), criado_por: (usuarioAtual || {}).email }); gravar(K.diagnostico, l);
+      return versao;
+    },
+    async ativarDiagnostico(versao) {
+      if (ONLINE) { const sb = await supabase(); await rodar(sb.rpc("ativar_diagnostico", { p_versao: versao })); return; }
+      gravar(K.diagnostico, diagnosticoDemo().map((x) => Object.assign(x, { ativo: x.versao === versao })));
+    },
+
     /* ---- Equipe ---- */
     async equipe() {
       if (!ONLINE) return ler(K.equipe, []);
@@ -893,6 +931,6 @@
     }
   };
 
-  window.Dados = { online: ONLINE, STATUS, CONFIRMADOS, site, catalogo, modulos, moduloLigado, produtosCredito, PERFIS_CREDITO, Conta, Painel, Chat, Push, slug };
+  window.Dados = { online: ONLINE, STATUS, CONFIRMADOS, site, catalogo, modulos, moduloLigado, produtosCredito, PERFIS_CREDITO, diagnosticoRegras, Conta, Painel, Chat, Push, slug };
   window.ContaPronta = Conta.iniciar();
 })();

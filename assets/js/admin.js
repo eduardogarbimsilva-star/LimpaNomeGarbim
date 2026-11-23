@@ -963,8 +963,81 @@
     await desenhar(true);
   };
 
+  /* =========================================================
+     DIAGNÓSTICO INTELIGENTE (E05): regras versionadas.
+     Toda mudança vira uma versão nova; só uma fica ativa.
+     ========================================================= */
+  CARREGAR.diagnostico = async function () {
+    const p = painel("diagnostico");
+    const DG = window.Diagnostico;
+    let versoes = [], cat = { servicos: [] };
+    try { cat = await D.catalogo(true); } catch (e) { /* ok */ }
+    async function desenhar() {
+      try { versoes = await A.diagnosticoVersoes(); } catch (e) { avisar(e.message); }
+      try { await D.modulos(true); } catch (e) { /* ok */ }
+      const ligado = D.moduloLigado("diagnostico");
+      const ativa = versoes.find((v) => v.ativo);
+      p.innerHTML = `<p class="adm-dica">O diagnóstico faz perguntas que mudam conforme as respostas e indica um caminho do catálogo, explicando o porquê. Ele <strong>não consulta CPF</strong> e não guarda as respostas. Hoje o módulo <strong>Diagnóstico inteligente</strong> está <strong>${ligado ? "ligado: a página inicial usa estas regras" : "desligado: a página inicial usa o questionário antigo de 3 perguntas"}</strong> (aba Módulos).</p>
+        <p class="adm-dica">Versão ativa: <strong>${ativa ? "v" + ativa.versao : "nenhuma"}</strong>${ativa ? ` · ${Object.keys(ativa.regras.perguntas || {}).length} perguntas · ${(ativa.regras.resultados || []).length} resultados · ${DG.caminhos(ativa.regras).length} caminhos possíveis` : ""}</p>
+        <div class="tabela-rolagem"><table class="tabela"><thead><tr><th>Versão</th><th>O que mudou</th><th>Criada</th><th></th></tr></thead><tbody>
+        ${versoes.map((v) => `<tr><td><strong>v${v.versao}</strong>${v.ativo ? ' <span class="selo-status st-ok">Ativa</span>' : ""}</td><td>${esc(v.nota || "")}</td><td>${esc(dataHora(v.criado_em))}<br><small>${esc(v.criado_por || "")}</small></td>
+          <td class="acoes"><button type="button" class="btn-texto" data-diag-testar="${v.versao}">Testar</button><button type="button" class="btn-texto" data-diag-editar="${v.versao}">Editar como nova versão</button>${v.ativo ? "" : `<button type="button" class="btn-texto" data-diag-ativar="${v.versao}">Ativar</button>`}</td></tr>`).join("")}
+        </tbody></table></div>
+        <div data-diag-area></div>`;
+    }
+    const area = () => $("[data-diag-area]", p);
+    function testar(v) {
+      area().innerHTML = `<div class="diag-simulador"><h3>Testando v${v.versao}</h3><p class="adm-dica">Simulação: responde como um visitante. Nada é salvo.</p><div class="quiz diag" data-diag-sim></div></div>`;
+      DG.montar($("[data-diag-sim]", p), v.regras, { catalogo: cat, esc, icone, versao: v.versao });
+      area().scrollIntoView({ block: "start" });
+    }
+    function editar(v) {
+      area().innerHTML = `<div class="diag-editor"><h3>Nova versão a partir da v${v.versao}</h3>
+        <p class="adm-dica">Edite as perguntas, opções (<code>ir</code> = próxima pergunta ou <code>fim</code>), resultados (a <strong>primeira</strong> regra que combinar vence; deixe um resultado com <code>"se": {}</code> por último) e notas. IDs de serviço: ${cat.servicos.map((s) => `<code>${esc(s.id)}</code>`).join(", ")}.</p>
+        <textarea spellcheck="false" data-diag-json>${esc(JSON.stringify(v.regras, null, 2))}</textarea>
+        <label class="campo"><span>O que mudou nesta versão? <small>(obrigatório)</small></span><input data-diag-nota maxlength="300"></label>
+        <div data-diag-erros></div>
+        <div class="botoes-form"><button type="button" class="btn btn-contorno-rosa" data-diag-validar>Conferir</button><button type="button" class="btn btn-primario" data-diag-salvar>Salvar como nova versão</button><button type="button" class="btn-texto" data-diag-cancelar>Cancelar</button></div></div>`;
+      area().scrollIntoView({ block: "start" });
+    }
+    function lerJson() {
+      const caixa = $("[data-diag-erros]", p);
+      let r;
+      try { r = JSON.parse($("[data-diag-json]", p).value); } catch (e) { caixa.innerHTML = `<div class="diag-erros">O texto não é um JSON válido: ${esc(e.message)}</div>`; return null; }
+      const erros = DG.validar(r);
+      const fora = (r.resultados || []).flatMap((x) => x.servicos || []).filter((id) => !cat.servicos.some((s) => s.id === id));
+      if (fora.length) erros.push("Serviços que não existem (ou estão desativados) no catálogo: " + [...new Set(fora)].join(", "));
+      caixa.innerHTML = erros.length ? `<div class="diag-erros"><strong>Corrija antes de salvar:</strong><ul>${erros.map((e) => `<li>${esc(e)}</li>`).join("")}</ul></div>`
+        : `<p class="adm-dica">✅ Regras conferidas: ${DG.caminhos(r).length} caminhos possíveis, todos com resultado.</p>`;
+      return erros.length ? null : r;
+    }
+    p.addEventListener("click", async (e) => {
+      const t = e.target.closest("[data-diag-testar]"); if (t) return testar(versoes.find((v) => v.versao === +t.dataset.diagTestar));
+      const ed = e.target.closest("[data-diag-editar]"); if (ed) return editar(versoes.find((v) => v.versao === +ed.dataset.diagEditar));
+      if (e.target.closest("[data-diag-cancelar]")) { area().innerHTML = ""; return; }
+      if (e.target.closest("[data-diag-validar]")) { lerJson(); return; }
+      const sv = e.target.closest("[data-diag-salvar]");
+      if (sv) {
+        const r = lerJson(); if (!r) return;
+        return comBotao(sv, async () => {
+          const nova = await A.salvarDiagnostico(r, $("[data-diag-nota]", p).value);
+          avisar(`Versão v${nova} salva. Teste e depois clique em Ativar.`);
+          carregadas.delete("historico");
+          await desenhar();
+          testar(versoes.find((v) => v.versao === nova));
+        });
+      }
+      const at = e.target.closest("[data-diag-ativar]");
+      if (at) {
+        if (!(await MG.confirmar(`Ativar a versão v${at.dataset.diagAtivar}? Ela passa a valer para todos os visitantes (com o módulo ligado).`, { titulo: "Ativar versão?", botao: "Ativar" }))) return;
+        return comBotao(at, async () => { await A.ativarDiagnostico(+at.dataset.diagAtivar); avisar("Versão ativada."); carregadas.delete("historico"); await desenhar(); });
+      }
+    });
+    await desenhar();
+  };
+
   /* HISTÓRICO: quem mudou o quê no painel (somente leitura) */
-  const TABELAS_HIST = { configuracoes: "Textos, aparência e contato", categorias: "Categoria do catálogo", servicos: "Serviço do catálogo", equipe: "Equipe", modulos: "Módulo", pedidos: "Situação do pedido", produtos_credito: "Produto de crédito" };
+  const TABELAS_HIST = { configuracoes: "Textos, aparência e contato", categorias: "Categoria do catálogo", servicos: "Serviço do catálogo", equipe: "Equipe", modulos: "Módulo", pedidos: "Situação do pedido", produtos_credito: "Produto de crédito", diagnostico_regras: "Regras do diagnóstico" };
   const ACOES_HIST = { insert: "criou", update: "alterou", delete: "excluiu" };
   CARREGAR.historico = async function () {
     const p = painel("historico");
