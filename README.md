@@ -274,3 +274,12 @@ O site já está conectado ao banco (`assets/js/config.js`). Configurado pelo to
    receba a apikey e crie os Secrets
    `CALLMEBOT_TELEFONE` (ex.: `+5516988381117`) e `CALLMEBOT_APIKEY`. CallMeBot é um serviço gratuito de
    terceiros, sem vínculo com o WhatsApp oficial.
+
+## Pré-renderização para o Google
+O catálogo vem do banco e é desenhado por JavaScript. Para o Google ler os serviços já no HTML,
+depois de mudar serviços ou categorias no painel rode (com um servidor local de URLs limpas na porta 8765):
+
+    node ferramentas/pre-renderizar.js
+
+O script grava o catálogo entre os marcadores `<!-- pre-render:... -->` de `servicos.html` e `index.html`.
+Sem rodar, o site continua certo para os visitantes; só o HTML inicial lido pelo Google fica desatualizado.
