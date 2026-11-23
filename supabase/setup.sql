@@ -612,3 +612,4 @@ on conflict (email) do update set papel = 'admin', nome = coalesce(public.equipe
 -- E04: produtos de crédito (Portfólio Ditto, rascunhos) -> rode também supabase/e04_produtos_credito.sql (desfazer: supabase/desfazer/e04.sql)
 -- E04b: sugestões de texto dos produtos Ditto -> supabase/e04b_sugestoes_ditto.sql
 -- E05: diagnóstico inteligente (regras versionadas) -> supabase/e05_diagnostico.sql (desfazer: supabase/desfazer/e05.sql)
+-- E05b: histórico privado (sem aba, valores sensíveis ocultos) -> supabase/e05b_historico_privado.sql

@@ -863,7 +863,7 @@
     async function desenhar() {
       let lista = [];
       try { lista = await A.modulos(); } catch (e) { avisar(e.message); }
-      p.innerHTML = `<p class="adm-dica">Desligar um módulo vale na hora para todo o site. Tudo fica registrado na aba <strong>Histórico</strong>.</p>` +
+      p.innerHTML = `<p class="adm-dica">Desligar um módulo vale na hora para todo o site. Cada mudança fica registrada com segurança no banco (quem mudou e quando).</p>` +
         Object.entries(GRUPOS_MOD).map(([g, [titulo, dica]]) => {
           const itens = lista.filter((m) => m.grupo === g);
           if (!itens.length) return "";
@@ -883,7 +883,7 @@
       const nome = b.getAttribute("aria-label");
       if (!ligar && !(await MG.confirmar(`Desligar “${nome}” para todo o site? Dá para ligar de novo a qualquer momento.`, { titulo: "Desligar módulo?", botao: "Desligar" }))) return;
       b.disabled = true;
-      try { await A.alternarModulo(b.dataset.modulo, ligar); avisar(ligar ? "Módulo ligado." : "Módulo desligado."); document.body.classList.toggle("mod-off-" + b.dataset.modulo, !ligar); carregadas.delete("historico"); }
+      try { await A.alternarModulo(b.dataset.modulo, ligar); avisar(ligar ? "Módulo ligado." : "Módulo desligado."); document.body.classList.toggle("mod-off-" + b.dataset.modulo, !ligar); }
       catch (err) { avisar(err.message); }
       await desenhar();
     });
@@ -954,7 +954,7 @@
           await A.salvarProduto(dados);
           m.closest(".modal-fundo").remove();
           avisar(dados.status === "publicado" ? (D.moduloLigado("catalogo_ditto") ? "Produto publicado no site." : "Produto pronto. Ligue o módulo Produtos de crédito para aparecer no site.") : "Produto salvo.");
-          carregadas.delete("historico");
+         
           await desenhar(true);
         });
       });
@@ -1022,7 +1022,7 @@
         return comBotao(sv, async () => {
           const nova = await A.salvarDiagnostico(r, $("[data-diag-nota]", p).value);
           avisar(`Versão v${nova} salva. Teste e depois clique em Ativar.`);
-          carregadas.delete("historico");
+         
           await desenhar();
           testar(versoes.find((v) => v.versao === nova));
         });
@@ -1030,33 +1030,10 @@
       const at = e.target.closest("[data-diag-ativar]");
       if (at) {
         if (!(await MG.confirmar(`Ativar a versão v${at.dataset.diagAtivar}? Ela passa a valer para todos os visitantes (com o módulo ligado).`, { titulo: "Ativar versão?", botao: "Ativar" }))) return;
-        return comBotao(at, async () => { await A.ativarDiagnostico(+at.dataset.diagAtivar); avisar("Versão ativada."); carregadas.delete("historico"); await desenhar(); });
+        return comBotao(at, async () => { await A.ativarDiagnostico(+at.dataset.diagAtivar); avisar("Versão ativada."); await desenhar(); });
       }
     });
     await desenhar();
-  };
-
-  /* HISTÓRICO: quem mudou o quê no painel (somente leitura) */
-  const TABELAS_HIST = { configuracoes: "Textos, aparência e contato", categorias: "Categoria do catálogo", servicos: "Serviço do catálogo", equipe: "Equipe", modulos: "Módulo", pedidos: "Situação do pedido", produtos_credito: "Produto de crédito", diagnostico_regras: "Regras do diagnóstico" };
-  const ACOES_HIST = { insert: "criou", update: "alterou", delete: "excluiu" };
-  CARREGAR.historico = async function () {
-    const p = painel("historico");
-    p.innerHTML = `<p class="vazio">Carregando...</p>`;
-    let lista = [];
-    try { lista = await A.historico(200); } catch (e) { p.innerHTML = `<p class="vazio">${esc(e.message)}</p>`; return; }
-    const resumo = (h) => {
-      const m = h.mudancas || {};
-      if (h.tabela === "modulos" && m.ativo) return m.ativo.depois ? "ligou" : "desligou";
-      if (h.tabela === "pedidos" && m.status) return `${(D.STATUS[m.status.antes] || {}).nome || m.status.antes} → ${(D.STATUS[m.status.depois] || {}).nome || m.status.depois}`;
-      const chaves = Object.keys(m);
-      return chaves.length ? "campos: " + chaves.slice(0, 6).join(", ") + (chaves.length > 6 ? "…" : "") : "";
-    };
-    p.innerHTML = `<p class="adm-dica">Últimas 200 alterações feitas no painel e nos pedidos. Este registro não pode ser editado nem apagado pelo site. Dados pessoais dos clientes não são guardados aqui.</p>
-      <div class="botoes-form"><button type="button" class="btn btn-contorno-rosa" data-recarregar-hist>Atualizar</button></div>` +
-      (lista.length ? `<ul class="historico-lista">${lista.map((h) => `<li><div class="hist-cab"><time>${esc(dataHora(h.quando))}</time><strong>${esc(h.quem || "sistema")}</strong><span>${esc(ACOES_HIST[h.acao] || h.acao)} · ${esc(TABELAS_HIST[h.tabela] || h.tabela)}${h.alvo ? ` <em>${esc(h.alvo)}</em>` : ""}</span><span>${esc(resumo(h))}</span></div>
-        ${h.mudancas && Object.keys(h.mudancas).length ? `<details><summary>Ver detalhes</summary><pre>${esc(JSON.stringify(h.mudancas, null, 2))}</pre></details>` : ""}</li>`).join("")}</ul>`
-        : `<p class="vazio">Nenhuma alteração registrada ainda.</p>`);
-    $("[data-recarregar-hist]", p).addEventListener("click", () => CARREGAR.historico());
   };
 
   /* =========================================================

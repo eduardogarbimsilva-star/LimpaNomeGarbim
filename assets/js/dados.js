@@ -156,7 +156,7 @@
     ["dupla_verificacao", "seguranca", "Dupla verificação da equipe", "Código do aplicativo autenticador para entrar no painel.", true, null, true],
     ["regras_banco", "seguranca", "Regras de acesso do banco (RLS)", "Cada cliente só vê os próprios dados; só a equipe vê os pedidos.", true, null, true],
     ["validacao_servidor", "seguranca", "Validação no servidor", "CPF, CNPJ, estado e limites conferidos pelo banco, não só pelo navegador.", true, null, true],
-    ["historico", "seguranca", "Histórico de alterações", "Registro de quem mudou o quê no painel.", true, null, true]
+    ["historico", "seguranca", "Histórico de alterações", "Registro de quem mudou o quê, guardado só no banco (sem aba no painel e sem valores sensíveis).", true, null, true]
   ].map(([id, grupo, nome, descricao, ativo, etapa, fixo], i) => ({ id, grupo, nome, descricao, ativo, etapa: etapa || null, fixo: !!fixo, disponivel: !etapa, ordem: i }));
   function modulosDemo() {
     const salvos = ler(K.modulos, {});
@@ -847,11 +847,6 @@
         gravar(K.auditoria, h.slice(0, 300));
       }
       await modulos(true);
-    },
-    async historico(limite = 200) {
-      if (!ONLINE) return ler(K.auditoria, []).slice(0, limite);
-      const sb = await supabase();
-      return (await rodar(sb.from("auditoria").select("*").order("quando", { ascending: false }).limit(limite))) || [];
     },
 
     /* ---- Produtos de crédito (E04) ---- */
