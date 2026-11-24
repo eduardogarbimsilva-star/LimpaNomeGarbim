@@ -856,7 +856,7 @@
   CARREGAR.consultas = async function () {
     const p = painel("consultas");
     const TIPOS = D.TIPOS_CONSULTA, ST = D.STATUS_CONSULTA;
-    let lista = [], produtos = [], clientes = {}, vista = "fila", integ = {};
+    let lista = [], produtos = [], clientes = {}, vista = "fila", integ = {}, gw = {};
     const fila = ["aguardando_pagamento", "aguardando_autorizacao", "autorizada", "em_andamento", "falhou"];
     const nomeCli = (c) => { const k = c.cliente || clientes[c.cliente_id] || {}; return (k.tipo === "pj" ? k.razao_social : k.nome) || k.email || "Cliente"; };
     const dt = (d) => (d ? new Date(d.length === 10 ? d + "T12:00:00" : d).toLocaleDateString("pt-BR") : "—");
@@ -865,6 +865,7 @@
     async function carregar() {
       try { [lista, produtos] = await Promise.all([A.consultas(), A.consultaProdutos()]); } catch (e) { avisar(e.message); }
       try { integ = (await A.situacaoIntegracao()) || {}; } catch (e) { integ = {}; }
+      try { gw = (await A.situacaoGateway()) || {}; } catch (e) { gw = {}; }
       try { (await A.clientes()).forEach((c) => { clientes[c.id] = c; if (c.email) clientes[c.email] = c; }); } catch (e) { /* ok */ }
       try { await D.modulos(); } catch (e) { /* ok */ }
     }
@@ -906,7 +907,7 @@
         </div>
         <div class="cons-status">
           <div><span class="cons-ponto ${ligado ? "ok" : "off"}"></span><strong>Venda no site</strong> ${ligado ? `ligada · ${vendidos} consulta${vendidos === 1 ? "" : "s"} à venda em <a href="/consultas" target="_blank">/consultas</a>` : "desligada (aba Módulos)"}</div>
-          <div><span class="cons-ponto espera"></span><strong>Pagamento</strong> PIX · você confirma com 1 clique <small>(automático quando houver gateway)</small></div>
+          <div><span class="cons-ponto ${gw.gateway ? "ok" : "espera"}"></span><strong>Pagamento</strong> ${gw.gateway ? `<b>automático</b> pelo Asaas${gw.ambiente === "sandbox" ? " <small>(modo de TESTE)</small>" : ""}` : "PIX · você confirma com 1 clique"} · <button type="button" class="btn-texto" data-gateway>Configurar pagamento</button></div>
           <div><span class="cons-ponto ${integ.provedor ? "ok" : "espera"}"></span><strong>Consulta</strong> ${integ.provedor ? `<b>automática</b> pela ${integ.provedor === "directd" ? "Direct Data" : "Relinq"} <small>(Bacen/SCR continua manual)</small>` : "manual no portal do revendedor"} · <button type="button" class="btn-texto" data-integracao>Configurar fornecedor</button></div>
         </div>
         <div class="seg cons-abas" role="group">
@@ -983,6 +984,24 @@
         ${c.erro ? `<p><strong>Observação:</strong> ${esc(c.erro)}</p>` : ""}`);
     }
     async function atualizar() { await carregar(); desenhar(); }
+    function configurarGateway() {
+      if (!ehAdmin) return avisar("Só o administrador configura o pagamento.");
+      const m = modal(`<h2>Pagamento automático (Asaas)</h2>
+        <p class="adm-dica">Com o Asaas ligado, o cliente paga o PIX gerado pelo Asaas e a confirmação chega <strong>sozinha</strong> — a consulta começa na hora, sem você clicar em nada. O dinheiro cai na sua conta Asaas.</p>
+        <form class="form-modal" novalidate>
+          <label class="campo"><span>Ambiente</span><select name="ambiente">
+            <option value="sandbox"${gw.ambiente !== "producao" ? " selected" : ""}>Teste (sandbox) — para experimentar sem dinheiro de verdade</option>
+            <option value="producao"${gw.ambiente === "producao" ? " selected" : ""}>Produção — cobranças reais</option>
+          </select></label>
+          <label class="campo"><span>Chave de API do Asaas <small>${gw.chave ? "— já existe uma salva; deixe vazio para manter" : ""}</small></span><input name="chave" type="password" autocomplete="off" placeholder="$aact_..."></label>
+          <p class="adm-dica">Onde achar: no Asaas, <strong>Integrações → Chaves de API</strong>. Ao salvar, o site confere a chave e <strong>cria sozinho o aviso de pagamento (webhook)</strong> no seu Asaas. 🔒 A chave fica só no servidor.</p>
+          <div class="botoes-form"><button type="submit" class="btn btn-primario">Salvar e ligar</button>${gw.gateway ? `<button type="button" class="btn-texto perigo" data-desligar-gw>Desligar (voltar ao PIX manual)</button>` : ""}<button type="button" class="btn-texto" data-fechar>Cancelar</button></div>
+        </form>`);
+      const f = m.querySelector("form");
+      f.addEventListener("submit", (e) => { e.preventDefault(); comBotao($("button[type=submit]", f), async () => { await A.configurarGateway(f.ambiente.value, f.chave.value); m.closest(".modal-fundo").remove(); avisar("Pagamento automático ligado!"); await atualizar(); }); });
+      const dg = m.querySelector("[data-desligar-gw]");
+      if (dg) dg.addEventListener("click", () => comBotao(dg, async () => { await A.desligarGateway(); m.closest(".modal-fundo").remove(); avisar("Voltou para o PIX com confirmação manual."); await atualizar(); }));
+    }
     function configurarIntegracao() {
       if (!ehAdmin) return avisar("Só o administrador configura o fornecedor.");
       const m = modal(`<h2>Fornecedor da consulta automática</h2>
@@ -992,6 +1011,7 @@
             <option value=""${!integ.provedor ? " selected" : ""}>Manual (eu consulto no portal e registro)</option>
             <option value="directd"${integ.provedor === "directd" ? " selected" : ""}>Direct Data${integ.directd ? " — chave salva ✓" : ""}</option>
             <option value="relinq"${integ.provedor === "relinq" ? " selected" : ""} disabled>Relinq — aguardando a API ser liberada</option>
+            <option value="eloapi" disabled>EloAPI — aguardando documentação e contrato</option>
           </select></label>
           <label class="campo"><span>Chave de acesso (TOKEN) <small>${integ.directd ? "— já existe uma salva; deixe vazio para manter" : ""}</small></span><input name="chave" type="password" autocomplete="off" placeholder="Cole aqui o TOKEN do painel da Direct Data"></label>
           <p class="adm-dica">🔒 A chave fica guardada no servidor e <strong>nunca</strong> aparece de novo no site — nem para você. Bacen/SCR continua manual (a Direct Data não oferece). Confira se os textos de cada consulta (aba Preços) combinam com as fontes que ela usa.</p>
@@ -1018,6 +1038,7 @@
         return comBotao(cp, async () => { await A.confirmarPagamentoConsulta(c.id); avisar("Pagamento confirmado. O cliente foi avisado."); await atualizar(); });
       }
       if (e.target.closest("[data-integracao]")) return configurarIntegracao();
+      if (e.target.closest("[data-gateway]")) return configurarGateway();
       const rp = e.target.closest("[data-reprocessar]");
       if (rp) return comBotao(rp, async () => { await A.reprocessarConsulta(rp.dataset.reprocessar); avisar("Consultando de novo…"); setTimeout(atualizar, 6000); await atualizar(); });
       const rg = e.target.closest("[data-registrar-consulta]"); if (rg) return registrar(lista.find((c) => c.id === rg.dataset.registrarConsulta));

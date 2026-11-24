@@ -98,6 +98,12 @@
   /** Passo 2: PIX com QR Code e "Já paguei" */
   async function mostrarPix(m, c, p) {
     const caixa = m.querySelector(".consulta-fluxo") || m;
+    // Pagamento automático (Asaas): QR da cobrança e confirmação sozinha
+    if (await D.pagamentoAutomatico()) {
+      caixa.innerHTML = `<p class="vazio">Gerando o seu PIX...</p>`;
+      try { return await pixAutomatico(caixa, c, await C.cobrarPix(c.id)); }
+      catch (err) { avisar(err.message + " Usando o PIX direto."); }
+    }
     const site = await D.site();
     const pix = (site.contatos || {}).pix || {};
     if (!pix.chave) {
@@ -125,6 +131,35 @@
           <div class="botoes-form"><a class="btn btn-primario" href="/conta?aba=consultas">Acompanhar minha consulta</a></div>`;
       } catch (err) { avisar(err.message); e.target.disabled = false; }
     });
+  }
+  /** PIX gerado pelo Asaas: mostra o QR e espera o pagamento cair (sem "Já paguei") */
+  async function pixAutomatico(caixa, c, cob) {
+    caixa.innerHTML = `<span class="quiz-num">Passo 2 de 2 · Pagamento</span>
+      <h2>Pague com PIX</h2>
+      <p class="consulta-valor">${esc(brl(cob.valor || c.valor))} <small>Consulta ${esc(cob.numero || c.numero || "")}</small></p>
+      <div class="pix-qr consulta-qr">Gerando QR Code...</div>
+      <label class="campo"><span>PIX copia e cola</span><textarea readonly rows="3" class="pix-copia">${esc(cob.payload)}</textarea></label>
+      <div class="botoes-form"><button type="button" class="btn btn-contorno-rosa" data-copiar>Copiar código</button></div>
+      <p class="pix-esperando"><span class="girando" aria-hidden="true"></span> Aguardando o pagamento… <strong>assim que o PIX cair, a consulta começa sozinha</strong>. Pode deixar esta tela aberta ou fechar: o resultado aparece em Minha conta → Consultas.</p>`;
+    try { caixa.querySelector(".consulta-qr").innerHTML = await window.ChatUI.qrSvg(cob.payload); } catch (e) { caixa.querySelector(".consulta-qr").textContent = "Use o código copia e cola abaixo."; }
+    caixa.querySelector("[data-copiar]").addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(cob.payload); avisar("Código PIX copiado!"); } catch (e) { caixa.querySelector(".pix-copia").select(); avisar("Selecione e copie o código."); }
+    });
+    // confere a cada 5 s (por até 20 min) se o pagamento já foi confirmado
+    const inicio = Date.now();
+    const conferir = async () => {
+      if (!document.body.contains(caixa)) return;   // modal fechado
+      try {
+        const atual = (await C.consultas()).find((x) => x.id === c.id);
+        if (atual && atual.pagamento_status === "pago") {
+          caixa.innerHTML = `<h2>Pagamento confirmado! ✅</h2><p>Sua consulta <strong>${esc(atual.numero || "")}</strong> já está sendo feita. O resultado aparece em <strong>Minha conta → Consultas</strong> e você recebe um aviso no celular.</p>
+            <div class="botoes-form"><a class="btn btn-primario" href="/conta?aba=consultas">Ver minha consulta</a></div>`;
+          return;
+        }
+      } catch (e) { /* tenta de novo */ }
+      if (Date.now() - inicio < 20 * 60 * 1000) setTimeout(conferir, 5000);
+    };
+    setTimeout(conferir, 5000);
   }
   window.ConsultasPix = { mostrarPix };
   if (!lista) return;   // na página Minha conta, este arquivo só fornece o PIX

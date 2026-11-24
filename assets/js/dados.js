@@ -511,6 +511,25 @@
       return r.ok ? await r.json() : [];
     } catch (e) { return []; }
   }
+  /** O pagamento automático (Asaas) está ligado? */
+  async function pagamentoAutomatico() {
+    if (!ONLINE) return false;
+    try {
+      const r = await fetch(SB.url + "/rest/v1/rpc/pagamento_automatico", { method: "POST", headers: { apikey: SB.anonKey, Authorization: "Bearer " + SB.anonKey, "Content-Type": "application/json" }, body: "{}" });
+      return r.ok ? (await r.json()) === true : false;
+    } catch (e) { return false; }
+  }
+  /** Chama a função "pagamentos" do servidor com a sessão de quem está logado */
+  async function funcaoPagamentos(corpo) {
+    const sb = await supabase();
+    const { data, error } = await sb.functions.invoke("pagamentos", { body: corpo });
+    if (error) {
+      let msg = "Não foi possível falar com o pagamento agora.";
+      try { const j = await error.context.json(); if (j && j.erro) msg = j.erro; } catch (e) { /* ok */ }
+      throw new Error(msg);
+    }
+    return data;
+  }
   const consultasDemo = () => ler(K.consultas, []);
   function gravarConsultaDemo(id, mudar) {
     const l = consultasDemo(), c = l.find((x) => x.id === id);
@@ -735,6 +754,11 @@
         anexos: arquivos.map((f) => "demo/" + f.name), observacao_cliente: String(observacao || "").trim(), consentimento_em: agora, consentimento_texto: "Envio meus próprios relatórios de crédito e autorizo a análise (" + num + "), conforme a LGPD.", criado_em: agora };
       const l = consultasDemo(); l.push(c); gravar(K.consultas, l);
       return c.id;
+    },
+    /** Cria (ou recupera) a cobrança PIX automática da consulta no Asaas */
+    async cobrarPix(consultaId) {
+      if (!ONLINE) throw new Error("Pagamento automático indisponível no modo demonstração.");
+      return funcaoPagamentos({ acao: "cobrar", consulta_id: consultaId });
     },
     async informarPagamento(id) {
       if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("informar_pagamento_consulta", { p_id: id })); }
@@ -1068,6 +1092,19 @@
       if (ONLINE) { const sb = await supabase(); return rodar(sb.rpc("reprocessar_consulta", { p_id: id })); }
       throw new Error("No modo demonstração não há fornecedor automático.");
     },
+    async situacaoGateway() {
+      if (!ONLINE) return { gateway: "" };
+      const sb = await supabase();
+      return (await rodar(sb.rpc("situacao_gateway"))) || { gateway: "" };
+    },
+    async configurarGateway(ambiente, chave) {
+      if (!ONLINE) throw new Error("No modo demonstração não há pagamento automático.");
+      return funcaoPagamentos({ acao: "configurar", ambiente, chave: String(chave || "").trim() });
+    },
+    async desligarGateway() {
+      if (!ONLINE) return;
+      const sb = await supabase(); return rodar(sb.rpc("desligar_gateway"));
+    },
     async consultaProdutos() {
       if (!ONLINE) return produtosConsultaDemo().slice().sort((a, b) => a.ordem - b.ordem);
       const sb = await supabase();
@@ -1126,6 +1163,6 @@
     }
   };
 
-  window.Dados = { online: ONLINE, STATUS, CONFIRMADOS, site, catalogo, modulos, moduloLigado, produtosCredito, PERFIS_CREDITO, diagnosticoRegras, TIPOS_CONSULTA, STATUS_CONSULTA, consultaProdutos, Conta, Painel, Chat, Push, slug };
+  window.Dados = { online: ONLINE, STATUS, CONFIRMADOS, site, catalogo, modulos, moduloLigado, produtosCredito, PERFIS_CREDITO, diagnosticoRegras, TIPOS_CONSULTA, STATUS_CONSULTA, consultaProdutos, pagamentoAutomatico, Conta, Painel, Chat, Push, slug };
   window.ContaPronta = Conta.iniciar();
 })();

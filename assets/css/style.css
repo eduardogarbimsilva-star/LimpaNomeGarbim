@@ -1805,3 +1805,7 @@ body.mod-off-chat:not(.pagina-painel) .chat-mensagens::after { content: "O chat 
 .guia-relatorios a { font-weight: 600; white-space: nowrap; }
 .anexos-cliente { background: var(--fundo-alt, #faf5f6); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; font-size: .92rem; }
 .anexos-cliente ul { list-style: none; padding: 0; margin: 6px 0; }
+.pix-esperando { display: flex; gap: 10px; align-items: flex-start; background: var(--fundo-alt, #faf5f6); border-radius: 12px; padding: 10px 14px; font-size: .9rem; }
+.girando { flex: 0 0 18px; width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--rosa-claro, #f6e2e7); border-top-color: var(--rosa, #a5536b); animation: girar 1s linear infinite; margin-top: 2px; }
+@keyframes girar { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .girando { animation: none; } }
