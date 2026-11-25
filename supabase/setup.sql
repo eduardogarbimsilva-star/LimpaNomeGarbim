@@ -618,3 +618,4 @@ on conflict (email) do update set papel = 'admin', nome = coalesce(public.equipe
 -- E06c: consulta automática por fornecedor (Direct Data; Relinq depois) -> supabase/e06c_consulta_automatica.sql (desfazer: supabase/desfazer/e06c.sql)
 -- E06d: textos das consultas fiéis às fontes -> supabase/e06d_textos_consultas.sql
 -- E06e: análise gratuita guiada (cofre "documentos") -> supabase/e06e_analise_gratuita.sql (desfazer: supabase/desfazer/e06e.sql)
+-- E08: pagamento automático Asaas (PIX + webhook) -> supabase/e08_pagamento_asaas.sql (desfazer: supabase/desfazer/e08.sql) + função supabase/functions/pagamentos

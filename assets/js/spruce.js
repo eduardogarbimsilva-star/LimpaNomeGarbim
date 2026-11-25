@@ -2,7 +2,7 @@
    Quando o site da SPRUCE UP estiver no ar, coloque o endereço abaixo (ex.: "https://spruceup.com.br").
    Vazio: a assinatura aparece, mas sem link, e o botão "Conheça a SPRUCE UP" fica escondido. */
 (function () {
-  var SPRUCE_URL = "";
+  var SPRUCE_URL = "https://spruce-up-gamma.vercel.app/";
   if (!SPRUCE_URL) return;
   document.querySelectorAll("[data-spruce-link]").forEach(function (a) {
     a.href = SPRUCE_URL;
