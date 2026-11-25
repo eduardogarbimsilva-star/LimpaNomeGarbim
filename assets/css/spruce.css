@@ -1,21 +1,61 @@
 /* =========================================================
-   SPRUCE UP Digital Engineering — assinatura e equipe técnica
+   SPRUCE UP Digital Engineering — assinatura, selo no canto e equipe técnica
    Mesmo arquivo em todos os sites feitos pela SPRUCE UP.
    Cores oficiais: #03070C fundo · #2455FF cobalto · #48D3FF ciano · #4AFF62 verde
    ========================================================= */
-.spruce-rodape { display: flex; align-items: center; justify-content: center; padding: 14px 20px 18px; border-top: 1px solid rgba(127, 127, 127, .18); }
-.spruce-assinatura { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; color: inherit !important; text-decoration: none !important; font-size: .78rem; }
-.spruce-frase { opacity: .85; letter-spacing: .02em; }
-.spruce-marca { display: block; height: 30px; width: auto; border-radius: 7px; box-shadow: 0 0 0 1px rgba(72, 211, 255, .25); transition: box-shadow .2s, transform .2s; }
-a.spruce-assinatura[href]:hover .spruce-marca, a.spruce-assinatura[href]:focus-visible .spruce-marca { box-shadow: 0 0 0 1px #4aff62, 0 4px 16px rgba(36, 85, 255, .35); transform: translateY(-1px); }
-a.spruce-assinatura[href]:hover .spruce-frase { text-decoration: underline; text-underline-offset: 3px; }
 
+/* ---------- Assinatura no rodapé (se adapta ao fundo claro ou escuro) ---------- */
+.spruce-rodape { display: flex; align-items: center; justify-content: center; padding: 16px 20px 20px; border-top: 1px solid rgba(127, 127, 127, .16); }
+.spruce-assinatura { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; color: inherit !important; text-decoration: none !important; font-size: .78rem; }
+.spruce-frase { opacity: .72; letter-spacing: .02em; }
+.spruce-logo { display: inline-flex; align-items: center; gap: 9px; padding: 6px 14px 6px 8px; border-radius: 999px; border: 1px solid rgba(127, 127, 127, .28); background: rgba(127, 127, 127, .06); transition: border-color .25s, background-color .25s, transform .25s, box-shadow .25s; }
+.spruce-logo img { display: block; width: auto; height: 26px; filter: drop-shadow(0 2px 6px rgba(36, 85, 255, .35)); }
+.spruce-nome { display: grid; line-height: 1; text-align: left; }
+.spruce-nome strong { font: italic 800 15px/1 "Exo 2", "Arial Black", system-ui, sans-serif; letter-spacing: .01em; color: inherit; }
+.spruce-nome strong b { color: #1e9e3c; font-weight: 800; }
+.spruce-nome small { margin-top: 3px; font-size: 7.5px; font-weight: 700; letter-spacing: .32em; text-transform: uppercase; opacity: .6; }
+.spruce-escuro .spruce-nome strong b { color: #4aff62; }
+a.spruce-assinatura[href]:hover .spruce-logo, a.spruce-assinatura[href]:focus-visible .spruce-logo { border-color: #2455ff; background: rgba(36, 85, 255, .08); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(36, 85, 255, .18); }
+.spruce-assinatura .spruce-marca { display: block; height: 28px; width: auto; border-radius: 6px; } /* imagem antiga: só aparece sem JavaScript */
+.spruce-assinatura:has(.spruce-logo) .spruce-marca { display: none; }
+
+/* ---------- Selo no canto da tela ---------- */
+.spruce-selo-link { display: inline-flex; align-items: center; color: inherit !important; text-decoration: none !important; border-radius: 999px; }
+.spruce-selo-link:focus-visible { outline: 2px solid #48d3ff; outline-offset: 3px; }
+.spruce-selo {
+  position: fixed; left: 18px; bottom: var(--spruce-selo-baixo, 18px); z-index: 58;
+  display: inline-flex; align-items: center; gap: 0; height: 46px; padding: 4px; border-radius: 999px;
+  background: rgba(3, 7, 12, .92); border: 1px solid rgba(72, 211, 255, .28); color: #f1f6ff; text-decoration: none !important;
+  box-shadow: 0 10px 30px rgba(3, 7, 12, .35), 0 0 0 1px rgba(255, 255, 255, .04) inset; backdrop-filter: blur(10px);
+  font: 600 12px/1.15 system-ui, -apple-system, "Segoe UI", sans-serif;
+  opacity: 0; transform: translateX(-130%); transition: opacity .45s ease, transform .55s cubic-bezier(.2, .9, .2, 1), bottom .3s ease;
+}
+.spruce-selo.is-visivel { opacity: 1; transform: none; }
+.spruce-selo.is-oculto { opacity: 0; transform: translateY(14px); pointer-events: none; }
+.spruce-selo-s { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #123b69, #03070c 70%); }
+.spruce-selo-s img { height: 22px; width: auto; filter: drop-shadow(0 0 6px rgba(36, 85, 255, .7)); }
+.spruce-selo-txt { display: grid; max-width: 0; overflow: hidden; white-space: nowrap; opacity: 0; transition: max-width .5s cubic-bezier(.2, .9, .2, 1), opacity .3s, margin .4s; }
+.spruce-selo-txt small { color: #9fb4ca; font-size: 10px; font-weight: 500; }
+.spruce-selo-txt b { color: #f1f6ff; font-size: 12.5px; letter-spacing: .01em; }
+.spruce-selo-txt b i { color: #4aff62; font-style: normal; }
+.spruce-selo.is-aberto .spruce-selo-txt, .spruce-selo:hover .spruce-selo-txt, .spruce-selo:focus-within .spruce-selo-txt { max-width: 200px; opacity: 1; margin: 0 10px 0 9px; }
+.spruce-selo-fechar { display: none; flex: none; width: 24px; height: 24px; margin-right: 4px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .08); color: #9fb4ca; font: 16px/1 system-ui, sans-serif; cursor: pointer; }
+.spruce-selo.is-aberto .spruce-selo-fechar, .spruce-selo:hover .spruce-selo-fechar, .spruce-selo:focus-within .spruce-selo-fechar { display: grid; place-items: center; }
+.spruce-selo-fechar:hover { background: rgba(255, 107, 125, .2); color: #fff; }
+.spruce-selo:hover, .spruce-selo:focus-within { border-color: #4aff62; }
+.spruce-selo::after { content: ""; position: absolute; inset: -3px; border-radius: inherit; border: 1px solid rgba(74, 255, 98, .55); opacity: 0; pointer-events: none; }
+.spruce-selo.is-visivel.is-aberto::after, .spruce-selo.is-visivel.is-pulso::after { animation: spruce-pulso 2.4s ease-out 2; }
+@keyframes spruce-pulso { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.25); } }
+@media (max-width: 600px) { .spruce-selo { left: 12px; height: 42px; } .spruce-selo-s { width: 32px; height: 32px; } }
+@media print { .spruce-selo { display: none !important; } }
+
+/* ---------- Seção Equipe técnica (Sobre) ---------- */
 .spruce-equipe { display: grid; grid-template-columns: 240px 1fr; gap: 44px; align-items: center; color: #bacada; border-radius: 22px; padding: 44px; border: 1px solid #263c52;
   background: radial-gradient(520px 260px at 0 100%, rgba(74, 255, 98, .14), transparent 70%), radial-gradient(640px 320px at 100% 0, rgba(36, 85, 255, .28), transparent 70%), #03070c;
   box-shadow: 0 24px 60px rgba(3, 7, 12, .28); }
 .spruce-equipe-marca { display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .spruce-equipe-marca .spruce-s { width: 150px; height: 150px; border-radius: 22px; box-shadow: 0 0 0 1px #263c52, 0 16px 40px rgba(36, 85, 255, .3); }
-.spruce-equipe-marca .spruce-marca { height: 46px; box-shadow: none; }
+.spruce-equipe-marca .spruce-marca { display: block; height: 46px; box-shadow: none; }
 .spruce-rotulo { display: inline-block; font-size: .76rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: #4aff62; margin-bottom: 10px; }
 .spruce-equipe h2 { color: #f1f6ff !important; font-size: clamp(1.4rem, 2.6vw, 2rem); line-height: 1.2; margin: 0 0 12px; }
 .spruce-equipe p { color: #bacada; margin: 0; }
@@ -32,4 +72,7 @@ a.spruce-assinatura[href]:hover .spruce-frase { text-decoration: underline; text
   .spruce-equipe-marca .spruce-marca { height: 36px; }
   .spruce-lista { grid-template-columns: 1fr; }
 }
-@media (prefers-reduced-motion: reduce) { .spruce-botao, .spruce-marca { transition: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .spruce-botao, .spruce-logo, .spruce-selo, .spruce-selo-txt { transition: none; }
+  .spruce-selo.is-visivel.is-aberto::after, .spruce-selo.is-visivel.is-pulso::after { animation: none; }
+}
